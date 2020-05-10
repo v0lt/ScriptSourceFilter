@@ -114,17 +114,20 @@ CVapourSynthStream::CVapourSynthStream(const WCHAR* name, CSource* pParent, HRES
 		switch (m_vsInfo->format->id) {
 		case pfCompatBGR32:
 			m_subtype = MEDIASUBTYPE_RGB32;
-			str_pixeltype = L"ARGB32";
+			str_pixeltype = L"RGB32";
 			break;
 		case pfCompatYUY2:
-			m_subtype = MEDIASUBTYPE_YV12;
-			str_pixeltype = L"YV12";
+			m_subtype = MEDIASUBTYPE_YUY2;
+			str_pixeltype = L"YUY2";
+			break;
 		case pfGray8:
 			m_subtype = MEDIASUBTYPE_Y8;
 			str_pixeltype = L"Y8";
+			break;
 		case pfGray16:
 			m_subtype = MEDIASUBTYPE_Y116;
 			str_pixeltype = L"Y16";
+			break;
 		default:
 			throw std::exception("Unsuported pixel type");
 		}
@@ -156,14 +159,14 @@ CVapourSynthStream::CVapourSynthStream(const WCHAR* name, CSource* pParent, HRES
 		memset(vih2, 0, sizeof(VIDEOINFOHEADER2));
 		vih2->rcSource = { 0, 0, (long)m_Width, (long)m_Height };
 		vih2->rcTarget = vih2->rcSource;
-		vih2->AvgTimePerFrame = m_AvgTimePerFrame;
-		vih2->bmiHeader.biSize = sizeof(vih2->bmiHeader);
-		vih2->bmiHeader.biWidth = m_Width;
-		vih2->bmiHeader.biHeight = m_Height;
-		vih2->bmiHeader.biPlanes = 1;
-		vih2->bmiHeader.biBitCount = bytesPerSample*8;
+		vih2->AvgTimePerFrame         = m_AvgTimePerFrame;
+		vih2->bmiHeader.biSize        = sizeof(vih2->bmiHeader);
+		vih2->bmiHeader.biWidth       = m_Width;
+		vih2->bmiHeader.biHeight      = m_Height;
+		vih2->bmiHeader.biPlanes      = 1;
+		vih2->bmiHeader.biBitCount    = bytesPerSample*8;
 		vih2->bmiHeader.biCompression = fourcc;
-		vih2->bmiHeader.biSizeImage = m_BufferSize;
+		vih2->bmiHeader.biSizeImage   = m_BufferSize;
 
 		m_rtDuration = m_rtStop = UNITS * m_NumFrames * m_vsInfo->fpsNum / m_vsInfo->fpsDen;
 
