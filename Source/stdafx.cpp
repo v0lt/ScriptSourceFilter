@@ -19,11 +19,3 @@
  */
 
 #include "stdafx.h"
-
-#ifdef _WIN64
-#pragma comment(lib, "../lib64/AviSynth.lib")
-#pragma comment(lib, "../lib64/vsscript.lib")
-#else
-#pragma comment(lib, "../lib32/AviSynth.lib")
-#pragma comment(lib, "../lib32/vsscript.lib")
-#endif
