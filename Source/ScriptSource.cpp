@@ -24,6 +24,7 @@
 #include "PropPage.h"
 #include "StringHelper.h"
 #include "AviSynthStream.h"
+#include "VapourSynthStream.h"
 
 #include "ScriptSource.h"
 
@@ -87,6 +88,11 @@ STDMETHODIMP CScriptSource::Load(LPCOLESTR pszFileName, const AM_MEDIA_TYPE* pmt
 	HRESULT hr = S_OK;
 	if (ext == L".avs") {
 		if (!(new CAviSynthStream(pszFileName, this, &hr))) {
+			return E_OUTOFMEMORY;
+		}
+	}
+	else if (ext == L".vpy") {
+		if (!(new CVapourSynthStream(pszFileName, this, &hr))) {
 			return E_OUTOFMEMORY;
 		}
 	}

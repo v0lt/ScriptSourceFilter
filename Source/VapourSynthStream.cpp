@@ -36,6 +36,11 @@ CVapourSynthStream::CVapourSynthStream(const WCHAR* name, CSource* pParent, HRES
 {
 	CAutoLock cAutoLock(&m_cSharedState);
 
+	{ // TODO
+		*phr = E_FAIL;
+		return;
+	}
+
 	m_hVSScriptDll = LoadLibraryW(L"vsscript.dll");
 	if (!m_hVSScriptDll) {
 		DLog(L"Failed to load VapourSynt");
