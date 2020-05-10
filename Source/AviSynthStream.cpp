@@ -82,44 +82,56 @@ CAviSynthStream::CAviSynthStream(const WCHAR* name, CSource* pParent, HRESULT* p
 	auto Clip = m_AVSValue.AsClip();
 
 	auto VInfo = Clip->GetVideoInfo();
-	DLog(L"Open clip %dx%d %.03f fps", VInfo.width, VInfo.height, (double)VInfo.fps_numerator/VInfo.fps_denominator);
+	LPCWSTR str_pixeltype = nullptr;
 
 	switch (VInfo.pixel_type) {
 	case VideoInfo::CS_BGR24:
 		m_subtype = MEDIASUBTYPE_RGB24;
+		str_pixeltype = L"RGB24";
 		break;
 	case VideoInfo::CS_BGR32:
 		m_subtype = MEDIASUBTYPE_ARGB32;
+		str_pixeltype = L"ARGB32";
 		break;
 	case VideoInfo::CS_BGR48:
 		m_subtype = MEDIASUBTYPE_RGB48;
+		str_pixeltype = L"RGB48";
 		break;
 	case VideoInfo::CS_BGR64:
 		m_subtype = MEDIASUBTYPE_ARGB64;
+		str_pixeltype = L"ARGB64";
 		break;
 	case VideoInfo::CS_YUY2:
 		m_subtype = MEDIASUBTYPE_YUY2;
+		str_pixeltype = L"YUY2";
 		break;
 	case VideoInfo::CS_YV12:
 		m_subtype = MEDIASUBTYPE_YV12;
+		str_pixeltype = L"YV12";
 		break;
 	case VideoInfo::CS_YV16:
 		m_subtype = MEDIASUBTYPE_YV16;
+		str_pixeltype = L"YV16";
 		break;
 	case VideoInfo::CS_YV24:
 		m_subtype = MEDIASUBTYPE_YV24;
+		str_pixeltype = L"YV24";
 		break;
 	case VideoInfo::CS_Y8:
 		m_subtype = MEDIASUBTYPE_Y8;
+		str_pixeltype = L"Y8";
 		break;
 	case VideoInfo::CS_Y16:
 		m_subtype = MEDIASUBTYPE_Y116;
+		str_pixeltype = L"Y16";
 		break;
 	default:
 		DLog(L"Unsuported pixel_type");
 		*phr = E_FAIL;
 		return;
 	}
+
+	DLog(L"Open clip %s %dx%d %.03f fps", str_pixeltype, VInfo.width, VInfo.height, (double)VInfo.fps_numerator/VInfo.fps_denominator);
 
 	DWORD fourcc = (m_subtype == MEDIASUBTYPE_RGB24 || m_subtype == MEDIASUBTYPE_RGB32) ? BI_RGB : m_subtype.Data1;
 

@@ -1,6 +1,6 @@
 ﻿# MPC Script Source
 
-MPC Script Source is a free and open-source DirectShow filter. The filter allows to open AviSynth script files (.avs) in video players. 
+MPC Script Source is a free and open-source DirectShow filter. The filter allows to open AviSynth+ script files (.avs) in video players. 
 
 ## Minimum system requirements
 
