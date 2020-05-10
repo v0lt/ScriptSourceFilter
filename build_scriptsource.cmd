@@ -59,7 +59,7 @@ CD /D %~dp0
 CALL :SubMPCVR x64
 
 IF /I "%SIGN%" == "True" (
-  SET FILES="%~dp0_bin\Filters_x86%SUFFIX%\ScriptSource.ax" "%~dp0_bin\Filters_x64%SUFFIX%\ScriptSource64.ax"
+  SET FILES="%~dp0_bin\Filters_x86%SUFFIX%\MpcScriptSource.ax" "%~dp0_bin\Filters_x64%SUFFIX%\MpcScriptSource64.ax"
   CALL "%~dp0\sign.cmd" !FILES! || (CALL :SubMsg "ERROR" "Problem signing !FILES!" & EXIT /B)
   CALL :SubMsg "INFO" "!FILES! signed successfully."
 )
@@ -80,9 +80,9 @@ FOR /F "tokens=3,4 delims= " %%A IN (
   'FINDSTR /I /L /C:"define MPCSS_REV_NUM" "revision.h"') DO (SET "REVNUM=%%A")
 
 IF /I "%RELEASE%" == "1" (
-  SET "PCKG_NAME=ScriptSource-%VERMAJOR%.%VERMINOR%.%VERBUILD%.%REVNUM%%SUFFIX%"
+  SET "PCKG_NAME=MpcScriptSource-%VERMAJOR%.%VERMINOR%.%VERBUILD%.%REVNUM%%SUFFIX%"
 ) ELSE (
-  SET "PCKG_NAME=ScriptSource-%VERMAJOR%.%VERMINOR%.%VERBUILD%.%REVNUM%_git%REVDATE%-%REVHASH%%SUFFIX%"
+  SET "PCKG_NAME=MpcScriptSource-%VERMAJOR%.%VERMINOR%.%VERBUILD%.%REVNUM%_git%REVDATE%-%REVHASH%%SUFFIX%"
 )
 
 CALL :SubDetectSevenzipPath
@@ -91,12 +91,12 @@ IF DEFINED SEVENZIP (
 
     TITLE Creating archive %PCKG_NAME%.zip...
     START "7z" /B /WAIT "%SEVENZIP%" a -tzip -mx9 "_bin\%PCKG_NAME%.zip" ^
-.\_bin\Filters_x86%SUFFIX%\ScriptSource.ax ^
-.\_bin\Filters_x64%SUFFIX%\ScriptSource64.ax ^
-.\distrib\Install_ScriptSource_32.cmd ^
-.\distrib\Install_ScriptSource_64.cmd ^
-.\distrib\Uninstall_ScriptSource_32.cmd ^
-.\distrib\Uninstall_ScriptSource_64.cmd ^
+.\_bin\Filters_x86%SUFFIX%\MpcScriptSource.ax ^
+.\_bin\Filters_x64%SUFFIX%\MpcScriptSource64.ax ^
+.\distrib\Install_MpcScriptSource_32.cmd ^
+.\distrib\Install_MpcScriptSource_64.cmd ^
+.\distrib\Uninstall_MpcScriptSource_32.cmd ^
+.\distrib\Uninstall_MpcScriptSource_64.cmd ^
 .\distrib\Reset_Settings.cmd ^
 .\Readme.md ^
 .\history.txt ^
