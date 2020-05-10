@@ -132,6 +132,14 @@ CVapourSynthStream::CVapourSynthStream(const WCHAR* name, CSource* pParent, HRES
 			throw std::exception("Unsuported pixel type");
 		}
 
+		const VSFrameRef* frame = m_vsAPI->getFrame(0, m_vsNode, m_vsErrorMessage, sizeof(m_vsErrorMessage));
+		if (!frame) {
+			error = ConvertUtf8ToWide(m_vsErrorMessage);
+			throw std::exception("Failed to call getFrame(0)");
+		}
+		const UINT pitch = m_vsAPI->getStride(frame, 0);
+		m_vsAPI->freeFrame(frame);
+
 		DLog(L"Open clip %s %dx%d %.03f fps", str_pixeltype, m_vsInfo->width, m_vsInfo->height, (double)m_vsInfo->fpsNum/m_vsInfo->fpsDen);
 
 		DWORD fourcc = (m_subtype == MEDIASUBTYPE_RGB24 || m_subtype == MEDIASUBTYPE_RGB32) ? BI_RGB : m_subtype.Data1;
@@ -141,14 +149,9 @@ CVapourSynthStream::CVapourSynthStream(const WCHAR* name, CSource* pParent, HRES
 		m_NumFrames = m_vsInfo->numFrames;
 		m_fpsNum    = m_vsInfo->fpsNum;
 		m_fpsDen    = m_vsInfo->fpsDen;
+		m_BufferSize = pitch * m_Height;
 
 		m_AvgTimePerFrame = UNITS * m_fpsDen / m_fpsNum;
-
-		UINT bitsPerSample  = m_vsInfo->format->bitsPerSample;
-		UINT bytesPerSample = m_vsInfo->format->bytesPerSample;
-
-		UINT pitch = m_Width * bytesPerSample;
-		m_BufferSize = pitch * m_Height;
 
 		m_mt.InitMediaType();
 		m_mt.SetType(&MEDIATYPE_Video);
@@ -166,7 +169,7 @@ CVapourSynthStream::CVapourSynthStream(const WCHAR* name, CSource* pParent, HRES
 		vih2->bmiHeader.biWidth       = m_Width;
 		vih2->bmiHeader.biHeight      = m_Height;
 		vih2->bmiHeader.biPlanes      = 1;
-		vih2->bmiHeader.biBitCount    = bytesPerSample*8;
+		vih2->bmiHeader.biBitCount    = m_vsInfo->format->bitsPerSample;
 		vih2->bmiHeader.biCompression = fourcc;
 		vih2->bmiHeader.biSizeImage   = m_BufferSize;
 
@@ -343,7 +346,8 @@ HRESULT CVapourSynthStream::FillBuffer(IMediaSample* pSample)
 		int framenum = (int)(m_rtPosition * m_fpsNum / (m_fpsDen * UNITS));
 		const VSFrameRef* frame = m_vsAPI->getFrame(framenum, m_vsNode, m_vsErrorMessage, sizeof(m_vsErrorMessage));
 		if (!frame) {
-			DLog(L"%S", m_vsErrorMessage);
+			std::wstring error = ConvertUtf8ToWide(m_vsErrorMessage);
+			DLog(error.c_str());
 			return E_FAIL;
 		}
 
