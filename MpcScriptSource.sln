@@ -1,0 +1,74 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.27130.2036
+MinimumVisualStudioVersion = 15.0.27130.2036
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MpcScriptSource", "Source\MpcScriptSource.vcxproj", "{DAF59106-BC83-478F-95D9-4516C2A52970}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "BaseClasses", "BaseClasses\BaseClasses.vcxproj", "{E8A3F6FA-AE1C-4C8E-A0B6-9C8480324EAA}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Include", "Include", "{C7CAE27C-03BC-45F2-BF8E-DEE05DBF37B8}"
+	ProjectSection(SolutionItems) = preProject
+		Include\avisynth.h = Include\avisynth.h
+		Include\FilterInterfaces.h = Include\FilterInterfaces.h
+		Include\FilterInterfacesImpl.h = Include\FilterInterfacesImpl.h
+		Include\Version.h = Include\Version.h
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "avs", "avs", "{5FDFFC8B-BC55-4214-BE2B-19331F617146}"
+	ProjectSection(SolutionItems) = preProject
+		Include\avs\capi.h = Include\avs\capi.h
+		Include\avs\config.h = Include\avs\config.h
+		Include\avs\cpuid.h = Include\avs\cpuid.h
+		Include\avs\types.h = Include\avs\types.h
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "fmt", "external\fmt.vcxproj", "{CF8302E6-21A3-4DD3-8A33-E19B6732F40B}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{DAF59106-BC83-478F-95D9-4516C2A52970}.Debug|x64.ActiveCfg = Debug|x64
+		{DAF59106-BC83-478F-95D9-4516C2A52970}.Debug|x64.Build.0 = Debug|x64
+		{DAF59106-BC83-478F-95D9-4516C2A52970}.Debug|x86.ActiveCfg = Debug|Win32
+		{DAF59106-BC83-478F-95D9-4516C2A52970}.Debug|x86.Build.0 = Debug|Win32
+		{DAF59106-BC83-478F-95D9-4516C2A52970}.Release|x64.ActiveCfg = Release|x64
+		{DAF59106-BC83-478F-95D9-4516C2A52970}.Release|x64.Build.0 = Release|x64
+		{DAF59106-BC83-478F-95D9-4516C2A52970}.Release|x86.ActiveCfg = Release|Win32
+		{DAF59106-BC83-478F-95D9-4516C2A52970}.Release|x86.Build.0 = Release|Win32
+		{E8A3F6FA-AE1C-4C8E-A0B6-9C8480324EAA}.Debug|x64.ActiveCfg = Debug|x64
+		{E8A3F6FA-AE1C-4C8E-A0B6-9C8480324EAA}.Debug|x64.Build.0 = Debug|x64
+		{E8A3F6FA-AE1C-4C8E-A0B6-9C8480324EAA}.Debug|x64.Deploy.0 = Debug|x64
+		{E8A3F6FA-AE1C-4C8E-A0B6-9C8480324EAA}.Debug|x86.ActiveCfg = Debug|Win32
+		{E8A3F6FA-AE1C-4C8E-A0B6-9C8480324EAA}.Debug|x86.Build.0 = Debug|Win32
+		{E8A3F6FA-AE1C-4C8E-A0B6-9C8480324EAA}.Debug|x86.Deploy.0 = Debug|Win32
+		{E8A3F6FA-AE1C-4C8E-A0B6-9C8480324EAA}.Release|x64.ActiveCfg = Release|x64
+		{E8A3F6FA-AE1C-4C8E-A0B6-9C8480324EAA}.Release|x64.Build.0 = Release|x64
+		{E8A3F6FA-AE1C-4C8E-A0B6-9C8480324EAA}.Release|x64.Deploy.0 = Release|x64
+		{E8A3F6FA-AE1C-4C8E-A0B6-9C8480324EAA}.Release|x86.ActiveCfg = Release|Win32
+		{E8A3F6FA-AE1C-4C8E-A0B6-9C8480324EAA}.Release|x86.Build.0 = Release|Win32
+		{E8A3F6FA-AE1C-4C8E-A0B6-9C8480324EAA}.Release|x86.Deploy.0 = Release|Win32
+		{CF8302E6-21A3-4DD3-8A33-E19B6732F40B}.Debug|x64.ActiveCfg = Debug|x64
+		{CF8302E6-21A3-4DD3-8A33-E19B6732F40B}.Debug|x64.Build.0 = Debug|x64
+		{CF8302E6-21A3-4DD3-8A33-E19B6732F40B}.Debug|x86.ActiveCfg = Debug|Win32
+		{CF8302E6-21A3-4DD3-8A33-E19B6732F40B}.Debug|x86.Build.0 = Debug|Win32
+		{CF8302E6-21A3-4DD3-8A33-E19B6732F40B}.Release|x64.ActiveCfg = Release|x64
+		{CF8302E6-21A3-4DD3-8A33-E19B6732F40B}.Release|x64.Build.0 = Release|x64
+		{CF8302E6-21A3-4DD3-8A33-E19B6732F40B}.Release|x86.ActiveCfg = Release|Win32
+		{CF8302E6-21A3-4DD3-8A33-E19B6732F40B}.Release|x86.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{5FDFFC8B-BC55-4214-BE2B-19331F617146} = {C7CAE27C-03BC-45F2-BF8E-DEE05DBF37B8}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {5D7781ED-53B1-4197-9C68-D2EDD94EC59B}
+	EndGlobalSection
+EndGlobal

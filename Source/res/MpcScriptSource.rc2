@@ -1,0 +1,65 @@
+//
+// MFCApplication1.rc2 - resources Microsoft Visual C++ does not edit directly
+//
+
+#ifdef APSTUDIO_INVOKED
+#error this file is not editable by Microsoft Visual C++
+#endif //APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+// Add manually edited resources here...
+
+/////////////////////////////////////////////////////////////////////////////
+
+#include "../../Include/Version.h"
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// FILE
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION MPCSS_VERSION_NUM
+ PRODUCTVERSION MPCSS_VERSION_NUM
+ FILEFLAGSMASK 0x17L
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x4L
+ FILETYPE 0x2L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904b0"
+        BEGIN
+            VALUE "CompanyName", "MPC-BE Team"
+            VALUE "FileDescription", "MPC Script Source"
+            VALUE "FileVersion", MPCSS_VERSION_STR
+            VALUE "InternalName", "ScriptSource"
+            VALUE "LegalCopyright", "Copyright  2018-2020"
+#ifdef _WIN64
+
+            VALUE "OriginalFilename", "MpcScriptSource64.ax"
+#else
+            VALUE "OriginalFilename", "MpcScriptSource.ax"
+#endif
+            VALUE "ProductName", "MPC Script Source"
+            VALUE "ProductVersion", MPCSS_VERSION_STR
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1200
+    END
+END

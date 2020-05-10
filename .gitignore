@@ -1,0 +1,6 @@
+*.user
+*.aps
+/.vs
+/_bin
+/revision.h
+/signinfo.txt
