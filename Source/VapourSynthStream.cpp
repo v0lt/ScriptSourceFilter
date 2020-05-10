@@ -48,14 +48,101 @@ CVapourSynthStream::CVapourSynthStream(const WCHAR* name, CSource* pParent, HRES
 		return;
 	}
 
+	struct extfunc {
+		void** adress;
+		char* name;
+	};
+#ifdef _WIN64
+	extfunc vsfuncs[] = {
+		{(void**)&vs_init,           "vsscript_init"          },
+		{(void**)&vs_finalize,       "vsscript_finalize"      },
+		{(void**)&vs_evaluateScript, "vsscript_evaluateScript"},
+		{(void**)&vs_evaluateFile,   "vsscript_evaluateFile"  },
+		{(void**)&vs_freeScript,     "vsscript_freeScript"    },
+		{(void**)&vs_getError,       "vsscript_getError"      },
+		{(void**)&vs_getOutput,      "vsscript_getOutput"     },
+		{(void**)&vs_clearOutput,    "vsscript_clearOutput"   },
+		{(void**)&vs_getCore,        "vsscript_getCore"       },
+		{(void**)&vs_getVSApi,       "vsscript_getVSApi"      }
+	};
+#else
+	extfunc vsfuncs[] = {
+		// TODO
+		{(void**)&vs_init,           "_vsscript_init@0"           },
+		{(void**)&vs_finalize,       "_vsscript_finalize@0"       },
+		{(void**)&vs_evaluateScript, "_vsscript_evaluateScript@16"},
+		{(void**)&vs_evaluateFile,   "_vsscript_evaluateFile@12"  },
+		{(void**)&vs_freeScript,     "_vsscript_freeScript@4"     },
+		{(void**)&vs_getError,       "_vsscript_getError@4"       },
+		{(void**)&vs_getOutput,      "_vsscript_getOutput@8"      },
+		{(void**)&vs_clearOutput,    "_vsscript_clearOutput@8"    },
+		{(void**)&vs_getCore,        "_vsscript_getCore@4"        },
+		{(void**)&vs_getVSApi,       "_vsscript_getVSApi@0"       }
+	};
+#endif
+	for (auto& vsfunc : vsfuncs) {
+		*(vsfunc.adress) = GetProcAddress(m_hVSScriptDll, vsfunc.name);
+		if (nullptr == *(vsfunc.adress)) {
+			DLog(L"Cannot resolve VapourSynth %S function", vsfunc.name);
+			*phr = E_FAIL;
+			return;
+		}
+	}
+
+	m_vsInit = vs_init();
+	if (!m_vsInit) {
+		DLog("Failed to initialize VapourSynth");
+		*phr = E_FAIL;
+		return;
+	}
+
+	m_vsAPI = vs_getVSApi();
+	if (!m_vsAPI) {
+		DLog("Failed to call VapourSynth vsscript_getVSApi");
+		*phr = E_FAIL;
+		return;
+	}
+
+	std::string utf8file = ConvertWideToUtf8(name);
+	if (vs_evaluateFile(&m_vsScript, utf8file.c_str(), 0)) {
+		std::wstring error = ConvertUtf8ToWide(vs_getError(m_vsScript));
+		DLog(error.c_str());
+		*phr = E_FAIL;
+		return;
+	}
+
+	m_vsNode = vs_getOutput(m_vsScript, 0);
+	if (!m_vsNode) {
+		DLog("Failed to get VapourSynth output");
+		*phr = E_FAIL;
+		return;
+	}
+
+	m_vsInfo = m_vsAPI->getVideoInfo(m_vsNode);
+	if (!m_vsInfo) {
+		DLog("Failed to get VapourSynth info");
+		*phr = E_FAIL;
+		return;
+	}
+
+	/*
+	m_vsFrame = m_vsAPI->getFrame(0, m_vsNode, m_vsErrorMessage, sizeof(m_vsErrorMessage));
+	if (!m_vsFrame) {
+		std::wstring error = ConvertUtf8ToWide(m_vsErrorMessage);
+		*phr = E_FAIL;
+		return;
+	}
+	*/
+	//TODO
+
 	m_subtype = GUID_NULL;
 
 	DWORD fourcc = (m_subtype == MEDIASUBTYPE_RGB24 || m_subtype == MEDIASUBTYPE_RGB32) ? BI_RGB : m_subtype.Data1;
 
-	m_Width  = 0;
-	m_Height = 0;
-	m_NumFrames = 0;
-	m_AvgTimePerFrame = MulDiv(UNITS, 1, 1);
+	m_Width     = m_vsInfo->width;
+	m_Height    = m_vsInfo->height;
+	m_NumFrames = m_vsInfo->numFrames;
+	m_AvgTimePerFrame = UNITS * m_vsInfo->fpsDen / m_vsInfo->fpsNum;
 
 	UINT bitdepth = 0;
 

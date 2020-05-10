@@ -33,6 +33,25 @@ private:
 
 	HMODULE m_hVSScriptDll = nullptr;
 
+	int          (__stdcall* vs_init)           (void);
+	int          (__stdcall* vs_finalize)       (void);
+	int          (__stdcall* vs_evaluateScript) (VSScript** handle, const char* script, const char* errorFilename, int flags);
+	int          (__stdcall* vs_evaluateFile)   (VSScript** handle, const char* scriptFilename, int flags);
+	void         (__stdcall* vs_freeScript)     (VSScript*  handle);
+	const char*  (__stdcall* vs_getError)       (VSScript*  handle);
+	VSNodeRef*   (__stdcall* vs_getOutput)      (VSScript*  handle, int index);
+	void         (__stdcall* vs_clearOutput)    (VSScript*  handle, int index);
+	VSCore*      (__stdcall* vs_getCore)        (VSScript*  handle);
+	const VSAPI* (__stdcall* vs_getVSApi)       (void);
+
+	int                m_vsInit = 0;
+	const VSAPI*       m_vsAPI    = nullptr;
+	VSScript*          m_vsScript = nullptr;
+	VSNodeRef*         m_vsNode   = nullptr;
+	const VSFrameRef*  m_vsFrame  = nullptr;
+	const VSVideoInfo* m_vsInfo   = nullptr;
+	char               m_vsErrorMessage[1024];
+
 	REFERENCE_TIME m_AvgTimePerFrame = UNITS * 2; // 0.5 fps
 	REFERENCE_TIME m_rtSampleTime = 0;
 	REFERENCE_TIME m_rtPosition = 0;
