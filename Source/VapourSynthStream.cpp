@@ -134,15 +134,17 @@ CVapourSynthStream::CVapourSynthStream(const WCHAR* name, CSource* pParent, HRES
 
 		DLog(L"Open clip %s %dx%d %.03f fps", str_pixeltype, m_vsInfo->width, m_vsInfo->height, (double)m_vsInfo->fpsNum/m_vsInfo->fpsDen);
 
-		m_subtype = GUID_NULL;
-
 		DWORD fourcc = (m_subtype == MEDIASUBTYPE_RGB24 || m_subtype == MEDIASUBTYPE_RGB32) ? BI_RGB : m_subtype.Data1;
 
 		m_Width     = m_vsInfo->width;
 		m_Height    = m_vsInfo->height;
 		m_NumFrames = m_vsInfo->numFrames;
-		m_AvgTimePerFrame = UNITS * m_vsInfo->fpsDen / m_vsInfo->fpsNum;
+		m_fpsNum    = m_vsInfo->fpsNum;
+		m_fpsDen    = m_vsInfo->fpsDen;
 
+		m_AvgTimePerFrame = UNITS * m_fpsDen / m_fpsNum;
+
+		UINT bitsPerSample  = m_vsInfo->format->bitsPerSample;
 		UINT bytesPerSample = m_vsInfo->format->bytesPerSample;
 
 		UINT pitch = m_Width * bytesPerSample;
@@ -168,7 +170,7 @@ CVapourSynthStream::CVapourSynthStream(const WCHAR* name, CSource* pParent, HRES
 		vih2->bmiHeader.biCompression = fourcc;
 		vih2->bmiHeader.biSizeImage   = m_BufferSize;
 
-		m_rtDuration = m_rtStop = UNITS * m_NumFrames * m_vsInfo->fpsNum / m_vsInfo->fpsDen;
+		m_rtDuration = m_rtStop = UNITS * m_NumFrames * m_fpsNum / m_fpsDen;
 
 		*phr = S_OK;
 	}
@@ -338,9 +340,25 @@ HRESULT CVapourSynthStream::FillBuffer(IMediaSample* pSample)
 			return S_FALSE;
 		}
 
-		int framenum = (int)(m_rtPosition * 1 / (1 * UNITS));
-		const BYTE* src_data = nullptr;
-		const UINT src_pitch = 0;
+		int framenum = (int)(m_rtPosition * m_fpsNum / (m_fpsDen * UNITS));
+		const VSFrameRef* frame = m_vsAPI->getFrame(framenum, m_vsNode, m_vsErrorMessage, sizeof(m_vsErrorMessage));
+		if (!frame) {
+			DLog(L"%S", m_vsErrorMessage);
+			return E_FAIL;
+		}
+
+		const BYTE* src_data = m_vsAPI->getReadPtr(frame, 0);
+		if (!src_data) {
+			DLog(L"VapourSynthServer m_vsAPI->getReadPtr returned NULL");
+			return E_FAIL;
+		}
+
+		const UINT src_pitch = m_vsAPI->getStride(frame, 0);
+
+		if (m_vsFrame) {
+			m_vsAPI->freeFrame(m_vsFrame);
+		}
+		m_vsFrame = frame;
 
 		HRESULT hr;
 		BYTE* pDataOut = nullptr;
