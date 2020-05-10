@@ -67,7 +67,7 @@ CAviSynthStream::CAviSynthStream(const WCHAR* name, CSource* pParent, HRESULT* p
 	try {
 		m_AVSValue = m_ScriptEnvironment->Invoke("Import", AVSValue(&arg, 1));
 	}
-	catch (AvisynthError e) {
+	catch ([[maybe_unused]] AvisynthError e) {
 		DLog(L"Failure to open script file. AvisynthError: %S", e.msg);
 		*phr = E_FAIL;
 		return;
