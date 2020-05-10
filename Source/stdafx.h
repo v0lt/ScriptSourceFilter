@@ -37,6 +37,7 @@
 #include <algorithm>
 #include <numeric>
 #include <vector>
+#include <exception>
 
 #include "../BaseClasses/streams.h"
 #include "../external/fmt/include/fmt/format.h"

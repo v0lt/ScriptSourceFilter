@@ -65,6 +65,8 @@ private:
 	UINT m_BufferSize = 0;
 	GUID m_subtype = GUID_NULL;
 
+	void VapourSynthFree();
+
 	HRESULT OnThreadStartPlay();
 	HRESULT OnThreadCreate();
 

@@ -36,142 +36,144 @@ CVapourSynthStream::CVapourSynthStream(const WCHAR* name, CSource* pParent, HRES
 {
 	CAutoLock cAutoLock(&m_cSharedState);
 
-	{ // TODO
-		*phr = E_FAIL;
-		return;
-	}
+	std::wstring error;
 
-	m_hVSScriptDll = LoadLibraryW(L"vsscript.dll");
-	if (!m_hVSScriptDll) {
-		DLog(L"Failed to load VapourSynt");
-		*phr = E_FAIL;
-		return;
-	}
-
-	struct extfunc {
-		void** adress;
-		char* name;
-	};
-#ifdef _WIN64
-	extfunc vsfuncs[] = {
-		{(void**)&vs_init,           "vsscript_init"          },
-		{(void**)&vs_finalize,       "vsscript_finalize"      },
-		{(void**)&vs_evaluateScript, "vsscript_evaluateScript"},
-		{(void**)&vs_evaluateFile,   "vsscript_evaluateFile"  },
-		{(void**)&vs_freeScript,     "vsscript_freeScript"    },
-		{(void**)&vs_getError,       "vsscript_getError"      },
-		{(void**)&vs_getOutput,      "vsscript_getOutput"     },
-		{(void**)&vs_clearOutput,    "vsscript_clearOutput"   },
-		{(void**)&vs_getCore,        "vsscript_getCore"       },
-		{(void**)&vs_getVSApi,       "vsscript_getVSApi"      }
-	};
-#else
-	extfunc vsfuncs[] = {
-		// TODO
-		{(void**)&vs_init,           "_vsscript_init@0"           },
-		{(void**)&vs_finalize,       "_vsscript_finalize@0"       },
-		{(void**)&vs_evaluateScript, "_vsscript_evaluateScript@16"},
-		{(void**)&vs_evaluateFile,   "_vsscript_evaluateFile@12"  },
-		{(void**)&vs_freeScript,     "_vsscript_freeScript@4"     },
-		{(void**)&vs_getError,       "_vsscript_getError@4"       },
-		{(void**)&vs_getOutput,      "_vsscript_getOutput@8"      },
-		{(void**)&vs_clearOutput,    "_vsscript_clearOutput@8"    },
-		{(void**)&vs_getCore,        "_vsscript_getCore@4"        },
-		{(void**)&vs_getVSApi,       "_vsscript_getVSApi@0"       }
-	};
-#endif
-	for (auto& vsfunc : vsfuncs) {
-		*(vsfunc.adress) = GetProcAddress(m_hVSScriptDll, vsfunc.name);
-		if (nullptr == *(vsfunc.adress)) {
-			DLog(L"Cannot resolve VapourSynth %S function", vsfunc.name);
-			*phr = E_FAIL;
-			return;
+	try {
+		m_hVSScriptDll = LoadLibraryW(L"vsscript.dll");
+		if (!m_hVSScriptDll) {
+			throw std::exception("Failed to load VapourSynt");
 		}
-	}
 
-	m_vsInit = vs_init();
-	if (!m_vsInit) {
-		DLog("Failed to initialize VapourSynth");
+		struct extfunc {
+			void** adress;
+			char* name;
+		};
+#ifdef _WIN64
+		extfunc vsfuncs[] = {
+			{(void**)&vs_init,           "vsscript_init"          },
+			{(void**)&vs_finalize,       "vsscript_finalize"      },
+			{(void**)&vs_evaluateScript, "vsscript_evaluateScript"},
+			{(void**)&vs_evaluateFile,   "vsscript_evaluateFile"  },
+			{(void**)&vs_freeScript,     "vsscript_freeScript"    },
+			{(void**)&vs_getError,       "vsscript_getError"      },
+			{(void**)&vs_getOutput,      "vsscript_getOutput"     },
+			{(void**)&vs_clearOutput,    "vsscript_clearOutput"   },
+			{(void**)&vs_getCore,        "vsscript_getCore"       },
+			{(void**)&vs_getVSApi,       "vsscript_getVSApi"      }
+		};
+#else
+		extfunc vsfuncs[] = {
+			// TODO
+			{(void**)&vs_init,           "_vsscript_init@0"           },
+			{(void**)&vs_finalize,       "_vsscript_finalize@0"       },
+			{(void**)&vs_evaluateScript, "_vsscript_evaluateScript@16"},
+			{(void**)&vs_evaluateFile,   "_vsscript_evaluateFile@12"  },
+			{(void**)&vs_freeScript,     "_vsscript_freeScript@4"     },
+			{(void**)&vs_getError,       "_vsscript_getError@4"       },
+			{(void**)&vs_getOutput,      "_vsscript_getOutput@8"      },
+			{(void**)&vs_clearOutput,    "_vsscript_clearOutput@8"    },
+			{(void**)&vs_getCore,        "_vsscript_getCore@4"        },
+			{(void**)&vs_getVSApi,       "_vsscript_getVSApi@0"       }
+		};
+#endif
+		for (auto& vsfunc : vsfuncs) {
+			*(vsfunc.adress) = GetProcAddress(m_hVSScriptDll, vsfunc.name);
+			if (nullptr == *(vsfunc.adress)) {
+				throw std::exception(fmt::format("Cannot resolve VapourSynth {} function", vsfunc.name).c_str());
+			}
+		}
+
+		m_vsInit = vs_init();
+		if (!m_vsInit) {
+			throw std::exception("Failed to initialize VapourSynth");
+		}
+
+		m_vsAPI = vs_getVSApi();
+		if (!m_vsAPI) {
+			throw std::exception("Failed to call VapourSynth vsscript_getVSApi");
+		}
+
+		std::string utf8file = ConvertWideToUtf8(name);
+		if (vs_evaluateFile(&m_vsScript, utf8file.c_str(), 0)) {
+			error = ConvertUtf8ToWide(vs_getError(m_vsScript));
+			throw std::exception("Failed to call VapourSynth vsscript_evaluateFile");
+		}
+
+		m_vsNode = vs_getOutput(m_vsScript, 0);
+		if (!m_vsNode) {
+			throw std::exception("Failed to get VapourSynth output");
+		}
+
+		m_vsInfo = m_vsAPI->getVideoInfo(m_vsNode);
+		if (!m_vsInfo) {
+			throw std::exception("Failed to get VapourSynth info");
+		}
+
+		LPCWSTR str_pixeltype = nullptr;
+
+		switch (m_vsInfo->format->id) {
+		case pfCompatBGR32:
+			m_subtype = MEDIASUBTYPE_RGB32;
+			str_pixeltype = L"ARGB32";
+			break;
+		case pfCompatYUY2:
+			m_subtype = MEDIASUBTYPE_YV12;
+			str_pixeltype = L"YV12";
+		case pfGray8:
+			m_subtype = MEDIASUBTYPE_Y8;
+			str_pixeltype = L"Y8";
+		case pfGray16:
+			m_subtype = MEDIASUBTYPE_Y116;
+			str_pixeltype = L"Y16";
+		default:
+			throw std::exception("Unsuported pixel type");
+		}
+
+		DLog(L"Open clip %s %dx%d %.03f fps", str_pixeltype, m_vsInfo->width, m_vsInfo->height, (double)m_vsInfo->fpsNum/m_vsInfo->fpsDen);
+
+		m_subtype = GUID_NULL;
+
+		DWORD fourcc = (m_subtype == MEDIASUBTYPE_RGB24 || m_subtype == MEDIASUBTYPE_RGB32) ? BI_RGB : m_subtype.Data1;
+
+		m_Width     = m_vsInfo->width;
+		m_Height    = m_vsInfo->height;
+		m_NumFrames = m_vsInfo->numFrames;
+		m_AvgTimePerFrame = UNITS * m_vsInfo->fpsDen / m_vsInfo->fpsNum;
+
+		UINT bytesPerSample = m_vsInfo->format->bytesPerSample;
+
+		UINT pitch = m_Width * bytesPerSample;
+		m_BufferSize = pitch * m_Height;
+
+		m_mt.InitMediaType();
+		m_mt.SetType(&MEDIATYPE_Video);
+		m_mt.SetSubtype(&m_subtype);
+		m_mt.SetFormatType(&FORMAT_VideoInfo2);
+		m_mt.SetTemporalCompression(FALSE);
+		m_mt.SetSampleSize(m_BufferSize);
+
+		VIDEOINFOHEADER2* vih2 = (VIDEOINFOHEADER2*)m_mt.AllocFormatBuffer(sizeof(VIDEOINFOHEADER2));
+		memset(vih2, 0, sizeof(VIDEOINFOHEADER2));
+		vih2->rcSource = { 0, 0, (long)m_Width, (long)m_Height };
+		vih2->rcTarget = vih2->rcSource;
+		vih2->AvgTimePerFrame = m_AvgTimePerFrame;
+		vih2->bmiHeader.biSize = sizeof(vih2->bmiHeader);
+		vih2->bmiHeader.biWidth = m_Width;
+		vih2->bmiHeader.biHeight = m_Height;
+		vih2->bmiHeader.biPlanes = 1;
+		vih2->bmiHeader.biBitCount = bytesPerSample*8;
+		vih2->bmiHeader.biCompression = fourcc;
+		vih2->bmiHeader.biSizeImage = m_BufferSize;
+
+		m_rtDuration = m_rtStop = UNITS * m_NumFrames * m_vsInfo->fpsNum / m_vsInfo->fpsDen;
+
+		*phr = S_OK;
+	}
+	catch (std::exception& e) {
+		VapourSynthFree();
+		DLog(L"%S\n%s", e.what(), error.c_str());
 		*phr = E_FAIL;
-		return;
 	}
-
-	m_vsAPI = vs_getVSApi();
-	if (!m_vsAPI) {
-		DLog("Failed to call VapourSynth vsscript_getVSApi");
-		*phr = E_FAIL;
-		return;
-	}
-
-	std::string utf8file = ConvertWideToUtf8(name);
-	if (vs_evaluateFile(&m_vsScript, utf8file.c_str(), 0)) {
-		std::wstring error = ConvertUtf8ToWide(vs_getError(m_vsScript));
-		DLog(error.c_str());
-		*phr = E_FAIL;
-		return;
-	}
-
-	m_vsNode = vs_getOutput(m_vsScript, 0);
-	if (!m_vsNode) {
-		DLog("Failed to get VapourSynth output");
-		*phr = E_FAIL;
-		return;
-	}
-
-	m_vsInfo = m_vsAPI->getVideoInfo(m_vsNode);
-	if (!m_vsInfo) {
-		DLog("Failed to get VapourSynth info");
-		*phr = E_FAIL;
-		return;
-	}
-
-	/*
-	m_vsFrame = m_vsAPI->getFrame(0, m_vsNode, m_vsErrorMessage, sizeof(m_vsErrorMessage));
-	if (!m_vsFrame) {
-		std::wstring error = ConvertUtf8ToWide(m_vsErrorMessage);
-		*phr = E_FAIL;
-		return;
-	}
-	*/
-	//TODO
-
-	m_subtype = GUID_NULL;
-
-	DWORD fourcc = (m_subtype == MEDIASUBTYPE_RGB24 || m_subtype == MEDIASUBTYPE_RGB32) ? BI_RGB : m_subtype.Data1;
-
-	m_Width     = m_vsInfo->width;
-	m_Height    = m_vsInfo->height;
-	m_NumFrames = m_vsInfo->numFrames;
-	m_AvgTimePerFrame = UNITS * m_vsInfo->fpsDen / m_vsInfo->fpsNum;
-
-	UINT bitdepth = 0;
-
-	int pitch = 0;
-	m_BufferSize = pitch * m_Height;
-
-	m_mt.InitMediaType();
-	m_mt.SetType(&MEDIATYPE_Video);
-	m_mt.SetSubtype(&m_subtype);
-	m_mt.SetFormatType(&FORMAT_VideoInfo2);
-	m_mt.SetTemporalCompression(FALSE);
-	m_mt.SetSampleSize(m_BufferSize);
-
-	VIDEOINFOHEADER2* vih2 = (VIDEOINFOHEADER2*)m_mt.AllocFormatBuffer(sizeof(VIDEOINFOHEADER2));
-	memset(vih2, 0, sizeof(VIDEOINFOHEADER2));
-	vih2->rcSource                = { 0, 0, (long)m_Width, (long)m_Height};
-	vih2->rcTarget                = vih2->rcSource;
-	vih2->AvgTimePerFrame         = m_AvgTimePerFrame;
-	vih2->bmiHeader.biSize        = sizeof(vih2->bmiHeader);
-	vih2->bmiHeader.biWidth       = m_Width;
-	vih2->bmiHeader.biHeight      = m_Height;
-	vih2->bmiHeader.biPlanes      = 1;
-	vih2->bmiHeader.biBitCount    = bitdepth;
-	vih2->bmiHeader.biCompression = fourcc;
-	vih2->bmiHeader.biSizeImage   = m_BufferSize;
-
-	m_rtDuration = m_rtStop = UNITS * m_NumFrames * 1 / 1;
-
-	*phr = S_OK;
 }
 
 CVapourSynthStream::~CVapourSynthStream()
@@ -180,6 +182,31 @@ CVapourSynthStream::~CVapourSynthStream()
 
 	if (m_hVSScriptDll) {
 		FreeLibrary(m_hVSScriptDll);
+	}
+}
+
+void CVapourSynthStream::VapourSynthFree()
+{
+	if (m_vsAPI) {
+		if (m_vsFrame) {
+			m_vsAPI->freeFrame(m_vsFrame);
+			m_vsFrame = nullptr;
+		}
+
+		if (m_vsNode) {
+			m_vsAPI->freeNode(m_vsNode);
+			m_vsNode = nullptr;
+		}
+	}
+
+	if (m_vsScript) {
+		vs_freeScript(m_vsScript);
+		m_vsScript = nullptr;
+	}
+
+	if (m_vsInit) {
+		vs_finalize();
+		m_vsInit = 0;
 	}
 }
 
