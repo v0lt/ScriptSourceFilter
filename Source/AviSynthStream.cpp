@@ -89,7 +89,9 @@ CAviSynthStream::CAviSynthStream(const WCHAR* name, CSource* pParent, HRESULT* p
 	auto Clip = m_AVSValue.AsClip();
 
 	auto VInfo = Clip->GetVideoInfo();
+	UINT bitdepth = VInfo.BitsPerPixel();
 	LPCWSTR str_pixeltype = nullptr;
+	UINT bytesPerSample = bitdepth / 8;
 
 	switch (VInfo.pixel_type) {
 	case VideoInfo::CS_BGR24:
@@ -115,14 +117,17 @@ CAviSynthStream::CAviSynthStream(const WCHAR* name, CSource* pParent, HRESULT* p
 	case VideoInfo::CS_YV12:
 		m_subtype = MEDIASUBTYPE_YV12;
 		str_pixeltype = L"YV12";
+		bytesPerSample = 1;
 		break;
 	case VideoInfo::CS_YV16:
 		m_subtype = MEDIASUBTYPE_YV16;
 		str_pixeltype = L"YV16";
+		bytesPerSample = 1;
 		break;
 	case VideoInfo::CS_YV24:
 		m_subtype = MEDIASUBTYPE_YV24;
 		str_pixeltype = L"YV24";
+		bytesPerSample = 1;
 		break;
 	case VideoInfo::CS_Y8:
 		m_subtype = MEDIASUBTYPE_Y8;
@@ -137,21 +142,19 @@ CAviSynthStream::CAviSynthStream(const WCHAR* name, CSource* pParent, HRESULT* p
 		*phr = E_FAIL;
 		return;
 	}
-
-	DLog(L"Open clip %s %dx%d %.03f fps", str_pixeltype, VInfo.width, VInfo.height, (double)VInfo.fps_numerator/VInfo.fps_denominator);
-
 	DWORD fourcc = (m_subtype == MEDIASUBTYPE_RGB24 || m_subtype == MEDIASUBTYPE_RGB32) ? BI_RGB : m_subtype.Data1;
 
-	m_Width  = VInfo.width;
-	m_Height = VInfo.height;
-	m_NumFrames = VInfo.num_frames;
-	m_AvgTimePerFrame = MulDiv(UNITS, VInfo.fps_denominator, VInfo.fps_numerator);
-
-	UINT bitdepth = VInfo.BitsPerPixel();
-
 	auto VFrame = Clip->GetFrame(0, m_ScriptEnvironment);
-	int pitch = VFrame->GetPitch();
+	const UINT pitch = VFrame->GetPitch();
+
+	m_Width      = VInfo.width;
+	m_Height     = VInfo.height;
+	m_NumFrames  = VInfo.num_frames;
 	m_BufferSize = pitch * m_Height;
+	m_AvgTimePerFrame = MulDiv(UNITS, VInfo.fps_denominator, VInfo.fps_numerator);
+	m_rtDuration = m_rtStop = UNITS * m_NumFrames * VInfo.fps_denominator / VInfo.fps_numerator;
+
+	DLog(L"Open clip %s %dx%d %.03f fps", str_pixeltype, m_Width, m_Height, (double)VInfo.fps_numerator/VInfo.fps_denominator);
 
 	m_mt.InitMediaType();
 	m_mt.SetType(&MEDIATYPE_Video);
@@ -166,14 +169,12 @@ CAviSynthStream::CAviSynthStream(const WCHAR* name, CSource* pParent, HRESULT* p
 	vih2->rcTarget                = vih2->rcSource;
 	vih2->AvgTimePerFrame         = m_AvgTimePerFrame;
 	vih2->bmiHeader.biSize        = sizeof(vih2->bmiHeader);
-	vih2->bmiHeader.biWidth       = m_Width;
+	vih2->bmiHeader.biWidth       = pitch / bytesPerSample;
 	vih2->bmiHeader.biHeight      = m_Height;
 	vih2->bmiHeader.biPlanes      = 1;
 	vih2->bmiHeader.biBitCount    = bitdepth;
 	vih2->bmiHeader.biCompression = fourcc;
 	vih2->bmiHeader.biSizeImage   = m_BufferSize;
-
-	m_rtDuration = m_rtStop = UNITS * m_NumFrames * VInfo.fps_denominator / VInfo.fps_numerator;
 
 	*phr = S_OK;
 }

@@ -38,7 +38,7 @@ private:
 	PVideoFrame          m_Frame;
 	const AVS_Linkage*   m_Linkage = nullptr;
 
-	REFERENCE_TIME m_AvgTimePerFrame = UNITS * 2; // 0.5 fps
+	REFERENCE_TIME m_AvgTimePerFrame = 0;
 	REFERENCE_TIME m_rtSampleTime = 0;
 	REFERENCE_TIME m_rtPosition = 0;
 
