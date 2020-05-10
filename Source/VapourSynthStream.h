@@ -20,23 +20,18 @@
 
 #pragma once
 
-#ifndef __AVISYNTH_7_H__
-#include "../Include/avisynth.h"
+#ifndef VSSCRIPT_H
+#include "../Include/VSScript.h"
 #endif
 
-class CAviSynthStream
+class CVapourSynthStream
 	: public CSourceStream
 	, public CSourceSeeking
 {
 private:
 	CCritSec m_cSharedState;
 
-	HMODULE m_hAviSynthDll = nullptr;
-
-	IScriptEnvironment2* m_ScriptEnvironment = nullptr;
-	AVSValue             m_AVSValue;
-	PVideoFrame          m_Frame;
-	const AVS_Linkage*   m_Linkage = nullptr;
+	HMODULE m_hVSScriptDll = nullptr;
 
 	REFERENCE_TIME m_AvgTimePerFrame = UNITS * 2; // 0.5 fps
 	REFERENCE_TIME m_rtSampleTime = 0;
@@ -62,8 +57,8 @@ private:
 	HRESULT ChangeRate() { return S_OK; }
 
 public:
-	CAviSynthStream(const WCHAR* name, CSource* pParent, HRESULT* phr);
-	virtual ~CAviSynthStream();
+	CVapourSynthStream(const WCHAR* name, CSource* pParent, HRESULT* phr);
+	virtual ~CVapourSynthStream();
 
 	STDMETHODIMP NonDelegatingQueryInterface(REFIID riid, void** ppv);
 
