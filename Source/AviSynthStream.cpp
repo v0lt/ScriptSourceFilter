@@ -45,22 +45,22 @@ CAviSynthStream::CAviSynthStream(const WCHAR* name, CSource* pParent, HRESULT* p
 	}
 
 #ifdef _WIN64
-	IScriptEnvironment2* (*CreateScriptEnvironment2)(int version) =
-		(IScriptEnvironment2 * (*)(int)) GetProcAddress(m_hAviSynthDll, "CreateScriptEnvironment2");
+	IScriptEnvironment* (WINAPI *CreateScriptEnvironment)(int version) =
+		(IScriptEnvironment * (WINAPI *)(int)) GetProcAddress(m_hAviSynthDll, "CreateScriptEnvironment");
 #else
 	// Hmm
-	IScriptEnvironment2* (*CreateScriptEnvironment2)(int version) =
-		(IScriptEnvironment2 * (*)(int)) GetProcAddress(m_hAviSynthDll, "_CreateScriptEnvironment2@4");
+	IScriptEnvironment* (WINAPI *CreateScriptEnvironment)(int version) =
+		(IScriptEnvironment * (WINAPI *)(int)) GetProcAddress(m_hAviSynthDll, "CreateScriptEnvironment");
 #endif
 
-	if (!CreateScriptEnvironment2) {
+	if (!CreateScriptEnvironment) {
 		DLog(L"Cannot resolve AviSynth+ CreateScriptEnvironment2 function");
 		*phr = E_FAIL;
 		return;
 	}
 
 
-	m_ScriptEnvironment = CreateScriptEnvironment2(6);
+	m_ScriptEnvironment = CreateScriptEnvironment(6);
 	if (!m_ScriptEnvironment) {
 		DLog(L"A newer AviSynth+ version is required");
 		*phr = E_FAIL;

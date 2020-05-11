@@ -33,10 +33,10 @@ private:
 
 	HMODULE m_hAviSynthDll = nullptr;
 
-	IScriptEnvironment2* m_ScriptEnvironment = nullptr;
-	AVSValue             m_AVSValue;
-	PVideoFrame          m_Frame;
-	const AVS_Linkage*   m_Linkage = nullptr;
+	IScriptEnvironment* m_ScriptEnvironment = nullptr;
+	AVSValue            m_AVSValue;
+	PVideoFrame         m_Frame;
+	const AVS_Linkage*  m_Linkage = nullptr;
 
 	REFERENCE_TIME m_AvgTimePerFrame = 0;
 	REFERENCE_TIME m_rtSampleTime = 0;
