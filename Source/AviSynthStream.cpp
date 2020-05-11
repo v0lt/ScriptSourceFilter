@@ -20,7 +20,6 @@
 
 #include "stdafx.h"
 
-#include "Helper.h"
 #include "StringHelper.h"
 
 #include "AviSynthStream.h"
@@ -85,17 +84,16 @@ CAviSynthStream::CAviSynthStream(const WCHAR* name, CSource* pParent, HRESULT* p
 	UINT bitdepth = VInfo.BitsPerPixel();
 	UINT bytesPerSample = bitdepth / 8;
 
-	auto FmtParams = GetFormatParamsAS(VInfo.pixel_type);
+	m_Format = GetFormatParamsAviSynth(VInfo.pixel_type);
 
-	if (FmtParams.cformat == CF_NONE) {
+	if (m_Format.cformat == CF_NONE) {
 		DLog(L"Unsuported pixel_type");
 		*phr = E_FAIL;
 		return;
 	}
 
-	m_subtype = FmtParams.Subtype;
-	DWORD fourcc = (m_subtype == MEDIASUBTYPE_RGB24 || m_subtype == MEDIASUBTYPE_RGB32 || m_subtype == MEDIASUBTYPE_ARGB32)
-		? BI_RGB : m_subtype.Data1;
+	DWORD fourcc = (m_Format.subtype == MEDIASUBTYPE_RGB24 || m_Format.subtype == MEDIASUBTYPE_RGB32 || m_Format.subtype == MEDIASUBTYPE_ARGB32)
+		? BI_RGB : m_Format.subtype.Data1;
 
 	auto VFrame = Clip->GetFrame(0, m_ScriptEnvironment);
 	const UINT pitch = VFrame->GetPitch();
@@ -107,11 +105,11 @@ CAviSynthStream::CAviSynthStream(const WCHAR* name, CSource* pParent, HRESULT* p
 	m_AvgTimePerFrame = MulDiv(UNITS, VInfo.fps_denominator, VInfo.fps_numerator);
 	m_rtDuration = m_rtStop = UNITS * m_NumFrames * VInfo.fps_denominator / VInfo.fps_numerator;
 
-	DLog(L"Open clip %S %dx%d %.03f fps", FmtParams.str, m_Width, m_Height, (double)VInfo.fps_numerator/VInfo.fps_denominator);
+	DLog(L"Open clip %S %dx%d %.03f fps", m_Format.str, m_Width, m_Height, (double)VInfo.fps_numerator/VInfo.fps_denominator);
 
 	m_mt.InitMediaType();
 	m_mt.SetType(&MEDIATYPE_Video);
-	m_mt.SetSubtype(&m_subtype);
+	m_mt.SetSubtype(&m_Format.subtype);
 	m_mt.SetFormatType(&FORMAT_VideoInfo2);
 	m_mt.SetTemporalCompression(FALSE);
 	m_mt.SetSampleSize(m_BufferSize);
@@ -373,7 +371,7 @@ HRESULT CAviSynthStream::GetMediaType(int iPosition, CMediaType* pmt)
 HRESULT CAviSynthStream::CheckMediaType(const CMediaType* pmt)
 {
 	if (pmt->majortype == MEDIATYPE_Video
-		&& pmt->subtype == m_subtype
+		&& pmt->subtype == m_Format.subtype
 		&& pmt->formattype == FORMAT_VideoInfo2) {
 
 		VIDEOINFOHEADER2* vih2 = (VIDEOINFOHEADER2*)pmt->Format();
@@ -391,9 +389,7 @@ HRESULT CAviSynthStream::SetMediaType(const CMediaType* pMediaType)
 
 	if (SUCCEEDED(hr)) {
 		VIDEOINFOHEADER2* vih2 = (VIDEOINFOHEADER2*)pMediaType->Format();
-		if (vih2->bmiHeader.biWidth >= (long)m_Width && vih2->bmiHeader.biHeight == m_Height) {
-			return S_OK;
-		}
+		m_BufferSize = m_Format.Packsize * vih2->bmiHeader.biWidth * abs(vih2->bmiHeader.biHeight);
 
 		DLog(L"SetMediaType with subtype %s", GUIDtoWString(m_mt.subtype).c_str());
 	}

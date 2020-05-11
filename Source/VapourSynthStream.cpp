@@ -20,7 +20,6 @@
 
 #include "stdafx.h"
 
-#include "Helper.h"
 #include "StringHelper.h"
 
 #include "VapourSynthStream.h"
@@ -109,15 +108,14 @@ CVapourSynthStream::CVapourSynthStream(const WCHAR* name, CSource* pParent, HRES
 			throw std::exception("Failed to get VapourSynth info");
 		}
 
-		auto FmtParams = GetFormatParamsAS(m_vsInfo->format->id);
+		m_Format = GetFormatParamsVapourSynth(m_vsInfo->format->id);
 
-		if (FmtParams.cformat == CF_NONE) {
+		if (m_Format.cformat == CF_NONE) {
 			throw std::exception(fmt::format("Unsuported pixel type {}", m_vsInfo->format->name).c_str());
 		}
 
-		m_subtype = FmtParams.Subtype;
-		DWORD fourcc = (m_subtype == MEDIASUBTYPE_RGB24 || m_subtype == MEDIASUBTYPE_RGB32 || m_subtype == MEDIASUBTYPE_ARGB32)
-			? BI_RGB : m_subtype.Data1;
+		DWORD fourcc = (m_Format.subtype == MEDIASUBTYPE_RGB24 || m_Format.subtype == MEDIASUBTYPE_RGB32 || m_Format.subtype == MEDIASUBTYPE_ARGB32)
+			? BI_RGB : m_Format.subtype.Data1;
 
 		const VSFrameRef* frame = m_vsAPI->getFrame(0, m_vsNode, m_vsErrorMessage, sizeof(m_vsErrorMessage));
 		if (!frame) {
@@ -136,11 +134,11 @@ CVapourSynthStream::CVapourSynthStream(const WCHAR* name, CSource* pParent, HRES
 		m_AvgTimePerFrame = UNITS * m_fpsDen / m_fpsNum;
 		m_rtDuration  = m_rtStop = UNITS * m_NumFrames * m_fpsNum / m_fpsDen;
 
-		DLog(L"Open clip %S %dx%d %.03f fps", FmtParams.str, m_Width, m_Height, (double)m_fpsNum/m_fpsDen);
+		DLog(L"Open clip %S %dx%d %.03f fps", m_Format.str, m_Width, m_Height, (double)m_fpsNum/m_fpsDen);
 
 		m_mt.InitMediaType();
 		m_mt.SetType(&MEDIATYPE_Video);
-		m_mt.SetSubtype(&m_subtype);
+		m_mt.SetSubtype(&m_Format.subtype);
 		m_mt.SetFormatType(&FORMAT_VideoInfo2);
 		m_mt.SetTemporalCompression(FALSE);
 		m_mt.SetSampleSize(m_BufferSize);
@@ -433,7 +431,7 @@ HRESULT CVapourSynthStream::GetMediaType(int iPosition, CMediaType* pmt)
 HRESULT CVapourSynthStream::CheckMediaType(const CMediaType* pmt)
 {
 	if (pmt->majortype == MEDIATYPE_Video
-		&& pmt->subtype == m_subtype
+		&& pmt->subtype == m_Format.subtype
 		&& pmt->formattype == FORMAT_VideoInfo2) {
 
 		VIDEOINFOHEADER2* vih2 = (VIDEOINFOHEADER2*)pmt->Format();
@@ -449,7 +447,12 @@ HRESULT CVapourSynthStream::SetMediaType(const CMediaType* pMediaType)
 {
 	HRESULT hr = __super::SetMediaType(pMediaType);
 
-	DLogIf(SUCCEEDED(hr), L"SetMediaType with subtype %s", GUIDtoWString(m_mt.subtype).c_str());
+	if (SUCCEEDED(hr)) {
+		VIDEOINFOHEADER2* vih2 = (VIDEOINFOHEADER2*)pMediaType->Format();
+		m_BufferSize = m_Format.Packsize * vih2->bmiHeader.biWidth * abs(vih2->bmiHeader.biHeight);
+
+		DLog(L"SetMediaType with subtype %s", GUIDtoWString(m_mt.subtype).c_str());
+	}
 
 	return hr;
 }

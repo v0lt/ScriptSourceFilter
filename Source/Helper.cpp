@@ -166,6 +166,7 @@ static const FmtParams_t s_FormatTable[] = {
 	{CF_YV12,   MEDIASUBTYPE_YV12,   VideoInfo::CS_YV12,  0,             "YV12",         1, 3,        8,    },
 	{CF_YV16,   MEDIASUBTYPE_YV16,   VideoInfo::CS_YV16,  0,             "YV16",         1, 4,        8,    },
 	{CF_YV24,   MEDIASUBTYPE_YV24,   VideoInfo::CS_YV24,  0,             "YV24",         1, 6,        8,    },
+	{CF_YV12,   MEDIASUBTYPE_YV12,   VideoInfo::CS_I420,  0,             "I420",         1, 3,        8,    }, // for tests
 	{CF_RGB24,  MEDIASUBTYPE_RGB24,  VideoInfo::CS_BGR24, 0,             "RGB24",        3, 2,        8,    },
 	{CF_XRGB32, MEDIASUBTYPE_RGB32,  0,                   pfCompatBGR32, "RGB32",        4, 2,        8,    },
 	{CF_ARGB32, MEDIASUBTYPE_ARGB32, VideoInfo::CS_BGR32, 0,             "ARGB32",       4, 2,        8,    },
@@ -175,7 +176,7 @@ static const FmtParams_t s_FormatTable[] = {
 	{CF_Y16,    MEDIASUBTYPE_Y116,   VideoInfo::CS_Y16,   pfGray16,      "Y16",          2, 2,        16,   },
 };
 
-const FmtParams_t& GetFormatParamsAS(const int asFormat)
+const FmtParams_t& GetFormatParamsAviSynth(const int asFormat)
 {
 	for (const auto& f : s_FormatTable) {
 		if (f.ASformat == asFormat) {
@@ -185,7 +186,7 @@ const FmtParams_t& GetFormatParamsAS(const int asFormat)
 	return s_FormatTable[CF_NONE];
 }
 
-const FmtParams_t& GetFormatParamsVS(const int vsFormat)
+const FmtParams_t& GetFormatParamsVapourSynth(const int vsFormat)
 {
 	for (const auto& f : s_FormatTable) {
 		if (f.VSformat == vsFormat) {

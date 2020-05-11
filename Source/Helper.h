@@ -107,15 +107,16 @@ enum ColorFormat_t {
 };
 
 struct FmtParams_t {
-	ColorFormat_t     cformat;
-	GUID              Subtype;
-	int               ASformat;
-	int               VSformat;
-	char*             str;
-	int               Packsize;
-	int               PitchCoeff;
-	int               CDepth;
+	ColorFormat_t cformat;
+	GUID          subtype;
+	int           ASformat;
+	int           VSformat;
+	const char*   str;
+	int           Packsize;
+	int           PitchCoeff;
+	int           CDepth;
+
 };
 
-const FmtParams_t& GetFormatParamsAS(const int asFormat);
-const FmtParams_t& GetFormatParamsVS(const int vsFormat);
+const FmtParams_t& GetFormatParamsAviSynth(const int asFormat);
+const FmtParams_t& GetFormatParamsVapourSynth(const int vsFormat);

@@ -23,6 +23,7 @@
 #ifndef __AVISYNTH_7_H__
 #include "../Include/avisynth.h"
 #endif
+#include "Helper.h"
 
 class CAviSynthStream
 	: public CSourceStream
@@ -45,11 +46,11 @@ private:
 	BOOL m_bDiscontinuity = FALSE;
 	BOOL m_bFlushing = FALSE;
 
+	FmtParams_t m_Format = {};
 	UINT m_Width  = 0;
 	UINT m_Height = 0;
 	UINT m_NumFrames = 0;
 	UINT m_BufferSize = 0;
-	GUID m_subtype = GUID_NULL;
 
 	HRESULT OnThreadStartPlay();
 	HRESULT OnThreadCreate();

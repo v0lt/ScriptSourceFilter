@@ -23,6 +23,7 @@
 #ifndef VSSCRIPT_H
 #include "../Include/VSScript.h"
 #endif
+#include "Helper.h"
 
 class CVapourSynthStream
 	: public CSourceStream
@@ -59,13 +60,13 @@ private:
 	BOOL m_bDiscontinuity = FALSE;
 	BOOL m_bFlushing = FALSE;
 
+	FmtParams_t m_Format = {};
 	UINT m_Width  = 0;
 	UINT m_Height = 0;
 	UINT m_NumFrames = 0;
 	int64_t m_fpsNum = 1;
 	int64_t m_fpsDen = 1;
 	UINT m_BufferSize = 0;
-	GUID m_subtype = GUID_NULL;
 
 	void VapourSynthFree();
 
