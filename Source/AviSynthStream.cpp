@@ -102,11 +102,13 @@ CAviSynthStream::CAviSynthStream(const WCHAR* name, CSource* pParent, HRESULT* p
 	m_PitchBuff  = m_Pitch;
 	m_BufferSize = m_PitchBuff * m_Height * m_Format.buffCoeff / 2;
 
+	m_fpsNum     = VInfo.fps_numerator;
+	m_fpsDen     = VInfo.fps_denominator;
 	m_NumFrames  = VInfo.num_frames;
-	m_AvgTimePerFrame = MulDiv(UNITS, VInfo.fps_denominator, VInfo.fps_numerator);
-	m_rtDuration = m_rtStop = UNITS * m_NumFrames * VInfo.fps_denominator / VInfo.fps_numerator;
+	m_AvgTimePerFrame = MulDiv(UNITS, m_fpsDen, m_fpsNum);
+	m_rtDuration = m_rtStop = UNITS * m_NumFrames * m_fpsDen / m_fpsNum;
 
-	DLog(L"Open clip %S %dx%d %.03f fps", m_Format.str, m_Width, m_Height, (double)VInfo.fps_numerator/VInfo.fps_denominator);
+	DLog(L"Open clip %S %dx%d %.03f fps", m_Format.str, m_Width, m_Height, (double)m_fpsNum/m_fpsDen);
 
 	m_mt.InitMediaType();
 	m_mt.SetType(&MEDIATYPE_Video);
@@ -277,28 +279,10 @@ HRESULT CAviSynthStream::FillBuffer(IMediaSample* pSample)
 			return S_FALSE;
 		}
 
-		auto Clip = m_AVSValue.AsClip();
-
-		auto VInfo = Clip->GetVideoInfo();
-
-		int framenum = (int)(m_rtPosition * VInfo.fps_numerator / (VInfo.fps_denominator * UNITS));
-		auto VFrame = Clip->GetFrame(framenum, m_ScriptEnvironment);
-		const BYTE* src_data = VFrame->GetReadPtr();
-		const UINT src_pitch = VFrame->GetPitch();
-
-		HRESULT hr;
-		BYTE* pDataOut = nullptr;
-		if (!src_data || FAILED(hr = pSample->GetPointer(&pDataOut)) || !pDataOut) {
-			return S_FALSE;
-		}
-
-		long outSize = pSample->GetSize();
-
 		AM_MEDIA_TYPE* pmt;
 		if (SUCCEEDED(pSample->GetMediaType(&pmt)) && pmt) {
 			CMediaType mt(*pmt);
 			SetMediaType(&mt);
-
 			DeleteMediaType(pmt);
 		}
 
@@ -306,32 +290,52 @@ HRESULT CAviSynthStream::FillBuffer(IMediaSample* pSample)
 			return S_FALSE;
 		}
 
-		VIDEOINFOHEADER2* vih2 = (VIDEOINFOHEADER2*)m_mt.Format();
-		const UINT w = vih2->bmiHeader.biWidth;
-		const UINT h = abs(vih2->bmiHeader.biHeight);
-		const UINT bpp = vih2->bmiHeader.biBitCount;
-		const UINT dst_pitch = w * bpp / 8;
-
-		if (w < m_Width || h != m_Height || outSize < (long)vih2->bmiHeader.biSizeImage) {
+		BYTE* dst_data = nullptr;
+		HRESULT hr = pSample->GetPointer(&dst_data);
+		if (FAILED(hr) || !dst_data) {
 			return S_FALSE;
 		}
 
-		UINT linesize = std::min(src_pitch, dst_pitch);
-
-		if (src_pitch == dst_pitch) {
-			memcpy(pDataOut, src_data, linesize * m_Height);
+		long buffSize = pSample->GetSize();
+		if (buffSize < (long)m_BufferSize) {
+			return S_FALSE;
 		}
-		else {
-			const BYTE* src = src_data;
-			BYTE* dst = pDataOut;
-			for (UINT y = 0; y < m_Height; y++) {
-				memcpy(dst, src, linesize);
-				src += src_pitch;
-				dst += dst_pitch;
+
+		auto Clip = m_AVSValue.AsClip();
+		auto VInfo = Clip->GetVideoInfo();
+		int framenum = (int)(m_rtPosition * m_fpsNum / (m_fpsDen * UNITS));
+		auto VFrame = Clip->GetFrame(framenum, m_ScriptEnvironment);
+
+		UINT DataLength = 0;
+		const int planes = m_Format.planes;
+		for (int i = 0; i < planes; i++) {
+			const int plane = (planes == 3) ? (1 << i) : 0;
+			const BYTE* src_data = VFrame->GetReadPtr(plane);
+			const UINT src_pitch = VFrame->GetPitch(plane);
+			UINT height    = VFrame->GetHeight(plane);
+			UINT dst_pitch = m_PitchBuff;
+			if (i > 0) {
+				if ((m_Format.ASformat&VideoInfo::CS_Sub_Width_Mask) == VideoInfo::CS_Sub_Width_2) {
+					dst_pitch /= 2;
+				}
 			}
+
+			if (src_pitch == dst_pitch) {
+				memcpy(dst_data, src_data, dst_pitch * height);
+				dst_data += dst_pitch * height;
+			}
+			else {
+				UINT linesize = std::min(src_pitch, dst_pitch);
+				for (UINT y = 0; y < height; y++) {
+					memcpy(dst_data, src_data, linesize);
+					src_data += src_pitch;
+					dst_data += dst_pitch;
+				}
+			}
+			DataLength = dst_pitch * height;
 		}
 
-		pSample->SetActualDataLength(linesize * m_Height);
+		pSample->SetActualDataLength(DataLength);
 
 		REFERENCE_TIME rtStart, rtStop;
 		// The sample times are modified by the current rate.

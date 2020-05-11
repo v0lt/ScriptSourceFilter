@@ -160,20 +160,20 @@ HRESULT GetDataFromResource(LPVOID& data, DWORD& size, UINT resid)
 }
 
 static const FmtParams_t s_FormatTable[] = {
-	// cformat |   subtype          | ASformat           | VSformat     | str    |Packsize|buffCoeff|CDepth
-	{CF_NONE,   GUID_NULL,           0,                   0,             nullptr,        0, 0,       0,    },
-	{CF_YUY2,   MEDIASUBTYPE_YUY2,   VideoInfo::CS_YUY2,  pfCompatYUY2,  "YUY2",         2, 2,       8,    },
-	{CF_YV12,   MEDIASUBTYPE_YV12,   VideoInfo::CS_YV12,  0,             "YV12",         1, 3,       8,    },
-	{CF_YV16,   MEDIASUBTYPE_YV16,   VideoInfo::CS_YV16,  0,             "YV16",         1, 4,       8,    },
-	{CF_YV24,   MEDIASUBTYPE_YV24,   VideoInfo::CS_YV24,  0,             "YV24",         1, 6,       8,    },
-	{CF_YV12,   MEDIASUBTYPE_YV12,   VideoInfo::CS_I420,  0,             "I420",         1, 3,       8,    }, // for tests
-	{CF_RGB24,  MEDIASUBTYPE_RGB24,  VideoInfo::CS_BGR24, 0,             "RGB24",        3, 2,       8,    },
-	{CF_XRGB32, MEDIASUBTYPE_RGB32,  VideoInfo::CS_BGR32, pfCompatBGR32, "RGB32",        4, 2,       8,    },
-	{CF_ARGB32, MEDIASUBTYPE_ARGB32, 0,                   0,             "ARGB32",       4, 2,       8,    },
-	{CF_RGB48,  MEDIASUBTYPE_RGB48,  VideoInfo::CS_BGR48, 0,             "RGB48",        6, 2,       16,   },
-	{CF_ARGB64, MEDIASUBTYPE_ARGB64, VideoInfo::CS_BGR64, 0,             "ARGB64",       8, 2,       16,   },
-	{CF_Y8,     MEDIASUBTYPE_Y8,     VideoInfo::CS_Y8,    pfGray8,       "Y8",           1, 2,       8,    },
-	{CF_Y16,    MEDIASUBTYPE_Y116,   VideoInfo::CS_Y16,   pfGray16,      "Y16",          2, 2,       16,   },
+	// cformat |   subtype          | ASformat           | VSformat     | str    |Packsize|buffCoeff|CDepth|planes
+	{CF_NONE,   GUID_NULL,           0,                   0,             nullptr,        0, 0,       0,     0},
+	{CF_YUY2,   MEDIASUBTYPE_YUY2,   VideoInfo::CS_YUY2,  pfCompatYUY2,  "YUY2",         2, 2,       8,     1},
+	{CF_YV12,   MEDIASUBTYPE_YV12,   VideoInfo::CS_YV12,  0,             "YV12",         1, 3,       8,     3},
+	{CF_YV16,   MEDIASUBTYPE_YV16,   VideoInfo::CS_YV16,  0,             "YV16",         1, 4,       8,     3},
+	{CF_YV24,   MEDIASUBTYPE_YV24,   VideoInfo::CS_YV24,  0,             "YV24",         1, 6,       8,     3},
+	{CF_YV12,   MEDIASUBTYPE_YV12,   VideoInfo::CS_I420,  0,             "I420",         1, 3,       8,     3}, // for tests
+	{CF_RGB24,  MEDIASUBTYPE_RGB24,  VideoInfo::CS_BGR24, 0,             "RGB24",        3, 2,       8,     1},
+	{CF_XRGB32, MEDIASUBTYPE_RGB32,  VideoInfo::CS_BGR32, pfCompatBGR32, "RGB32",        4, 2,       8,     1},
+	{CF_ARGB32, MEDIASUBTYPE_ARGB32, 0,                   0,             "ARGB32",       4, 2,       8,     1},
+	{CF_RGB48,  MEDIASUBTYPE_RGB48,  VideoInfo::CS_BGR48, 0,             "RGB48",        6, 2,       16,    1},
+	{CF_ARGB64, MEDIASUBTYPE_ARGB64, VideoInfo::CS_BGR64, 0,             "ARGB64",       8, 2,       16,    1},
+	{CF_Y8,     MEDIASUBTYPE_Y8,     VideoInfo::CS_Y8,    pfGray8,       "Y8",           1, 2,       8,     1},
+	{CF_Y16,    MEDIASUBTYPE_Y116,   VideoInfo::CS_Y16,   pfGray16,      "Y16",          2, 2,       16,    1},
 };
 
 const FmtParams_t& GetFormatParamsAviSynth(const int asFormat)

@@ -115,7 +115,7 @@ struct FmtParams_t {
 	int           Packsize;
 	int           buffCoeff;
 	int           CDepth;
-
+	int           planes;
 };
 
 const FmtParams_t& GetFormatParamsAviSynth(const int asFormat);

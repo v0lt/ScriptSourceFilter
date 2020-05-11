@@ -54,6 +54,8 @@ private:
 	UINT m_BufferSize = 0;
 
 	UINT m_NumFrames = 0;
+	unsigned m_fpsNum = 1;
+	unsigned m_fpsDen = 1;
 
 	HRESULT OnThreadStartPlay();
 	HRESULT OnThreadCreate();
