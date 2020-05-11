@@ -82,7 +82,6 @@ CAviSynthStream::CAviSynthStream(const WCHAR* name, CSource* pParent, HRESULT* p
 
 	auto VInfo = Clip->GetVideoInfo();
 	UINT bitdepth = VInfo.BitsPerPixel();
-	UINT bytesPerSample = bitdepth / 8;
 
 	m_Format = GetFormatParamsAviSynth(VInfo.pixel_type);
 
@@ -122,8 +121,8 @@ CAviSynthStream::CAviSynthStream(const WCHAR* name, CSource* pParent, HRESULT* p
 	vih2->rcTarget                = vih2->rcSource;
 	vih2->AvgTimePerFrame         = m_AvgTimePerFrame;
 	vih2->bmiHeader.biSize        = sizeof(vih2->bmiHeader);
-	vih2->bmiHeader.biWidth       = m_Pitch / bytesPerSample;
-	vih2->bmiHeader.biHeight      = m_Height;
+	vih2->bmiHeader.biWidth       = m_PitchBuff / m_Format.Packsize;
+	vih2->bmiHeader.biHeight      = (fourcc == BI_RGB) ? -(long)m_Height : m_Height;
 	vih2->bmiHeader.biPlanes      = 1;
 	vih2->bmiHeader.biBitCount    = bitdepth;
 	vih2->bmiHeader.biCompression = fourcc;

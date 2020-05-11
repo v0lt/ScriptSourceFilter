@@ -151,8 +151,8 @@ CVapourSynthStream::CVapourSynthStream(const WCHAR* name, CSource* pParent, HRES
 		vih2->rcTarget = vih2->rcSource;
 		vih2->AvgTimePerFrame         = m_AvgTimePerFrame;
 		vih2->bmiHeader.biSize        = sizeof(vih2->bmiHeader);
-		vih2->bmiHeader.biWidth       = m_Pitch / m_vsInfo->format->bytesPerSample;
-		vih2->bmiHeader.biHeight      = m_Height;
+		vih2->bmiHeader.biWidth       = m_PitchBuff / m_Format.Packsize;
+		vih2->bmiHeader.biHeight      = (fourcc == BI_RGB) ? -(long)m_Height : m_Height;
 		vih2->bmiHeader.biPlanes      = 1;
 		vih2->bmiHeader.biBitCount    = m_vsInfo->format->bitsPerSample;
 		vih2->bmiHeader.biCompression = fourcc;
