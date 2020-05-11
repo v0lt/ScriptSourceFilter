@@ -113,7 +113,7 @@ struct FmtParams_t {
 	int           VSformat;
 	const char*   str;
 	int           Packsize;
-	int           PitchCoeff;
+	int           buffCoeff;
 	int           CDepth;
 
 };

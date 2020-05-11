@@ -63,10 +63,13 @@ private:
 	FmtParams_t m_Format = {};
 	UINT m_Width  = 0;
 	UINT m_Height = 0;
+	UINT m_Pitch  = 0;
+	UINT m_PitchBuff  = 0;
+	UINT m_BufferSize = 0;
+
 	UINT m_NumFrames = 0;
 	int64_t m_fpsNum = 1;
 	int64_t m_fpsDen = 1;
-	UINT m_BufferSize = 0;
 
 	void VapourSynthFree();
 

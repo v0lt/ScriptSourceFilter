@@ -122,17 +122,19 @@ CVapourSynthStream::CVapourSynthStream(const WCHAR* name, CSource* pParent, HRES
 			error = ConvertUtf8ToWide(m_vsErrorMessage);
 			throw std::exception("Failed to call getFrame(0)");
 		}
-		const UINT pitch = m_vsAPI->getStride(frame, 0);
+		m_Pitch = m_vsAPI->getStride(frame, 0);
 		m_vsAPI->freeFrame(frame);
 
-		m_Width       = m_vsInfo->width;
-		m_Height      = m_vsInfo->height;
-		m_NumFrames   = m_vsInfo->numFrames;
-		m_fpsNum      = m_vsInfo->fpsNum;
-		m_fpsDen      = m_vsInfo->fpsDen;
-		m_BufferSize  = pitch * m_Height;
+		m_Width      = m_vsInfo->width;
+		m_Height     = m_vsInfo->height;
+		m_PitchBuff  = m_Pitch;
+		m_BufferSize = m_PitchBuff * m_Height * m_Format.buffCoeff / 2;
+
+		m_fpsNum     = m_vsInfo->fpsNum;
+		m_fpsDen     = m_vsInfo->fpsDen;
+		m_NumFrames  = m_vsInfo->numFrames;
 		m_AvgTimePerFrame = UNITS * m_fpsDen / m_fpsNum;
-		m_rtDuration  = m_rtStop = UNITS * m_NumFrames * m_fpsNum / m_fpsDen;
+		m_rtDuration = m_rtStop = UNITS * m_NumFrames * m_fpsNum / m_fpsDen;
 
 		DLog(L"Open clip %S %dx%d %.03f fps", m_Format.str, m_Width, m_Height, (double)m_fpsNum/m_fpsDen);
 
@@ -149,7 +151,7 @@ CVapourSynthStream::CVapourSynthStream(const WCHAR* name, CSource* pParent, HRES
 		vih2->rcTarget = vih2->rcSource;
 		vih2->AvgTimePerFrame         = m_AvgTimePerFrame;
 		vih2->bmiHeader.biSize        = sizeof(vih2->bmiHeader);
-		vih2->bmiHeader.biWidth       = pitch / m_vsInfo->format->bytesPerSample;
+		vih2->bmiHeader.biWidth       = m_Pitch / m_vsInfo->format->bytesPerSample;
 		vih2->bmiHeader.biHeight      = m_Height;
 		vih2->bmiHeader.biPlanes      = 1;
 		vih2->bmiHeader.biBitCount    = m_vsInfo->format->bitsPerSample;
@@ -449,7 +451,9 @@ HRESULT CVapourSynthStream::SetMediaType(const CMediaType* pMediaType)
 
 	if (SUCCEEDED(hr)) {
 		VIDEOINFOHEADER2* vih2 = (VIDEOINFOHEADER2*)pMediaType->Format();
-		m_BufferSize = m_Format.Packsize * vih2->bmiHeader.biWidth * abs(vih2->bmiHeader.biHeight);
+		m_PitchBuff = m_Format.Packsize * vih2->bmiHeader.biWidth;
+		ASSERT(m_PitchBuff >= m_Pitch);
+		m_BufferSize = m_PitchBuff * abs(vih2->bmiHeader.biHeight) * m_Format.buffCoeff / 2;
 
 		DLog(L"SetMediaType with subtype %s", GUIDtoWString(m_mt.subtype).c_str());
 	}

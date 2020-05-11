@@ -49,8 +49,11 @@ private:
 	FmtParams_t m_Format = {};
 	UINT m_Width  = 0;
 	UINT m_Height = 0;
-	UINT m_NumFrames = 0;
+	UINT m_Pitch  = 0;
+	UINT m_PitchBuff  = 0;
 	UINT m_BufferSize = 0;
+
+	UINT m_NumFrames = 0;
 
 	HRESULT OnThreadStartPlay();
 	HRESULT OnThreadCreate();
