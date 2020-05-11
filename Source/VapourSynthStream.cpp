@@ -109,29 +109,15 @@ CVapourSynthStream::CVapourSynthStream(const WCHAR* name, CSource* pParent, HRES
 			throw std::exception("Failed to get VapourSynth info");
 		}
 
-		LPCWSTR str_pixeltype = nullptr;
+		auto FmtParams = GetFormatParamsAS(m_vsInfo->format->id);
 
-		switch (m_vsInfo->format->id) {
-		case pfCompatBGR32:
-			m_subtype = MEDIASUBTYPE_RGB32;
-			str_pixeltype = L"RGB32";
-			break;
-		case pfCompatYUY2:
-			m_subtype = MEDIASUBTYPE_YUY2;
-			str_pixeltype = L"YUY2";
-			break;
-		case pfGray8:
-			m_subtype = MEDIASUBTYPE_Y8;
-			str_pixeltype = L"Y8";
-			break;
-		case pfGray16:
-			m_subtype = MEDIASUBTYPE_Y116;
-			str_pixeltype = L"Y16";
-			break;
-		default:
-			throw std::exception("Unsuported pixel type");
+		if (FmtParams.cformat == CF_NONE) {
+			throw std::exception(fmt::format("Unsuported pixel type {}", m_vsInfo->format->name).c_str());
 		}
-		DWORD fourcc = (m_subtype == MEDIASUBTYPE_RGB24 || m_subtype == MEDIASUBTYPE_RGB32) ? BI_RGB : m_subtype.Data1;
+
+		m_subtype = FmtParams.Subtype;
+		DWORD fourcc = (m_subtype == MEDIASUBTYPE_RGB24 || m_subtype == MEDIASUBTYPE_RGB32 || m_subtype == MEDIASUBTYPE_ARGB32)
+			? BI_RGB : m_subtype.Data1;
 
 		const VSFrameRef* frame = m_vsAPI->getFrame(0, m_vsNode, m_vsErrorMessage, sizeof(m_vsErrorMessage));
 		if (!frame) {
@@ -150,7 +136,7 @@ CVapourSynthStream::CVapourSynthStream(const WCHAR* name, CSource* pParent, HRES
 		m_AvgTimePerFrame = UNITS * m_fpsDen / m_fpsNum;
 		m_rtDuration  = m_rtStop = UNITS * m_NumFrames * m_fpsNum / m_fpsDen;
 
-		DLog(L"Open clip %s %dx%d %.03f fps", str_pixeltype, m_Width, m_Height, (double)m_fpsNum/m_fpsDen);
+		DLog(L"Open clip %S %dx%d %.03f fps", FmtParams.str, m_Width, m_Height, (double)m_fpsNum/m_fpsDen);
 
 		m_mt.InitMediaType();
 		m_mt.SetType(&MEDIATYPE_Video);

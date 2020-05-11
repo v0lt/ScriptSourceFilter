@@ -44,21 +44,14 @@ CAviSynthStream::CAviSynthStream(const WCHAR* name, CSource* pParent, HRESULT* p
 		return;
 	}
 
-#ifdef _WIN64
 	IScriptEnvironment* (WINAPI *CreateScriptEnvironment)(int version) =
 		(IScriptEnvironment * (WINAPI *)(int)) GetProcAddress(m_hAviSynthDll, "CreateScriptEnvironment");
-#else
-	// Hmm
-	IScriptEnvironment* (WINAPI *CreateScriptEnvironment)(int version) =
-		(IScriptEnvironment * (WINAPI *)(int)) GetProcAddress(m_hAviSynthDll, "CreateScriptEnvironment");
-#endif
 
 	if (!CreateScriptEnvironment) {
 		DLog(L"Cannot resolve AviSynth+ CreateScriptEnvironment2 function");
 		*phr = E_FAIL;
 		return;
 	}
-
 
 	m_ScriptEnvironment = CreateScriptEnvironment(6);
 	if (!m_ScriptEnvironment) {
@@ -90,59 +83,19 @@ CAviSynthStream::CAviSynthStream(const WCHAR* name, CSource* pParent, HRESULT* p
 
 	auto VInfo = Clip->GetVideoInfo();
 	UINT bitdepth = VInfo.BitsPerPixel();
-	LPCWSTR str_pixeltype = nullptr;
 	UINT bytesPerSample = bitdepth / 8;
 
-	switch (VInfo.pixel_type) {
-	case VideoInfo::CS_BGR24:
-		m_subtype = MEDIASUBTYPE_RGB24;
-		str_pixeltype = L"RGB24";
-		break;
-	case VideoInfo::CS_BGR32:
-		m_subtype = MEDIASUBTYPE_ARGB32;
-		str_pixeltype = L"ARGB32";
-		break;
-	case VideoInfo::CS_BGR48:
-		m_subtype = MEDIASUBTYPE_RGB48;
-		str_pixeltype = L"RGB48";
-		break;
-	case VideoInfo::CS_BGR64:
-		m_subtype = MEDIASUBTYPE_ARGB64;
-		str_pixeltype = L"ARGB64";
-		break;
-	case VideoInfo::CS_YUY2:
-		m_subtype = MEDIASUBTYPE_YUY2;
-		str_pixeltype = L"YUY2";
-		break;
-	case VideoInfo::CS_YV12:
-		m_subtype = MEDIASUBTYPE_YV12;
-		str_pixeltype = L"YV12";
-		bytesPerSample = 1;
-		break;
-	case VideoInfo::CS_YV16:
-		m_subtype = MEDIASUBTYPE_YV16;
-		str_pixeltype = L"YV16";
-		bytesPerSample = 1;
-		break;
-	case VideoInfo::CS_YV24:
-		m_subtype = MEDIASUBTYPE_YV24;
-		str_pixeltype = L"YV24";
-		bytesPerSample = 1;
-		break;
-	case VideoInfo::CS_Y8:
-		m_subtype = MEDIASUBTYPE_Y8;
-		str_pixeltype = L"Y8";
-		break;
-	case VideoInfo::CS_Y16:
-		m_subtype = MEDIASUBTYPE_Y116;
-		str_pixeltype = L"Y16";
-		break;
-	default:
+	auto FmtParams = GetFormatParamsAS(VInfo.pixel_type);
+
+	if (FmtParams.cformat == CF_NONE) {
 		DLog(L"Unsuported pixel_type");
 		*phr = E_FAIL;
 		return;
 	}
-	DWORD fourcc = (m_subtype == MEDIASUBTYPE_RGB24 || m_subtype == MEDIASUBTYPE_RGB32) ? BI_RGB : m_subtype.Data1;
+
+	m_subtype = FmtParams.Subtype;
+	DWORD fourcc = (m_subtype == MEDIASUBTYPE_RGB24 || m_subtype == MEDIASUBTYPE_RGB32 || m_subtype == MEDIASUBTYPE_ARGB32)
+		? BI_RGB : m_subtype.Data1;
 
 	auto VFrame = Clip->GetFrame(0, m_ScriptEnvironment);
 	const UINT pitch = VFrame->GetPitch();
@@ -154,7 +107,7 @@ CAviSynthStream::CAviSynthStream(const WCHAR* name, CSource* pParent, HRESULT* p
 	m_AvgTimePerFrame = MulDiv(UNITS, VInfo.fps_denominator, VInfo.fps_numerator);
 	m_rtDuration = m_rtStop = UNITS * m_NumFrames * VInfo.fps_denominator / VInfo.fps_numerator;
 
-	DLog(L"Open clip %s %dx%d %.03f fps", str_pixeltype, m_Width, m_Height, (double)VInfo.fps_numerator/VInfo.fps_denominator);
+	DLog(L"Open clip %S %dx%d %.03f fps", FmtParams.str, m_Width, m_Height, (double)VInfo.fps_numerator/VInfo.fps_denominator);
 
 	m_mt.InitMediaType();
 	m_mt.SetType(&MEDIATYPE_Video);
@@ -436,7 +389,14 @@ HRESULT CAviSynthStream::SetMediaType(const CMediaType* pMediaType)
 {
 	HRESULT hr = __super::SetMediaType(pMediaType);
 
-	DLogIf(SUCCEEDED(hr), L"SetMediaType with subtype %s", GUIDtoWString(m_mt.subtype).c_str());
+	if (SUCCEEDED(hr)) {
+		VIDEOINFOHEADER2* vih2 = (VIDEOINFOHEADER2*)pMediaType->Format();
+		if (vih2->bmiHeader.biWidth >= (long)m_Width && vih2->bmiHeader.biHeight == m_Height) {
+			return S_OK;
+		}
+
+		DLog(L"SetMediaType with subtype %s", GUIDtoWString(m_mt.subtype).c_str());
+	}
 
 	return hr;
 }

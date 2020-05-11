@@ -90,3 +90,32 @@ std::wstring HR2Str(const HRESULT hr);
 void CopyFrameAsIs(const UINT height, BYTE* dst, UINT dst_pitch, const BYTE* src, int src_pitch);
 
 HRESULT GetDataFromResource(LPVOID& data, DWORD& size, UINT resid);
+
+enum ColorFormat_t {
+	CF_NONE = 0,
+	CF_YUY2,
+	CF_YV12,
+	CF_YV16,
+	CF_YV24,
+	CF_RGB24,
+	CF_XRGB32,
+	CF_ARGB32,
+	CF_RGB48,
+	CF_ARGB64,
+	CF_Y8,
+	CF_Y16,
+};
+
+struct FmtParams_t {
+	ColorFormat_t     cformat;
+	GUID              Subtype;
+	int               ASformat;
+	int               VSformat;
+	char*             str;
+	int               Packsize;
+	int               PitchCoeff;
+	int               CDepth;
+};
+
+const FmtParams_t& GetFormatParamsAS(const int asFormat);
+const FmtParams_t& GetFormatParamsVS(const int vsFormat);

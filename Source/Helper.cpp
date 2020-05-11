@@ -23,6 +23,14 @@
 #include "../Include/Version.h"
 #include "Helper.h"
 
+#ifndef __AVISYNTH_7_H__
+#include "../Include/avisynth.h"
+#endif
+#ifndef VSSCRIPT_H
+#include "../Include/VSScript.h"
+#endif
+
+
 // missing GUIDs for Win8.1 SDK
 //DEFINE_GUID(GUID_ContainerFormatAdng, 0xf3ff6d0d, 0x38c0, 0x41c4, 0xb1, 0xfe, 0x1f, 0x38, 0x24, 0xf1, 0x7b, 0x84);
 //DEFINE_GUID(GUID_ContainerFormatHeif, 0xe1e62521, 0x6787, 0x405b, 0xa3, 0x39, 0x50, 0x07, 0x15, 0xb5, 0x76, 0x3f);
@@ -149,4 +157,40 @@ HRESULT GetDataFromResource(LPVOID& data, DWORD& size, UINT resid)
 	}
 
 	return S_OK;
+}
+
+static const FmtParams_t s_FormatTable[] = {
+	// cformat |   subtype          |                    |              | str    |Packsize|PitchCoeff|CDepth
+	{CF_NONE,   GUID_NULL,           0,                   0,             nullptr,        0, 0,        0,    },
+	{CF_YUY2,   MEDIASUBTYPE_YUY2,   VideoInfo::CS_YUY2,  pfCompatYUY2,  "YUY2",         2, 2,        8,    },
+	{CF_YV12,   MEDIASUBTYPE_YV12,   VideoInfo::CS_YV12,  0,             "YV12",         1, 3,        8,    },
+	{CF_YV16,   MEDIASUBTYPE_YV16,   VideoInfo::CS_YV16,  0,             "YV16",         1, 4,        8,    },
+	{CF_YV24,   MEDIASUBTYPE_YV24,   VideoInfo::CS_YV24,  0,             "YV24",         1, 6,        8,    },
+	{CF_RGB24,  MEDIASUBTYPE_RGB24,  VideoInfo::CS_BGR24, 0,             "RGB24",        3, 2,        8,    },
+	{CF_XRGB32, MEDIASUBTYPE_RGB32,  0,                   pfCompatBGR32, "RGB32",        4, 2,        8,    },
+	{CF_ARGB32, MEDIASUBTYPE_ARGB32, VideoInfo::CS_BGR32, 0,             "ARGB32",       4, 2,        8,    },
+	{CF_RGB48,  MEDIASUBTYPE_RGB48,  VideoInfo::CS_BGR48, 0,             "RGB48",        6, 2,        16,   },
+	{CF_ARGB64, MEDIASUBTYPE_ARGB64, VideoInfo::CS_BGR64, 0,             "ARGB64",       8, 2,        16,   },
+	{CF_Y8,     MEDIASUBTYPE_Y8,     VideoInfo::CS_Y8,    pfGray8,       "Y8",           1, 2,        8,    },
+	{CF_Y16,    MEDIASUBTYPE_Y116,   VideoInfo::CS_Y16,   pfGray16,      "Y16",          2, 2,        16,   },
+};
+
+const FmtParams_t& GetFormatParamsAS(const int asFormat)
+{
+	for (const auto& f : s_FormatTable) {
+		if (f.ASformat == asFormat) {
+			return f;
+		}
+	}
+	return s_FormatTable[CF_NONE];
+}
+
+const FmtParams_t& GetFormatParamsVS(const int vsFormat)
+{
+	for (const auto& f : s_FormatTable) {
+		if (f.VSformat == vsFormat) {
+			return f;
+		}
+	}
+	return s_FormatTable[CF_NONE];
 }
