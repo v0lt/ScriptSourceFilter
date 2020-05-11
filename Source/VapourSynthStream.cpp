@@ -437,7 +437,7 @@ HRESULT CVapourSynthStream::CheckMediaType(const CMediaType* pmt)
 		&& pmt->formattype == FORMAT_VideoInfo2) {
 
 		VIDEOINFOHEADER2* vih2 = (VIDEOINFOHEADER2*)pmt->Format();
-		if (vih2->bmiHeader.biWidth >= (long)m_Width && vih2->bmiHeader.biHeight == m_Height) {
+		if (vih2->bmiHeader.biWidth >= (long)m_Width && abs(vih2->bmiHeader.biHeight) == (long)m_Height) {
 			return S_OK;
 		}
 	}
