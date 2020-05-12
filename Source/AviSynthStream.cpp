@@ -312,7 +312,7 @@ HRESULT CAviSynthStream::FillBuffer(IMediaSample* pSample)
 			const int plane = (planes == 3) ? (1 << i) : 0;
 			const BYTE* src_data = VFrame->GetReadPtr(plane);
 			const UINT src_pitch = VFrame->GetPitch(plane);
-			UINT height    = VFrame->GetHeight(plane);
+			const UINT height    = VFrame->GetHeight(plane);
 			UINT dst_pitch = m_PitchBuff;
 			if (i > 0) {
 				if ((m_Format.ASformat&VideoInfo::CS_Sub_Width_Mask) == VideoInfo::CS_Sub_Width_2) {

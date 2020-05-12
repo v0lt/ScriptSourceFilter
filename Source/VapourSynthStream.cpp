@@ -110,7 +110,7 @@ CVapourSynthStream::CVapourSynthStream(const WCHAR* name, CSource* pParent, HRES
 
 		m_Format = GetFormatParamsVapourSynth(m_vsInfo->format->id);
 
-		if (m_Format.cformat == CF_NONE) {
+		if (m_Format.cformat == CF_NONE || m_Format.planes != m_vsInfo->format->numPlanes) {
 			throw std::exception(fmt::format("Unsuported pixel type {}", m_vsInfo->format->name).c_str());
 		}
 
@@ -326,6 +326,28 @@ HRESULT CVapourSynthStream::FillBuffer(IMediaSample* pSample)
 			return S_FALSE;
 		}
 
+		AM_MEDIA_TYPE* pmt;
+		if (SUCCEEDED(pSample->GetMediaType(&pmt)) && pmt) {
+			CMediaType mt(*pmt);
+			SetMediaType(&mt);
+			DeleteMediaType(pmt);
+		}
+
+		if (m_mt.formattype != FORMAT_VideoInfo2) {
+			return S_FALSE;
+		}
+
+		BYTE* dst_data = nullptr;
+		HRESULT hr = pSample->GetPointer(&dst_data);
+		if (FAILED(hr) || !dst_data) {
+			return S_FALSE;
+		}
+
+		long buffSize = pSample->GetSize();
+		if (buffSize < (long)m_BufferSize) {
+			return S_FALSE;
+		}
+
 		int framenum = (int)(m_rtPosition * m_fpsNum / (m_fpsDen * UNITS));
 		const VSFrameRef* frame = m_vsAPI->getFrame(framenum, m_vsNode, m_vsErrorMessage, sizeof(m_vsErrorMessage));
 		if (!frame) {
@@ -334,65 +356,32 @@ HRESULT CVapourSynthStream::FillBuffer(IMediaSample* pSample)
 			return E_FAIL;
 		}
 
-		const BYTE* src_data = m_vsAPI->getReadPtr(frame, 0);
-		if (!src_data) {
-			DLog(L"VapourSynthServer m_vsAPI->getReadPtr returned NULL");
-			return E_FAIL;
-		}
-
-		const UINT src_pitch = m_vsAPI->getStride(frame, 0);
-
-		if (m_vsFrame) {
-			m_vsAPI->freeFrame(m_vsFrame);
-		}
-		m_vsFrame = frame;
-
-		HRESULT hr;
-		BYTE* pDataOut = nullptr;
-		if (!src_data || FAILED(hr = pSample->GetPointer(&pDataOut)) || !pDataOut) {
-			return S_FALSE;
-		}
-
-		long outSize = pSample->GetSize();
-
-		AM_MEDIA_TYPE* pmt;
-		if (SUCCEEDED(pSample->GetMediaType(&pmt)) && pmt) {
-			CMediaType mt(*pmt);
-			SetMediaType(&mt);
-
-			DeleteMediaType(pmt);
-		}
-
-		if (m_mt.formattype != FORMAT_VideoInfo2) {
-			return S_FALSE;
-		}
-
-		VIDEOINFOHEADER2* vih2 = (VIDEOINFOHEADER2*)m_mt.Format();
-		const UINT w = vih2->bmiHeader.biWidth;
-		const UINT h = abs(vih2->bmiHeader.biHeight);
-		const UINT bpp = vih2->bmiHeader.biBitCount;
-		const UINT dst_pitch = w * bpp / 8;
-
-		if (w < m_Width || h != m_Height || outSize < (long)vih2->bmiHeader.biSizeImage) {
-			return S_FALSE;
-		}
-
-		UINT linesize = std::min(src_pitch, dst_pitch);
-
-		if (src_pitch == dst_pitch) {
-			memcpy(pDataOut, src_data, linesize * m_Height);
-		}
-		else {
-			const BYTE* src = src_data;
-			BYTE* dst = pDataOut;
-			for (UINT y = 0; y < m_Height; y++) {
-				memcpy(dst, src, linesize);
-				src += src_pitch;
-				dst += dst_pitch;
+		UINT DataLength = 0;
+		const int planes = m_vsInfo->format->numPlanes;
+		for (int i = 0; i < planes; i++) {
+			const BYTE* src_data = m_vsAPI->getReadPtr(frame, i);
+			const UINT src_pitch = m_vsAPI->getStride(frame, i);
+			const UINT height    = m_vsAPI->getFrameHeight(frame, i);
+			UINT dst_pitch = m_PitchBuff;
+			if (i > 0) {
+				dst_pitch >>= m_vsInfo->format->subSamplingW;
 			}
+			if (src_pitch == dst_pitch) {
+				memcpy(dst_data, src_data, dst_pitch * height);
+				dst_data += dst_pitch * height;
+			}
+			else {
+				UINT linesize = std::min(src_pitch, dst_pitch);
+				for (UINT y = 0; y < height; y++) {
+					memcpy(dst_data, src_data, linesize);
+					src_data += src_pitch;
+					dst_data += dst_pitch;
+				}
+			}
+			DataLength = dst_pitch * height;
 		}
 
-		pSample->SetActualDataLength(linesize * m_Height);
+		pSample->SetActualDataLength(DataLength);
 
 		REFERENCE_TIME rtStart, rtStop;
 		// The sample times are modified by the current rate.
