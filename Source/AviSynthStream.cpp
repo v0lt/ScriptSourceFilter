@@ -105,8 +105,8 @@ CAviSynthStream::CAviSynthStream(const WCHAR* name, CSource* pParent, HRESULT* p
 	m_fpsNum     = VInfo.fps_numerator;
 	m_fpsDen     = VInfo.fps_denominator;
 	m_NumFrames  = VInfo.num_frames;
-	m_AvgTimePerFrame = MulDiv(UNITS, m_fpsDen, m_fpsNum);
-	m_rtDuration = m_rtStop = UNITS * m_NumFrames * m_fpsDen / m_fpsNum;
+	m_AvgTimePerFrame = UNITS * m_fpsDen / m_fpsNum; // no need any MulDiv here
+	m_rtDuration = m_rtStop = llMulDiv(UNITS * m_NumFrames, m_fpsDen, m_fpsNum, 0);
 
 	DLog(L"Open clip %S %dx%d %.03f fps", m_Format.str, m_Width, m_Height, (double)m_fpsNum/m_fpsDen);
 
@@ -303,7 +303,7 @@ HRESULT CAviSynthStream::FillBuffer(IMediaSample* pSample)
 
 		auto Clip = m_AVSValue.AsClip();
 		auto VInfo = Clip->GetVideoInfo();
-		int framenum = (int)(m_rtPosition * m_fpsNum / (m_fpsDen * UNITS));
+		const int framenum = (int)llMulDiv(m_rtPosition, m_fpsNum, m_fpsDen * UNITS, 0); // round down
 		auto VFrame = Clip->GetFrame(framenum, m_ScriptEnvironment);
 
 		UINT DataLength = 0;
@@ -337,14 +337,13 @@ HRESULT CAviSynthStream::FillBuffer(IMediaSample* pSample)
 
 		pSample->SetActualDataLength(DataLength);
 
-		REFERENCE_TIME rtStart, rtStop;
 		// The sample times are modified by the current rate.
-		rtStart = static_cast<REFERENCE_TIME>(m_rtSampleTime / m_dRateSeeking);
-		rtStop  = rtStart + static_cast<int>(m_AvgTimePerFrame / m_dRateSeeking);
+		REFERENCE_TIME rtStart = static_cast<REFERENCE_TIME>(m_rtSampleTime / m_dRateSeeking);
+		REFERENCE_TIME rtStop = static_cast<REFERENCE_TIME>((m_rtSampleTime + m_AvgTimePerFrame) / m_dRateSeeking);
 		pSample->SetTime(&rtStart, &rtStop);
 
-		m_rtSampleTime += m_AvgTimePerFrame;
-		m_rtPosition += m_AvgTimePerFrame;
+		m_rtSampleTime += m_AvgTimePerFrame; // Hmm
+		m_rtPosition = llMulDiv((framenum+1) * UNITS, m_fpsDen, m_fpsNum, m_fpsNum-1); // round up
 	}
 
 	pSample->SetSyncPoint(TRUE);

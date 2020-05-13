@@ -133,8 +133,8 @@ CVapourSynthStream::CVapourSynthStream(const WCHAR* name, CSource* pParent, HRES
 		m_fpsNum     = m_vsInfo->fpsNum;
 		m_fpsDen     = m_vsInfo->fpsDen;
 		m_NumFrames  = m_vsInfo->numFrames;
-		m_AvgTimePerFrame = UNITS * m_fpsDen / m_fpsNum;
-		m_rtDuration = m_rtStop = UNITS * m_NumFrames * m_fpsNum / m_fpsDen;
+		m_AvgTimePerFrame = llMulDiv(UNITS, m_fpsDen, m_fpsNum, 0);
+		m_rtDuration = m_rtStop = llMulDiv(UNITS * m_NumFrames, m_fpsDen, m_fpsNum, 0);
 
 		DLog(L"Open clip %S %dx%d %.03f fps", m_Format.str, m_Width, m_Height, (double)m_fpsNum/m_fpsDen);
 
@@ -348,7 +348,7 @@ HRESULT CVapourSynthStream::FillBuffer(IMediaSample* pSample)
 			return S_FALSE;
 		}
 
-		int framenum = (int)(m_rtPosition * m_fpsNum / (m_fpsDen * UNITS));
+		int framenum = (int)llMulDiv(m_rtPosition, m_fpsNum, m_fpsDen * UNITS, 0); // round down
 		const VSFrameRef* frame = m_vsAPI->getFrame(framenum, m_vsNode, m_vsErrorMessage, sizeof(m_vsErrorMessage));
 		if (!frame) {
 			std::wstring error = ConvertUtf8ToWide(m_vsErrorMessage);
@@ -383,14 +383,13 @@ HRESULT CVapourSynthStream::FillBuffer(IMediaSample* pSample)
 
 		pSample->SetActualDataLength(DataLength);
 
-		REFERENCE_TIME rtStart, rtStop;
 		// The sample times are modified by the current rate.
-		rtStart = static_cast<REFERENCE_TIME>(m_rtSampleTime / m_dRateSeeking);
-		rtStop  = rtStart + static_cast<int>(m_AvgTimePerFrame / m_dRateSeeking);
+		REFERENCE_TIME rtStart = static_cast<REFERENCE_TIME>(m_rtSampleTime / m_dRateSeeking);
+		REFERENCE_TIME rtStop = static_cast<REFERENCE_TIME>((m_rtSampleTime + m_AvgTimePerFrame) / m_dRateSeeking);
 		pSample->SetTime(&rtStart, &rtStop);
 
-		m_rtSampleTime += m_AvgTimePerFrame;
-		m_rtPosition += m_AvgTimePerFrame;
+		m_rtSampleTime += m_AvgTimePerFrame; // Hmm
+		m_rtPosition = llMulDiv((framenum+1) * UNITS, m_fpsDen, m_fpsNum, m_fpsNum-1); // round up
 	}
 
 	pSample->SetSyncPoint(TRUE);
