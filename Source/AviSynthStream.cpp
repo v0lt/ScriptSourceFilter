@@ -108,6 +108,17 @@ CAviSynthStream::CAviSynthStream(const WCHAR* name, CSource* pParent, HRESULT* p
 	m_AvgTimePerFrame = UNITS * m_fpsDen / m_fpsNum; // no need any MulDiv here
 	m_rtDuration = m_rtStop = llMulDiv(UNITS * m_NumFrames, m_fpsDen, m_fpsNum, 0);
 
+	if (VInfo.IsYUV() && VInfo.IsPlanar()) {
+		m_Planes[0] = PLANAR_Y;
+		if (VInfo.IsVPlaneFirst()) {
+			m_Planes[1] = PLANAR_U; // Yes, that’s right, because the output is YV12, YV16, YV24.
+			m_Planes[2] = PLANAR_V;
+		} else {
+			m_Planes[1] = PLANAR_V;
+			m_Planes[2] = PLANAR_U;
+		}
+	}
+
 	DLog(L"Open clip %S %dx%d %.03f fps", m_Format.str, m_Width, m_Height, (double)m_fpsNum/m_fpsDen);
 
 	m_mt.InitMediaType();
@@ -307,9 +318,9 @@ HRESULT CAviSynthStream::FillBuffer(IMediaSample* pSample)
 		auto VFrame = Clip->GetFrame(framenum, m_ScriptEnvironment);
 
 		UINT DataLength = 0;
-		const int planes = m_Format.planes;
-		for (int i = 0; i < planes; i++) {
-			const int plane = (planes == 3) ? (1 << i) : 0;
+		const int num_planes = m_Format.planes;
+		for (int i = 0; i < num_planes; i++) {
+			const int plane = m_Planes[i];
 			const BYTE* src_data = VFrame->GetReadPtr(plane);
 			const UINT src_pitch = VFrame->GetPitch(plane);
 			const UINT height    = VFrame->GetHeight(plane);

@@ -136,6 +136,10 @@ CVapourSynthStream::CVapourSynthStream(const WCHAR* name, CSource* pParent, HRES
 		m_AvgTimePerFrame = llMulDiv(UNITS, m_fpsDen, m_fpsNum, 0);
 		m_rtDuration = m_rtStop = llMulDiv(UNITS * m_NumFrames, m_fpsDen, m_fpsNum, 0);
 
+		if (m_vsInfo->format->id > cmYUV && m_vsInfo->format->id < cmYCoCg) {
+			std::swap(m_Planes[1], m_Planes[2]); // swap U and V for YV12, YV16, YV24.
+		}
+
 		DLog(L"Open clip %S %dx%d %.03f fps", m_Format.str, m_Width, m_Height, (double)m_fpsNum/m_fpsDen);
 
 		m_mt.InitMediaType();
@@ -357,11 +361,12 @@ HRESULT CVapourSynthStream::FillBuffer(IMediaSample* pSample)
 		}
 
 		UINT DataLength = 0;
-		const int planes = m_vsInfo->format->numPlanes;
-		for (int i = 0; i < planes; i++) {
-			const BYTE* src_data = m_vsAPI->getReadPtr(frame, i);
-			const UINT src_pitch = m_vsAPI->getStride(frame, i);
-			const UINT height    = m_vsAPI->getFrameHeight(frame, i);
+		const int num_planes = m_vsInfo->format->numPlanes;
+		for (int i = 0; i < num_planes; i++) {
+			const int plane = m_Planes[i];
+			const BYTE* src_data = m_vsAPI->getReadPtr(frame, plane);
+			const UINT src_pitch = m_vsAPI->getStride(frame, plane);
+			const UINT height    = m_vsAPI->getFrameHeight(frame, plane);
 			UINT dst_pitch = m_PitchBuff;
 			if (i > 0) {
 				dst_pitch >>= m_vsInfo->format->subSamplingW;

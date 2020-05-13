@@ -38,6 +38,7 @@ private:
 	AVSValue            m_AVSValue;
 	PVideoFrame         m_Frame;
 	const AVS_Linkage*  m_Linkage = nullptr;
+	int                 m_Planes[4] = {};
 
 	REFERENCE_TIME m_AvgTimePerFrame = 0;
 	REFERENCE_TIME m_rtSampleTime = 0;

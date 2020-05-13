@@ -52,6 +52,7 @@ private:
 	const VSFrameRef*  m_vsFrame  = nullptr;
 	const VSVideoInfo* m_vsInfo   = nullptr;
 	char               m_vsErrorMessage[1024];
+	int                m_Planes[4] = {0, 1, 2, 3};
 
 	REFERENCE_TIME m_AvgTimePerFrame = 0;
 	REFERENCE_TIME m_rtSampleTime = 0;
