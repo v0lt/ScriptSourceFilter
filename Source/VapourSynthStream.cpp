@@ -155,7 +155,7 @@ CVapourSynthStream::CVapourSynthStream(const WCHAR* name, CSource* pParent, HRES
 		vih2->bmiHeader.biWidth       = m_PitchBuff / m_Format.Packsize;
 		vih2->bmiHeader.biHeight      = (m_Format.fourcc == BI_RGB) ? -(long)m_Height : m_Height;
 		vih2->bmiHeader.biPlanes      = 1;
-		vih2->bmiHeader.biBitCount    = m_vsInfo->format->bitsPerSample;
+		vih2->bmiHeader.biBitCount    = m_Format.CDepth * m_Format.buffCoeff / 2;
 		vih2->bmiHeader.biCompression = m_Format.fourcc;
 		vih2->bmiHeader.biSizeImage   = m_BufferSize;
 
