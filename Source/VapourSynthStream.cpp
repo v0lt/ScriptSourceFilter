@@ -110,12 +110,9 @@ CVapourSynthStream::CVapourSynthStream(const WCHAR* name, CSource* pParent, HRES
 
 		m_Format = GetFormatParamsVapourSynth(m_vsInfo->format->id);
 
-		if (m_Format.cformat == CF_NONE || m_Format.planes != m_vsInfo->format->numPlanes) {
+		if (m_Format.fourcc == DWORD(-1) || m_Format.planes != m_vsInfo->format->numPlanes) {
 			throw std::exception(fmt::format("Unsuported pixel type {}", m_vsInfo->format->name).c_str());
 		}
-
-		DWORD fourcc = (m_Format.subtype == MEDIASUBTYPE_RGB24 || m_Format.subtype == MEDIASUBTYPE_RGB32 || m_Format.subtype == MEDIASUBTYPE_ARGB32)
-			? BI_RGB : m_Format.subtype.Data1;
 
 		const VSFrameRef* frame = m_vsAPI->getFrame(0, m_vsNode, m_vsErrorMessage, sizeof(m_vsErrorMessage));
 		if (!frame) {
@@ -156,10 +153,10 @@ CVapourSynthStream::CVapourSynthStream(const WCHAR* name, CSource* pParent, HRES
 		vih2->AvgTimePerFrame         = m_AvgTimePerFrame;
 		vih2->bmiHeader.biSize        = sizeof(vih2->bmiHeader);
 		vih2->bmiHeader.biWidth       = m_PitchBuff / m_Format.Packsize;
-		vih2->bmiHeader.biHeight      = (fourcc == BI_RGB) ? -(long)m_Height : m_Height;
+		vih2->bmiHeader.biHeight      = (m_Format.fourcc == BI_RGB) ? -(long)m_Height : m_Height;
 		vih2->bmiHeader.biPlanes      = 1;
 		vih2->bmiHeader.biBitCount    = m_vsInfo->format->bitsPerSample;
-		vih2->bmiHeader.biCompression = fourcc;
+		vih2->bmiHeader.biCompression = m_Format.fourcc;
 		vih2->bmiHeader.biSizeImage   = m_BufferSize;
 
 		*phr = S_OK;
