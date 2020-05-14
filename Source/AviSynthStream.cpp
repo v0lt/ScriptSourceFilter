@@ -220,7 +220,7 @@ HRESULT CAviSynthStream::ChangeStart()
 	{
 		CAutoLock lock(CSourceSeeking::m_pLock);
 		m_rtSampleTime = 0;
-		m_rtPosition = m_rtStart;
+		m_CurrentFrame = (int)llMulDiv(m_rtStart, m_fpsNum, m_fpsDen * UNITS, 0); // round down
 	}
 
 	UpdateFromSeek();
@@ -232,7 +232,7 @@ HRESULT CAviSynthStream::ChangeStop()
 {
 	{
 		CAutoLock lock(CSourceSeeking::m_pLock);
-		if (m_rtPosition < m_rtStop) {
+		if (m_CurrentFrame < m_NumFrames) {
 			return S_OK;
 		}
 	}
@@ -248,7 +248,7 @@ HRESULT CAviSynthStream::OnThreadCreate()
 	CAutoLock cAutoLockShared(&m_cSharedState);
 
 	m_rtSampleTime = 0;
-	m_rtPosition = m_rtStart;
+	m_CurrentFrame = (int)llMulDiv(m_rtStart, m_fpsNum, m_fpsDen * UNITS, 0); // round down
 
 	return CSourceStream::OnThreadCreate();
 }
@@ -283,7 +283,7 @@ HRESULT CAviSynthStream::FillBuffer(IMediaSample* pSample)
 	{
 		CAutoLock cAutoLockShared(&m_cSharedState);
 
-		if (m_rtPosition >= m_rtStop) {
+		if (m_CurrentFrame >= m_NumFrames) {
 			return S_FALSE;
 		}
 
@@ -311,8 +311,7 @@ HRESULT CAviSynthStream::FillBuffer(IMediaSample* pSample)
 
 		auto Clip = m_AVSValue.AsClip();
 		auto VInfo = Clip->GetVideoInfo();
-		const int framenum = (int)llMulDiv(m_rtPosition, m_fpsNum, m_fpsDen * UNITS, 0); // round down
-		auto VFrame = Clip->GetFrame(framenum, m_ScriptEnvironment);
+		auto VFrame = Clip->GetFrame(m_CurrentFrame, m_ScriptEnvironment);
 
 		UINT DataLength = 0;
 		const int num_planes = m_Format.planes;
@@ -351,7 +350,7 @@ HRESULT CAviSynthStream::FillBuffer(IMediaSample* pSample)
 		pSample->SetTime(&rtStart, &rtStop);
 
 		m_rtSampleTime += m_AvgTimePerFrame; // Hmm
-		m_rtPosition = llMulDiv((framenum+1) * UNITS, m_fpsDen, m_fpsNum, m_fpsNum-1); // round up
+		m_CurrentFrame++;
 	}
 
 	pSample->SetSyncPoint(TRUE);

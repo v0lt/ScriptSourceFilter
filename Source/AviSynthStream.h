@@ -42,7 +42,7 @@ private:
 
 	REFERENCE_TIME m_AvgTimePerFrame = 0;
 	REFERENCE_TIME m_rtSampleTime = 0;
-	REFERENCE_TIME m_rtPosition = 0;
+	int m_CurrentFrame = 0;
 
 	BOOL m_bDiscontinuity = FALSE;
 	BOOL m_bFlushing = FALSE;
@@ -54,7 +54,7 @@ private:
 	UINT m_PitchBuff  = 0;
 	UINT m_BufferSize = 0;
 
-	UINT m_NumFrames = 0;
+	int m_NumFrames = 0;
 	unsigned m_fpsNum = 1;
 	unsigned m_fpsDen = 1;
 

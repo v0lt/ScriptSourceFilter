@@ -260,7 +260,7 @@ HRESULT CVapourSynthStream::ChangeStart()
 	{
 		CAutoLock lock(CSourceSeeking::m_pLock);
 		m_rtSampleTime = 0;
-		m_rtPosition = m_rtStart;
+		m_CurrentFrame = (int)llMulDiv(m_rtStart, m_fpsNum, m_fpsDen * UNITS, 0); // round down
 	}
 
 	UpdateFromSeek();
@@ -272,7 +272,7 @@ HRESULT CVapourSynthStream::ChangeStop()
 {
 	{
 		CAutoLock lock(CSourceSeeking::m_pLock);
-		if (m_rtPosition < m_rtStop) {
+		if (m_CurrentFrame < m_NumFrames) {
 			return S_OK;
 		}
 	}
@@ -288,7 +288,7 @@ HRESULT CVapourSynthStream::OnThreadCreate()
 	CAutoLock cAutoLockShared(&m_cSharedState);
 
 	m_rtSampleTime = 0;
-	m_rtPosition = m_rtStart;
+	m_CurrentFrame = (int)llMulDiv(m_rtStart, m_fpsNum, m_fpsDen * UNITS, 0); // round down
 
 	return CSourceStream::OnThreadCreate();
 }
@@ -323,7 +323,7 @@ HRESULT CVapourSynthStream::FillBuffer(IMediaSample* pSample)
 	{
 		CAutoLock cAutoLockShared(&m_cSharedState);
 
-		if (m_rtPosition >= m_rtStop) {
+		if (m_CurrentFrame >= m_NumFrames) {
 			return S_FALSE;
 		}
 
@@ -349,8 +349,7 @@ HRESULT CVapourSynthStream::FillBuffer(IMediaSample* pSample)
 			return S_FALSE;
 		}
 
-		int framenum = (int)llMulDiv(m_rtPosition, m_fpsNum, m_fpsDen * UNITS, 0); // round down
-		const VSFrameRef* frame = m_vsAPI->getFrame(framenum, m_vsNode, m_vsErrorMessage, sizeof(m_vsErrorMessage));
+		const VSFrameRef* frame = m_vsAPI->getFrame(m_CurrentFrame, m_vsNode, m_vsErrorMessage, sizeof(m_vsErrorMessage));
 		if (!frame) {
 			std::wstring error = ConvertUtf8ToWide(m_vsErrorMessage);
 			DLog(error.c_str());
@@ -391,7 +390,7 @@ HRESULT CVapourSynthStream::FillBuffer(IMediaSample* pSample)
 		pSample->SetTime(&rtStart, &rtStop);
 
 		m_rtSampleTime += m_AvgTimePerFrame; // Hmm
-		m_rtPosition = llMulDiv((framenum+1) * UNITS, m_fpsDen, m_fpsNum, m_fpsNum-1); // round up
+		m_CurrentFrame++;
 	}
 
 	pSample->SetSyncPoint(TRUE);
