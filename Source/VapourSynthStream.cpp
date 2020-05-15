@@ -135,10 +135,16 @@ CVapourSynthStream::CVapourSynthStream(const WCHAR* name, CSource* pParent, HRES
 
 		int k = m_vsInfo->format->id / cmGray;
 		if (k == (cmYUV / cmGray)) {
-			// swap U and V for YV12, YV16, YV24.
-			m_Planes[0] = 0;
-			m_Planes[1] = 2;
-			m_Planes[2] = 1;
+			if (m_Format.CDepth == 8) {
+				// swap U and V for YV12, YV16, YV24.
+				m_Planes[0] = 0;
+				m_Planes[1] = 2;
+				m_Planes[2] = 1;
+			} else {
+				m_Planes[0] = 0;
+				m_Planes[1] = 1;
+				m_Planes[2] = 2;
+			}
 		}
 		else if (k == (cmRGB / cmGray)) {
 			// planar RGB
