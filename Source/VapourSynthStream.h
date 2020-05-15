@@ -55,7 +55,7 @@ private:
 	int                m_Planes[4] = {0, 1, 2, 3};
 
 	REFERENCE_TIME m_AvgTimePerFrame = 0;
-	REFERENCE_TIME m_rtSampleTime = 0;
+	int m_FrameCounter = 0;
 	int m_CurrentFrame = 0;
 
 	BOOL m_bDiscontinuity = FALSE;

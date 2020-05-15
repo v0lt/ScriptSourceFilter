@@ -219,7 +219,7 @@ HRESULT CAviSynthStream::ChangeStart()
 {
 	{
 		CAutoLock lock(CSourceSeeking::m_pLock);
-		m_rtSampleTime = 0;
+		m_FrameCounter = 0;
 		m_CurrentFrame = (int)llMulDiv(m_rtStart, m_fpsNum, m_fpsDen * UNITS, 0); // round down
 	}
 
@@ -247,7 +247,7 @@ HRESULT CAviSynthStream::OnThreadCreate()
 {
 	CAutoLock cAutoLockShared(&m_cSharedState);
 
-	m_rtSampleTime = 0;
+	m_FrameCounter = 0;
 	m_CurrentFrame = (int)llMulDiv(m_rtStart, m_fpsNum, m_fpsDen * UNITS, 0); // round down
 
 	return CSourceStream::OnThreadCreate();
@@ -344,12 +344,17 @@ HRESULT CAviSynthStream::FillBuffer(IMediaSample* pSample)
 
 		pSample->SetActualDataLength(DataLength);
 
+		// Sample time
+		REFERENCE_TIME rtStart = llMulDiv(UNITS * m_FrameCounter, m_fpsDen, m_fpsNum, 0);
+		REFERENCE_TIME rtStop  = llMulDiv(UNITS * (m_FrameCounter+1), m_fpsDen, m_fpsNum, 0);
 		// The sample times are modified by the current rate.
-		REFERENCE_TIME rtStart = static_cast<REFERENCE_TIME>(m_rtSampleTime / m_dRateSeeking);
-		REFERENCE_TIME rtStop = static_cast<REFERENCE_TIME>((m_rtSampleTime + m_AvgTimePerFrame) / m_dRateSeeking);
+		if (m_dRateSeeking != 1.0) {
+			rtStart = static_cast<REFERENCE_TIME>(rtStart / m_dRateSeeking);
+			rtStop = static_cast<REFERENCE_TIME>(rtStop / m_dRateSeeking);
+		}
 		pSample->SetTime(&rtStart, &rtStop);
 
-		m_rtSampleTime += m_AvgTimePerFrame; // Hmm
+		m_FrameCounter++;
 		m_CurrentFrame++;
 	}
 
