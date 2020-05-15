@@ -133,8 +133,18 @@ CVapourSynthStream::CVapourSynthStream(const WCHAR* name, CSource* pParent, HRES
 		m_AvgTimePerFrame = llMulDiv(UNITS, m_fpsDen, m_fpsNum, 0);
 		m_rtDuration = m_rtStop = llMulDiv(UNITS * m_NumFrames, m_fpsDen, m_fpsNum, 0);
 
-		if (m_vsInfo->format->id > cmYUV && m_vsInfo->format->id < cmYCoCg) {
-			std::swap(m_Planes[1], m_Planes[2]); // swap U and V for YV12, YV16, YV24.
+		int k = m_vsInfo->format->id / cmGray;
+		if (k == (cmYUV / cmGray)) {
+			// swap U and V for YV12, YV16, YV24.
+			m_Planes[0] = 0;
+			m_Planes[1] = 2;
+			m_Planes[2] = 1;
+		}
+		else if (k == (cmRGB / cmGray)) {
+			// planar RGB
+			m_Planes[0] = 1;
+			m_Planes[1] = 2;
+			m_Planes[2] = 0;
 		}
 
 		DLog(L"Open clip %S %dx%d %.03f fps", m_Format.str, m_Width, m_Height, (double)m_fpsNum/m_fpsDen);

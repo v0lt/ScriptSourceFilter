@@ -162,18 +162,25 @@ HRESULT GetDataFromResource(LPVOID& data, DWORD& size, UINT resid)
 static const FmtParams_t s_FormatTable[] = {
 	// fourcc                   |   subtype                | ASformat               | VSformat     | str    |Packsize|buffCoeff|CDepth|planes
 	{DWORD(-1),                  GUID_NULL,                 0,                       0,             nullptr,        0, 0,       0,     0},
+	// YUV packed
 	{FCC('YUY2'),                MEDIASUBTYPE_YUY2,         VideoInfo::CS_YUY2,      pfCompatYUY2,  "YUY2",         2, 2,       8,     1},
+	// YUV planar
 	{FCC('YV12'),                MEDIASUBTYPE_YV12,         VideoInfo::CS_I420,      0,             "I420",         1, 3,       8,     3}, // for tests
 	{FCC('YV12'),                MEDIASUBTYPE_YV12,         VideoInfo::CS_YV12,      pfYUV420P8,    "YV12",         1, 3,       8,     3},
 	{FCC('YV16'),                MEDIASUBTYPE_YV16,         VideoInfo::CS_YV16,      pfYUV422P8,    "YV16",         1, 4,       8,     3},
 	{FCC('YV24'),                MEDIASUBTYPE_YV24,         VideoInfo::CS_YV24,      pfYUV444P8,    "YV24",         1, 6,       8,     3},
 	{MAKEFOURCC('Y','3',11,10),  MEDIASUBTYPE_LAV_RAWVIDEO, VideoInfo::CS_YUV420P10, pfYUV420P10,   "YUV420P16",    2, 3,       10,    3},
 	{MAKEFOURCC('Y','3',11,16),  MEDIASUBTYPE_LAV_RAWVIDEO, VideoInfo::CS_YUV420P16, pfYUV420P16,   "YUV420P16",    2, 3,       16,    3},
+	// RGB packed
 	{BI_RGB,                     MEDIASUBTYPE_RGB24,        VideoInfo::CS_BGR24,     0,             "RGB24",        3, 2,       8,     1},
 	{BI_RGB,                     MEDIASUBTYPE_RGB32,        VideoInfo::CS_BGR32,     pfCompatBGR32, "RGB32",        4, 2,       8,     1},
 	{BI_RGB,                     MEDIASUBTYPE_ARGB32,       0,                       0,             "ARGB32",       4, 2,       8,     1},
 	{MAKEFOURCC('B','G','R',48), MEDIASUBTYPE_RGB48,        VideoInfo::CS_BGR48,     0,             "RGB48",        6, 2,       16,    1},
 	{MAKEFOURCC('B','R','A',64), MEDIASUBTYPE_ARGB64,       VideoInfo::CS_BGR64,     0,             "ARGB64",       8, 2,       16,    1},
+	// RGB planar
+	{MAKEFOURCC('G','3',0,8),    MEDIASUBTYPE_LAV_RAWVIDEO, VideoInfo::CS_RGBP,      pfRGB24,       "RGBP24",       1, 6,       8,     3},
+	{MAKEFOURCC('G','3',0,16),   MEDIASUBTYPE_LAV_RAWVIDEO, VideoInfo::CS_RGBP16,    pfRGB48,       "RGBP48",       2, 6,       16,    3},
+	// grayscale
 	{FCC('Y8  '),                MEDIASUBTYPE_Y8,           VideoInfo::CS_Y8,        pfGray8,       "Y8",           1, 2,       8,     1},
 	{MAKEFOURCC('Y','1',0,16),   MEDIASUBTYPE_Y16,          VideoInfo::CS_Y16,       pfGray16,      "Y16",          2, 2,       16,    1},
 };
