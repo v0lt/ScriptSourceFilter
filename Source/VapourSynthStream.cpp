@@ -371,18 +371,24 @@ HRESULT CVapourSynthStream::FillBuffer(IMediaSample* pSample)
 		for (int i = 0; i < num_planes; i++) {
 			const int plane = m_Planes[i];
 			const BYTE* src_data = m_vsAPI->getReadPtr(frame, plane);
-			const UINT src_pitch = m_vsAPI->getStride(frame, plane);
+			int src_pitch = m_vsAPI->getStride(frame, plane);
 			const UINT height    = m_vsAPI->getFrameHeight(frame, plane);
 			UINT dst_pitch = m_PitchBuff;
 			if (i > 0) {
 				dst_pitch >>= m_vsInfo->format->subSamplingW;
 			}
+
+			if (m_Format.fourcc == BI_RGB) {
+				src_data += src_pitch * (height - 1);
+				src_pitch = -src_pitch;
+			}
+
 			if (src_pitch == dst_pitch) {
 				memcpy(dst_data, src_data, dst_pitch * height);
 				dst_data += dst_pitch * height;
 			}
 			else {
-				UINT linesize = std::min(src_pitch, dst_pitch);
+				UINT linesize = std::min((UINT)abs(src_pitch), dst_pitch);
 				for (UINT y = 0; y < height; y++) {
 					memcpy(dst_data, src_data, linesize);
 					src_data += src_pitch;

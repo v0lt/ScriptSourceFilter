@@ -324,13 +324,16 @@ HRESULT CAviSynthStream::FillBuffer(IMediaSample* pSample)
 		for (int i = 0; i < num_planes; i++) {
 			const int plane = m_Planes[i];
 			const BYTE* src_data = VFrame->GetReadPtr(plane);
-			const UINT src_pitch = VFrame->GetPitch(plane);
+			int src_pitch = VFrame->GetPitch(plane);
 			const UINT height    = VFrame->GetHeight(plane);
 			UINT dst_pitch = m_PitchBuff;
-			if (i > 0) {
-				if ((m_Format.ASformat&VideoInfo::CS_Sub_Width_Mask) == VideoInfo::CS_Sub_Width_2) {
-					dst_pitch /= 2;
-				}
+			if (i > 0 && (m_Format.ASformat&VideoInfo::CS_Sub_Width_Mask) == VideoInfo::CS_Sub_Width_2) {
+				dst_pitch /= 2;
+			}
+
+			if (m_Format.fourcc == BI_RGB) {
+				src_data += src_pitch * (height - 1);
+				src_pitch = -src_pitch;
 			}
 
 			if (src_pitch == dst_pitch) {
@@ -338,7 +341,7 @@ HRESULT CAviSynthStream::FillBuffer(IMediaSample* pSample)
 				dst_data += dst_pitch * height;
 			}
 			else {
-				UINT linesize = std::min(src_pitch, dst_pitch);
+				UINT linesize = std::min((UINT)abs(src_pitch), dst_pitch);
 				for (UINT y = 0; y < height; y++) {
 					memcpy(dst_data, src_data, linesize);
 					src_data += src_pitch;
