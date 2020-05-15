@@ -1,6 +1,6 @@
 //{{NO_DEPENDENCIES}}
 // Microsoft Visual C++ generated include file.
-// Used by ScriptSource.rc
+// Used by MpcScriptSource.rc
 //
 #define IDD_MAINPROPPAGE                102
 #define IDS_MAINPROPPAGE_TITLE          104
