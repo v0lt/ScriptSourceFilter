@@ -379,7 +379,7 @@ HRESULT CVapourSynthStream::FillBuffer(IMediaSample* pSample)
 					dst_data += dst_pitch;
 				}
 			}
-			DataLength = dst_pitch * height;
+			DataLength += dst_pitch * height;
 		}
 
 		pSample->SetActualDataLength(DataLength);
