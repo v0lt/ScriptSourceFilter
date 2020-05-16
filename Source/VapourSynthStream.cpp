@@ -177,7 +177,7 @@ CVapourSynthStream::CVapourSynthStream(const WCHAR* name, CSource* pParent, HRES
 
 		*phr = S_OK;
 	}
-	catch (const std::exception& e) {
+	catch ([[maybe_unused]] const std::exception& e) {
 		VapourSynthFree();
 		DLog(L"%S\n%s", e.what(), error.c_str());
 		*phr = E_FAIL;
