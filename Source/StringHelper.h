@@ -44,6 +44,18 @@ inline void str_toupper(std::wstring& s)
 	std::transform(s.begin(), s.end(), s.begin(), std::toupper);
 }
 
+inline void str_tolower_all(std::wstring& s)
+{
+	const std::ctype<wchar_t>& f = std::use_facet<std::ctype<wchar_t>>(std::locale());
+	f.tolower(&s[0], &s[0] + s.size());
+}
+
+inline void str_toupper_all(std::wstring& s)
+{
+	const std::ctype<wchar_t>& f = std::use_facet<std::ctype<wchar_t>>(std::locale());
+	f.toupper(&s[0], &s[0] + s.size());
+}
+
 inline const std::wstring A2WStr(std::string& s)
 {
 	return std::wstring(s.begin(), s.end());
