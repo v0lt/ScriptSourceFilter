@@ -171,6 +171,10 @@ static const FmtParams_t s_FormatTable[] = {
 	{FCC('YV24'),                MEDIASUBTYPE_YV24,         VideoInfo::CS_YV24,      pfYUV444P8,    "YV24",         1, 6,       8,     3,     24},
 	{MAKEFOURCC('Y','3',11,10),  MEDIASUBTYPE_LAV_RAWVIDEO, VideoInfo::CS_YUV420P10, pfYUV420P10,   "YUV420P10",    2, 3,       10,    3,     24},
 	{MAKEFOURCC('Y','3',11,16),  MEDIASUBTYPE_LAV_RAWVIDEO, VideoInfo::CS_YUV420P16, pfYUV420P16,   "YUV420P16",    2, 3,       16,    3,     24},
+	{MAKEFOURCC('Y','3',10,10),  MEDIASUBTYPE_LAV_RAWVIDEO, VideoInfo::CS_YUV422P10, pfYUV422P10,   "YUV422P10",    2, 4,       10,    3,     32},
+	{MAKEFOURCC('Y','3',10,16),  MEDIASUBTYPE_LAV_RAWVIDEO, VideoInfo::CS_YUV422P16, pfYUV422P16,   "YUV422P16",    2, 4,       16,    3,     32},
+	{MAKEFOURCC('Y','3',0,10),   MEDIASUBTYPE_LAV_RAWVIDEO, VideoInfo::CS_YUV444P10, pfYUV444P10,   "YUV444P10",    2, 6,       10,    3,     48},
+	{MAKEFOURCC('Y','3',0,16),   MEDIASUBTYPE_LAV_RAWVIDEO, VideoInfo::CS_YUV444P16, pfYUV444P16,   "YUV444P16",    2, 6,       16,    3,     48},
 	// RGB packed
 	{BI_RGB,                     MEDIASUBTYPE_RGB24,        VideoInfo::CS_BGR24,     0,             "RGB24",        3, 2,       8,     1,     24},
 	{BI_RGB,                     MEDIASUBTYPE_RGB32,        VideoInfo::CS_BGR32,     pfCompatBGR32, "RGB32",        4, 2,       8,     1,     32},
