@@ -74,11 +74,27 @@ STDAPI DllRegisterServer()
 
 STDAPI DllUnregisterServer()
 {
+	LPWSTR strGuid = L"{7D3BBD5A-880D-4A30-A2D1-7B8C2741AFEF}";
+	DWORD type;
+	WCHAR data[40];
+	DWORD cbData;
+
 	HKEY hKey;
-	LONG ec = ::RegOpenKeyExW(HKEY_CLASSES_ROOT, L"Media Type\\Extensions", 0, KEY_ALL_ACCESS, &hKey);
+	LONG ec = ::RegOpenKeyExW(HKEY_CLASSES_ROOT, L"Media Type\\Extensions\\.avs", 0, KEY_ALL_ACCESS, &hKey);
 	if (ec == ERROR_SUCCESS) {
-		ec = ::RegDeleteKeyW(hKey, L".avs");
-		ec = ::RegDeleteKeyW(hKey, L".vpy");
+		ec = RegQueryValueExW(hKey, L"Source Filter", nullptr, &type, (LPBYTE)data, &cbData);
+		if (ec == ERROR_SUCCESS && type == REG_SZ && _wcsicmp(strGuid, data) == 0) {
+			RegDeleteValueW(hKey, L"Source Filter");
+		}
+		::RegCloseKey(hKey);
+	}
+
+	ec = ::RegOpenKeyExW(HKEY_CLASSES_ROOT, L"Media Type\\Extensions\\.vpy", 0, KEY_ALL_ACCESS, &hKey);
+	if (ec == ERROR_SUCCESS) {
+		ec = RegQueryValueExW(hKey, L"Source Filter", nullptr, &type, (LPBYTE)data, &cbData);
+		if (ec == ERROR_SUCCESS && type == REG_SZ && _wcsicmp(strGuid, data) == 0) {
+			RegDeleteValueW(hKey, L"Source Filter");
+		}
 		::RegCloseKey(hKey);
 	}
 
