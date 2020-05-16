@@ -20,7 +20,7 @@
 
 #include "stdafx.h"
 
-#include <fstream>
+#include "VUIOptions.h"
 #include "StringHelper.h"
 
 #include "AviSynthStream.h"
@@ -145,47 +145,7 @@ CAviSynthStream::CAviSynthStream(const WCHAR* name, CSource* pParent, HRESULT* p
 	vih2->bmiHeader.biCompression = m_Format.fourcc;
 	vih2->bmiHeader.biSizeImage   = m_BufferSize;
 
-#if 0
-	std::string vui_options;
-	std::ifstream scrypt(ansiFile);
-	if (scrypt.is_open()) {
-		const std::string vui_prefix("# $VUI:");
-		std::string line;
-		while (std::getline(scrypt, line)) {
-			// looking for the last line of VUI options
-			if (line.compare(0, vui_prefix.size(), vui_prefix) == 0) {
-				vui_options = line.substr(vui_prefix.size());
-			}
-		}
-		scrypt.close();
-	}
-	std::vector<std::string> tokens;
-	str_split(vui_options, tokens, ' ');
-	if (tokens.size() >= 2) {
-		int i = 0;
-		while (i+1 < tokens.size()) {
-			const auto& param = tokens[i];
-			const auto& value = tokens[i+1];
-			if (param == "--range") {
-				if (value == "tv") {
-					i++;
-				}
-				else if (value == "pc") {
-					i++;
-				}
-			}
-			else if (param == "--colorprim") {
-			}
-			else if (param == "--transfer") {
-			}
-			else if (param == "--colormatrix") {
-			}
-			else if (param == "--chromaloc") {
-			}
-			i++;
-		}
-	}
-#endif
+	vih2->dwControlFlags = GetColorInfoFromVUIOptions(ansiFile.c_str());
 
 	*phr = S_OK;
 }

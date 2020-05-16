@@ -78,6 +78,7 @@
     <ClCompile Include="ScriptSource.cpp" />
     <ClCompile Include="StringHelper.cpp" />
     <ClCompile Include="VapourSynthStream.cpp" />
+    <ClCompile Include="VUIOptions.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AviSynthStream.h" />
@@ -89,6 +90,7 @@
     <ClInclude Include="ScriptSource.h" />
     <ClInclude Include="StringHelper.h" />
     <ClInclude Include="VapourSynthStream.h" />
+    <ClInclude Include="VUIOptions.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\BaseClasses\BaseClasses.vcxproj">
