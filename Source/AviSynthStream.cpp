@@ -20,6 +20,7 @@
 
 #include "stdafx.h"
 
+#include <fstream>
 #include "StringHelper.h"
 
 #include "AviSynthStream.h"
@@ -143,6 +144,24 @@ CAviSynthStream::CAviSynthStream(const WCHAR* name, CSource* pParent, HRESULT* p
 	vih2->bmiHeader.biBitCount    = m_Format.bitCount;
 	vih2->bmiHeader.biCompression = m_Format.fourcc;
 	vih2->bmiHeader.biSizeImage   = m_BufferSize;
+
+#if 0
+	std::string vui_options;
+	std::ifstream scrypt(ansiFile);
+	if (scrypt.is_open()) {
+		const std::string vui_prefix("# $VUI:");
+		std::string line;
+		while (std::getline(scrypt, line)) {
+			// looking for the last line of VUI options
+			if (line.compare(0, vui_prefix.size(), vui_prefix) == 0) {
+				vui_options = line.substr(vui_prefix.size());
+			}
+		}
+		scrypt.close();
+	}
+	std::vector<std::string> tokens;
+	str_split(vui_options, tokens, ' ');
+#endif
 
 	*phr = S_OK;
 }
