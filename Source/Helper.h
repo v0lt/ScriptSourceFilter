@@ -102,6 +102,7 @@ struct FmtParams_t {
 	int         buffCoeff;
 	int         CDepth;
 	int         planes;
+	int         bitCount;
 };
 
 const FmtParams_t& GetFormatParamsAviSynth(const int asFormat);
