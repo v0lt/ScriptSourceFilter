@@ -56,6 +56,10 @@ inline void str_toupper_all(std::wstring& s)
 	f.toupper(&s[0], &s[0] + s.size());
 }
 
+void str_split(const std::string& str, std::vector<std::string>& tokens, char delim);
+
+void str_split(const std::wstring& wstr, std::vector<std::wstring>& tokens, wchar_t delim);
+
 inline const std::wstring A2WStr(std::string& s)
 {
 	return std::wstring(s.begin(), s.end());

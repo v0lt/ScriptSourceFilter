@@ -19,8 +19,30 @@
 */
 
 #include "stdafx.h"
-
+#include <sstream>
 #include "StringHelper.h"
+
+void str_split(const std::string& str, std::vector<std::string>& tokens, char delim)
+{
+	std::istringstream iss(str);
+	std::string tmp;
+	while (std::getline(iss, tmp, delim)) {
+		if (tmp.size()) {
+			tokens.push_back(tmp);
+		}
+	}
+}
+
+void str_split(const std::wstring& wstr, std::vector<std::wstring>& tokens, wchar_t delim)
+{
+	std::wistringstream iss(wstr);
+	std::wstring tmp;
+	while (std::getline(iss, tmp, delim)) {
+		if (tmp.size()) {
+			tokens.push_back(tmp);
+		}
+	}
+}
 
 std::string ConvertWideToANSI(const std::wstring& wstr)
 {
