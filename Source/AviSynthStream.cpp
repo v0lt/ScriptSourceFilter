@@ -161,6 +161,30 @@ CAviSynthStream::CAviSynthStream(const WCHAR* name, CSource* pParent, HRESULT* p
 	}
 	std::vector<std::string> tokens;
 	str_split(vui_options, tokens, ' ');
+	if (tokens.size() >= 2) {
+		int i = 0;
+		while (i+1 < tokens.size()) {
+			const auto& param = tokens[i];
+			const auto& value = tokens[i+1];
+			if (param == "--range") {
+				if (value == "tv") {
+					i++;
+				}
+				else if (value == "pc") {
+					i++;
+				}
+			}
+			else if (param == "--colorprim") {
+			}
+			else if (param == "--transfer") {
+			}
+			else if (param == "--colormatrix") {
+			}
+			else if (param == "--chromaloc") {
+			}
+			i++;
+		}
+	}
 #endif
 
 	*phr = S_OK;
