@@ -94,7 +94,7 @@ UINT GetColorInfoFromVUIOptions(LPCSTR scriptfile)
 	str_split(vui_options, tokens, ' ');
 
 	if (tokens.size() >= 2) {
-		int i = 0;
+		unsigned i = 0;
 		while (i+1 < tokens.size()) {
 			const auto& param = tokens[i];
 			const auto& value = tokens[i+1];

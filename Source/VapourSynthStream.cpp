@@ -19,9 +19,9 @@
 */
 
 #include "stdafx.h"
+#include "VUIOptions.h"
 
 #include "VapourSynthStream.h"
-
 
 //
 // CVapourSynthStream
@@ -172,6 +172,8 @@ CVapourSynthStream::CVapourSynthStream(const WCHAR* name, CSource* pParent, HRES
 		vih2->bmiHeader.biBitCount    = m_Format.bitCount;
 		vih2->bmiHeader.biCompression = m_Format.fourcc;
 		vih2->bmiHeader.biSizeImage   = m_BufferSize;
+
+		vih2->dwControlFlags = GetColorInfoFromVUIOptions(ConvertWideToANSI(name).c_str());
 
 		*phr = S_OK;
 	}
