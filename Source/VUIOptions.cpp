@@ -25,12 +25,40 @@
 #include "Helper.h"
 #include "VUIOptions.h"
 
+/*
+"Video Usability Info" https://code.videolan.org/videolan/x264/-/blob/master/x264.c
+
+--range <string>        Specify color range
+    auto, tv, pc
+
+--colorprim <string>    Specify color primaries
+    undef, bt709, bt470m, bt470bg, smpte170m,
+    smpte240m, film, bt2020, smpte428,
+    smpte431, smpte432
+
+--transfer <string>     Specify transfer characteristics
+    undef, bt709, bt470m, bt470bg, smpte170m,
+    smpte240m, linear, log100, log316,
+    iec61966-2-4, bt1361e, iec61966-2-1,
+    bt2020-10, bt2020-12, smpte2084, smpte428,
+    arib-std-b67
+
+--colormatrix <string>  Specify color matrix setting
+    undef, bt709, fcc, bt470bg, smpte170m,
+    smpte240m, GBR, YCgCo, bt2020nc, bt2020c,
+    smpte2085, chroma-derived-nc,
+    chroma-derived-c, ICtCp
+
+--chromaloc <integer>   Specify chroma sample location (0 to 5)
+    0 - Left(MPEG-2)
+    1 - Center(MPEG-1)
+    2 - TopLeft(Co-sited)
+*/
+
 struct str_value {
 	LPCSTR str;
 	UINT value;
 };
-
-// See "Video Usability Info" in https://code.videolan.org/videolan/x264/-/blob/master/x264.c
 
 static const str_value vui_range[] {
 	{ "tv", DXVA2_NominalRange_16_235 },
@@ -65,11 +93,14 @@ static const str_value vui_colormatrix[] {
 	{ "bt470bg",   DXVA2_VideoTransferMatrix_BT601 },
 	{ "smpte240m", DXVA2_VideoTransferMatrix_SMPTE240M },
 	{ "YCgCo",     VIDEOTRANSFERMATRIX_YCgCo },
+	{ "bt2020nc",  VIDEOTRANSFERMATRIX_BT2020_10 },
+	{ "bt2020c",   VIDEOTRANSFERMATRIX_BT2020_10 },
 };
 
 static const str_value vui_chromaloc[] {
 	{ "0",     DXVA2_VideoChromaSubsampling_MPEG2 },
 	{ "1",     DXVA2_VideoChromaSubsampling_MPEG1 },
+	{ "2",     DXVA2_VideoChromaSubsampling_Cosited },
 };
 
 UINT GetColorInfoFromVUIOptions(LPCSTR scriptfile)
