@@ -20,8 +20,6 @@
 
 #include "stdafx.h"
 
-#include "StringHelper.h"
-
 #include "VapourSynthStream.h"
 
 

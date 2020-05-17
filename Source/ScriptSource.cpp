@@ -22,7 +22,6 @@
 
 #include "../Include/Version.h"
 #include "PropPage.h"
-#include "StringHelper.h"
 #include "AviSynthStream.h"
 #include "VapourSynthStream.h"
 

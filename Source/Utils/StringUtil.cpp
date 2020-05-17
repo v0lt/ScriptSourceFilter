@@ -20,7 +20,7 @@
 
 #include "stdafx.h"
 #include <sstream>
-#include "StringHelper.h"
+#include "StringUtil.h"
 
 void str_split(const std::string& str, std::vector<std::string>& tokens, char delim)
 {

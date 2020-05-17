@@ -19,9 +19,7 @@
 */
 
 #include "stdafx.h"
-
 #include "VUIOptions.h"
-#include "StringHelper.h"
 
 #include "AviSynthStream.h"
 

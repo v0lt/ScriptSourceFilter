@@ -23,7 +23,6 @@
 #include <d3d9types.h>
 #include <dxva2api.h>
 #include "Helper.h"
-#include "StringHelper.h"
 #include "VUIOptions.h"
 
 struct str_value {
