@@ -108,7 +108,7 @@ CAviSynthStream::CAviSynthStream(const WCHAR* name, CSource* pParent, HRESULT* p
 		if (VInfo.IsYUV()) {
 			m_Planes[0] = PLANAR_Y;
 			if (VInfo.IsVPlaneFirst()) {
-				m_Planes[1] = PLANAR_U; // Yes, that’s right, because the output is YV12, YV16, YV24.
+				m_Planes[1] = PLANAR_U; // Yes, that's right, because the output is YV12, YV16, YV24.
 				m_Planes[2] = PLANAR_V;
 			} else {
 				m_Planes[1] = PLANAR_V;
@@ -119,6 +119,7 @@ CAviSynthStream::CAviSynthStream(const WCHAR* name, CSource* pParent, HRESULT* p
 			m_Planes[1] = PLANAR_B;
 			m_Planes[2] = PLANAR_R;
 		}
+		m_Planes[3] = PLANAR_A;
 	}
 
 	DLog(L"Open clip %S %dx%d %.03f fps", m_Format.str, m_Width, m_Height, (double)m_fpsNum/m_fpsDen);
