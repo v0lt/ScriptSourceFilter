@@ -33,6 +33,7 @@ CVapourSynthStream::CVapourSynthStream(const WCHAR* name, CSource* pParent, HRES
 {
 	CAutoLock cAutoLock(&m_cSharedState);
 
+	HRESULT hr;
 	std::wstring error;
 
 	try {
@@ -151,8 +152,41 @@ CVapourSynthStream::CVapourSynthStream(const WCHAR* name, CSource* pParent, HRES
 			m_Planes[2] = 0;
 		}
 
+		ColorInfo = GetColorInfoFromVUIOptions(ConvertWideToANSI(name).c_str());
+
 		DLog(L"Open clip %S %dx%d %.03f fps", m_Format.str, m_Width, m_Height, (double)m_fpsNum/m_fpsDen);
 
+		hr = S_OK;
+	}
+	catch (const std::exception& e) {
+		VapourSynthFree();
+		DLog(L"%S\n%s", e.what(), error.c_str());
+
+		m_Format     = GetFormatParamsVapourSynth(pfCompatBGR32);
+
+		m_Width      = 640;
+		m_Height     = 360;
+		m_Pitch      = m_Width * 4;
+		m_PitchBuff  = m_Pitch;
+		m_BufferSize = m_PitchBuff * m_Height * m_Format.buffCoeff / 2;
+
+		m_fpsNum     = 1;
+		m_fpsDen     = 1;
+		m_NumFrames  = 10;
+		m_AvgTimePerFrame = UNITS;
+		m_rtDuration = m_rtStop = UNITS * m_NumFrames;
+
+		std::wstring str = A2WStr(std::string_view(e.what())) + L"\n\n" + error;
+		m_BitmapError = GetBitmapWithText(str, m_Width, m_Height);
+
+		if (m_BitmapError) {
+			hr = S_FALSE;
+		} else {
+			hr = E_FAIL;
+		}
+	}
+
+	if (SUCCEEDED(hr)) {
 		m_mt.InitMediaType();
 		m_mt.SetType(&MEDIATYPE_Video);
 		m_mt.SetSubtype(&m_Format.subtype);
@@ -173,15 +207,10 @@ CVapourSynthStream::CVapourSynthStream(const WCHAR* name, CSource* pParent, HRES
 		vih2->bmiHeader.biCompression = m_Format.fourcc;
 		vih2->bmiHeader.biSizeImage   = m_BufferSize;
 
-		vih2->dwControlFlags = GetColorInfoFromVUIOptions(ConvertWideToANSI(name).c_str());
+		vih2->dwControlFlags = ColorInfo;
+	}
 
-		*phr = S_OK;
-	}
-	catch ([[maybe_unused]] const std::exception& e) {
-		VapourSynthFree();
-		DLog(L"%S\n%s", e.what(), error.c_str());
-		*phr = E_FAIL;
-	}
+	*phr = hr;
 }
 
 CVapourSynthStream::~CVapourSynthStream()
@@ -365,43 +394,61 @@ HRESULT CVapourSynthStream::FillBuffer(IMediaSample* pSample)
 			return S_FALSE;
 		}
 
-		const VSFrameRef* frame = m_vsAPI->getFrame(m_CurrentFrame, m_vsNode, m_vsErrorMessage, sizeof(m_vsErrorMessage));
-		if (!frame) {
-			std::wstring error = ConvertUtf8ToWide(m_vsErrorMessage);
-			DLog(error.c_str());
-			return E_FAIL;
-		}
-
 		UINT DataLength = 0;
-		const int num_planes = m_vsInfo->format->numPlanes;
-		for (int i = 0; i < num_planes; i++) {
-			const int plane = m_Planes[i];
-			const BYTE* src_data = m_vsAPI->getReadPtr(frame, plane);
-			int src_pitch = m_vsAPI->getStride(frame, plane);
-			const UINT height    = m_vsAPI->getFrameHeight(frame, plane);
-			UINT dst_pitch = m_PitchBuff;
-			if (i > 0) {
-				dst_pitch >>= m_vsInfo->format->subSamplingW;
-			}
 
-			if (m_Format.fourcc == BI_RGB) {
-				src_data += src_pitch * (height - 1);
-				src_pitch = -src_pitch;
-			}
-
-			if (src_pitch == dst_pitch) {
-				memcpy(dst_data, src_data, dst_pitch * height);
-				dst_data += dst_pitch * height;
+		if (m_BitmapError) {
+			const BYTE* src_data = m_BitmapError.get();
+			if (m_Pitch == m_PitchBuff) {
+				memcpy(dst_data, src_data, m_PitchBuff * m_Height);
 			}
 			else {
-				UINT linesize = std::min((UINT)abs(src_pitch), dst_pitch);
-				for (UINT y = 0; y < height; y++) {
+				UINT linesize = std::min(m_Pitch, m_PitchBuff);
+				for (UINT y = 0; y < m_Height; y++) {
 					memcpy(dst_data, src_data, linesize);
-					src_data += src_pitch;
-					dst_data += dst_pitch;
+					src_data += m_Pitch;
+					dst_data += m_PitchBuff;
 				}
 			}
-			DataLength += dst_pitch * height;
+			DataLength += m_PitchBuff * m_Height;
+		}
+		else {
+			const VSFrameRef* frame = m_vsAPI->getFrame(m_CurrentFrame, m_vsNode, m_vsErrorMessage, sizeof(m_vsErrorMessage));
+			if (!frame) {
+				std::wstring error = ConvertUtf8ToWide(m_vsErrorMessage);
+				DLog(error.c_str());
+				return E_FAIL;
+			}
+
+			const int num_planes = m_vsInfo->format->numPlanes;
+			for (int i = 0; i < num_planes; i++) {
+				const int plane = m_Planes[i];
+				const BYTE* src_data = m_vsAPI->getReadPtr(frame, plane);
+				int src_pitch = m_vsAPI->getStride(frame, plane);
+				const UINT height = m_vsAPI->getFrameHeight(frame, plane);
+				UINT dst_pitch = m_PitchBuff;
+				if (i > 0) {
+					dst_pitch >>= m_vsInfo->format->subSamplingW;
+				}
+
+				if (m_Format.fourcc == BI_RGB) {
+					src_data += src_pitch * (height - 1);
+					src_pitch = -src_pitch;
+				}
+
+				if (src_pitch == dst_pitch) {
+					memcpy(dst_data, src_data, dst_pitch * height);
+					dst_data += dst_pitch * height;
+				}
+				else {
+					UINT linesize = std::min((UINT)abs(src_pitch), dst_pitch);
+					for (UINT y = 0; y < height; y++) {
+						memcpy(dst_data, src_data, linesize);
+						src_data += src_pitch;
+						dst_data += dst_pitch;
+					}
+				}
+				DataLength += dst_pitch * height;
+			}
 		}
 
 		pSample->SetActualDataLength(DataLength);
