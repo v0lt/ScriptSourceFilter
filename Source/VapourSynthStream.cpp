@@ -397,9 +397,11 @@ HRESULT CVapourSynthStream::FillBuffer(IMediaSample* pSample)
 		UINT DataLength = 0;
 
 		if (m_BitmapError) {
+			DataLength = m_PitchBuff * m_Height;
+
 			const BYTE* src_data = m_BitmapError.get();
 			if (m_Pitch == m_PitchBuff) {
-				memcpy(dst_data, src_data, m_PitchBuff * m_Height);
+				memcpy(dst_data, src_data, DataLength);
 			}
 			else {
 				UINT linesize = std::min(m_Pitch, m_PitchBuff);
@@ -409,7 +411,6 @@ HRESULT CVapourSynthStream::FillBuffer(IMediaSample* pSample)
 					dst_data += m_PitchBuff;
 				}
 			}
-			DataLength += m_PitchBuff * m_Height;
 		}
 		else {
 			const VSFrameRef* frame = m_vsAPI->getFrame(m_CurrentFrame, m_vsNode, m_vsErrorMessage, sizeof(m_vsErrorMessage));
