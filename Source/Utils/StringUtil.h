@@ -65,6 +65,11 @@ inline const std::wstring A2WStr(std::string& s)
 	return std::wstring(s.begin(), s.end());
 }
 
+inline const std::wstring A2WStr(std::string_view& s)
+{
+	return std::wstring(s.begin(), s.end());
+}
+
 std::string ConvertWideToANSI(const std::wstring& wstr);
 
 std::wstring ConvertAnsiToWide(const std::string& str);
