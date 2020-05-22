@@ -40,6 +40,8 @@ private:
 	const AVS_Linkage*  m_Linkage = nullptr;
 	int                 m_Planes[4] = {};
 
+	std::unique_ptr<BYTE[]> m_BitmapError;
+
 	REFERENCE_TIME m_AvgTimePerFrame = 0;
 	int m_FrameCounter = 0;
 	int m_CurrentFrame = 0;
@@ -48,9 +50,10 @@ private:
 	BOOL m_bFlushing = FALSE;
 
 	FmtParams_t m_Format = {};
-	UINT m_Width  = 0;
-	UINT m_Height = 0;
-	UINT m_Pitch  = 0;
+	UINT ColorInfo = 0;
+	UINT m_Width   = 0;
+	UINT m_Height  = 0;
+	UINT m_Pitch   = 0;
 	UINT m_PitchBuff  = 0;
 	UINT m_BufferSize = 0;
 
