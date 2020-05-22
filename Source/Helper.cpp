@@ -113,3 +113,71 @@ const FmtParams_t& GetFormatParamsVapourSynth(const int vsFormat)
 	}
 	return s_FormatTable[0];
 }
+
+std::unique_ptr<BYTE[]> GetBitmapWithText(const std::wstring text, const long width, const long height)
+{
+	HFONT hFont = CreateFontW(-14, 0, 0, 0, FW_NORMAL, FALSE,
+		FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS,
+		CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY,
+		FIXED_PITCH, L"Consolas");
+	if (!hFont) {
+		return nullptr;
+	}
+
+	BOOL ret = 0;
+	HDC hDC = CreateCompatibleDC(nullptr);
+	SetMapMode(hDC, MM_TEXT);
+
+	HFONT hFontOld = (HFONT)SelectObject(hDC, hFont);
+
+	SIZE size;
+	ret = GetTextExtentPoint32W(hDC, L"_", 1, &size);
+
+	// Prepare to create a bitmap
+	BITMAPINFO bmi = {};
+	bmi.bmiHeader.biSize        = sizeof(BITMAPINFOHEADER);
+	bmi.bmiHeader.biWidth       = width;
+	bmi.bmiHeader.biHeight      = -height;
+	bmi.bmiHeader.biPlanes      = 1;
+	bmi.bmiHeader.biCompression = BI_RGB;
+	bmi.bmiHeader.biBitCount    = 32;
+
+	HGDIOBJ hBitmapOld = nullptr;
+	void* pBitmapBits = nullptr;
+	HBITMAP hBitmap = CreateDIBSection(hDC, &bmi, DIB_RGB_COLORS, &pBitmapBits, nullptr, 0);
+	if (pBitmapBits) {
+		HGDIOBJ hBitmapOld = SelectObject(hDC, hBitmap);
+
+		SetTextColor(hDC, RGB(255, 255, 255));
+		SetBkColor(hDC, RGB(64, 64, 64));
+		RECT rect = {0, 0, width, height};
+		HBRUSH hBrush = CreateSolidBrush(RGB(64, 64, 64));
+		FillRect(hDC, &rect, hBrush);
+		DrawTextW(hDC, text.c_str(), text.size(), &rect, DT_LEFT|DT_WORDBREAK);
+
+		GdiFlush();
+		DeleteObject(hBrush);
+
+		const long len = width * height * 4;
+		std::unique_ptr<BYTE[]> bitmapData(new(std::nothrow) BYTE[len]);
+
+		if (bitmapData) {
+			memcpy(bitmapData.get(), pBitmapBits, len);
+		}
+
+		SelectObject(hDC, hBitmapOld);
+		DeleteObject(hBitmap);
+
+		SelectObject(hDC, hFontOld);
+		DeleteObject(hFont);
+		DeleteDC(hDC);
+
+		return bitmapData;
+	}
+
+	SelectObject(hDC, hFontOld);
+	DeleteObject(hFont);
+	DeleteDC(hDC);
+
+	return nullptr;
+}

@@ -40,3 +40,5 @@ struct FmtParams_t {
 
 const FmtParams_t& GetFormatParamsAviSynth(const int asFormat);
 const FmtParams_t& GetFormatParamsVapourSynth(const int vsFormat);
+
+std::unique_ptr<BYTE[]> GetBitmapWithText(const std::wstring text, const long width, const long height);
