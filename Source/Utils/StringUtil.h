@@ -22,6 +22,9 @@
 
 #include <cctype>
 
+
+// convert string to lower or upper case
+
 inline void str_tolower(std::string& s)
 {
 	std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c){ return std::tolower(c); } );
@@ -56,9 +59,15 @@ inline void str_toupper_all(std::wstring& s)
 	f.toupper(&s[0], &s[0] + s.size());
 }
 
+
+// split a string using char delimiter
+
 void str_split(const std::string& str, std::vector<std::string>& tokens, char delim);
 
 void str_split(const std::wstring& wstr, std::vector<std::wstring>& tokens, wchar_t delim);
+
+
+// simple convert ANSI string to wide character string
 
 inline const std::wstring A2WStr(const std::string& s)
 {
@@ -75,6 +84,9 @@ inline const std::wstring A2WStr(const std::string_view& sv)
 {
 	return std::wstring(sv.begin(), sv.end());
 }
+
+
+// converting strings of different formats
 
 std::string ConvertWideToANSI(const std::wstring& wstr);
 

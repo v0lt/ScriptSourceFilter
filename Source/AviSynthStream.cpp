@@ -80,7 +80,7 @@ CAviSynthStream::CAviSynthStream(const WCHAR* name, CSource* pParent, HRESULT* p
 		m_Format = GetFormatParamsAviSynth(VInfo.pixel_type);
 
 		if (m_Format.fourcc == DWORD(-1)) {
-			throw std::exception(fmt::format("Unsuported pixel_type {:#010x}", VInfo.pixel_type).c_str());
+			throw std::exception(fmt::format("Unsuported pixel_type {:#010x} ({})", (uint32_t)VInfo.pixel_type, VInfo.pixel_type).c_str());
 		}
 
 		auto VFrame = Clip->GetFrame(0, m_ScriptEnvironment);
