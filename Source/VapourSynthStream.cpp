@@ -176,7 +176,7 @@ CVapourSynthStream::CVapourSynthStream(const WCHAR* name, CSource* pParent, HRES
 		m_AvgTimePerFrame = UNITS;
 		m_rtDuration = m_rtStop = UNITS * m_NumFrames;
 
-		std::wstring str = A2WStr(std::string_view(e.what())) + L"\n\n" + error;
+		std::wstring str = A2WStr(e.what()) + L"\n\n" + error;
 		m_BitmapError = GetBitmapWithText(str, m_Width, m_Height);
 
 		if (m_BitmapError) {

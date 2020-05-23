@@ -60,14 +60,20 @@ void str_split(const std::string& str, std::vector<std::string>& tokens, char de
 
 void str_split(const std::wstring& wstr, std::vector<std::wstring>& tokens, wchar_t delim);
 
-inline const std::wstring A2WStr(std::string& s)
+inline const std::wstring A2WStr(const std::string& s)
 {
 	return std::wstring(s.begin(), s.end());
 }
 
-inline const std::wstring A2WStr(std::string_view& s)
+inline const std::wstring A2WStr(const char* s)
 {
-	return std::wstring(s.begin(), s.end());
+	const std::string_view sv(s);
+	return std::wstring(sv.begin(), sv.end());
+}
+
+inline const std::wstring A2WStr(const std::string_view& sv)
+{
+	return std::wstring(sv.begin(), sv.end());
 }
 
 std::string ConvertWideToANSI(const std::wstring& wstr);
