@@ -20,4 +20,4 @@
 
 #pragma once
 
-UINT GetColorInfoFromVUIOptions(LPCSTR scriptfile);
+UINT GetColorInfoFromVUIOptions(LPCWSTR scriptfile);

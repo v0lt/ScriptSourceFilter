@@ -117,7 +117,7 @@ CAviSynthStream::CAviSynthStream(const WCHAR* name, CSource* pParent, HRESULT* p
 			m_Planes[3] = PLANAR_A;
 		}
 
-		ColorInfo = GetColorInfoFromVUIOptions(ansiFile.c_str());
+		ColorInfo = GetColorInfoFromVUIOptions(name);
 
 		DLog(L"Open clip %S %dx%d %.03f fps", m_Format.str, m_Width, m_Height, (double)m_fpsNum / m_fpsDen);
 

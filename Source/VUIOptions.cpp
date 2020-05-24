@@ -103,7 +103,7 @@ static const str_value vui_chromaloc[] {
 	{ "2",     DXVA2_VideoChromaSubsampling_Cosited },
 };
 
-UINT GetColorInfoFromVUIOptions(LPCSTR scriptfile)
+UINT GetColorInfoFromVUIOptions(LPCWSTR scriptfile)
 {
 	DXVA2_ExtendedFormat exFmt = {};
 	std::string vui_options;

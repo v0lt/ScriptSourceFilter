@@ -152,7 +152,7 @@ CVapourSynthStream::CVapourSynthStream(const WCHAR* name, CSource* pParent, HRES
 			m_Planes[2] = 0;
 		}
 
-		ColorInfo = GetColorInfoFromVUIOptions(ConvertWideToANSI(name).c_str());
+		ColorInfo = GetColorInfoFromVUIOptions(name);
 
 		DLog(L"Open clip %S %dx%d %.03f fps", m_Format.str, m_Width, m_Height, (double)m_fpsNum/m_fpsDen);
 
