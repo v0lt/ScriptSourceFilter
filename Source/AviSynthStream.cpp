@@ -58,13 +58,14 @@ CAviSynthStream::CAviSynthStream(const WCHAR* name, CSource* pParent, HRESULT* p
 
 		AVS_linkage = m_Linkage = m_ScriptEnvironment->GetAVSLinkage();
 
-		std::string ansiFile = ConvertWideToANSI(name);
-		AVSValue arg(ansiFile.c_str());
+		std::string utf8file = ConvertWideToUtf8(name);
+		AVSValue args[2] = { utf8file.c_str(), true };
+		const char* const arg_names[2] = { 0, "utf8" };
 		try {
-			m_AVSValue = m_ScriptEnvironment->Invoke("Import", AVSValue(&arg, 1));
+			m_AVSValue = m_ScriptEnvironment->Invoke("Import", AVSValue(args, 2), arg_names);
 		}
 		catch (const AvisynthError& e) {
-			error = ConvertAnsiToWide(e.msg);
+			error = ConvertUtf8ToWide(e.msg);
 			throw std::exception("Failure to open Avisynth script file.");
 		}
 
