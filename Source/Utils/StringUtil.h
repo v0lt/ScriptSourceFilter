@@ -22,8 +22,9 @@
 
 #include <cctype>
 
-
+//
 // convert string to lower or upper case
+//
 
 inline void str_tolower(std::string& s)
 {
@@ -59,34 +60,44 @@ inline void str_toupper_all(std::wstring& s)
 	f.toupper(&s[0], &s[0] + s.size());
 }
 
-
+//
 // split a string using char delimiter
+//
 
 void str_split(const std::string& str, std::vector<std::string>& tokens, char delim);
 
 void str_split(const std::wstring& wstr, std::vector<std::wstring>& tokens, wchar_t delim);
 
+//
+// trimming whitespace
+//
 
+inline const std::string str_trim(const std::string_view& sv)
+{
+	auto sfront = std::find_if_not(sv.begin(), sv.end(), [](int c) {return isspace(c); });
+	auto sback = std::find_if_not(sv.rbegin(), sv.rend(), [](int c) {return isspace(c); }).base();
+	return (sback <= sfront ? std::string() : std::string(sfront, sback));
+}
+
+inline const std::wstring str_trim(const std::wstring_view& sv)
+{
+	auto sfront = std::find_if_not(sv.begin(), sv.end(), [](int c) {return iswspace(c); });
+	auto sback = std::find_if_not(sv.rbegin(), sv.rend(), [](int c) {return iswspace(c); }).base();
+	return (sback <= sfront ? std::wstring() : std::wstring(sfront, sback));
+}
+
+//
 // simple convert ANSI string to wide character string
-
-inline const std::wstring A2WStr(const std::string& s)
-{
-	return std::wstring(s.begin(), s.end());
-}
-
-inline const std::wstring A2WStr(const char* s)
-{
-	const std::string_view sv(s);
-	return std::wstring(sv.begin(), sv.end());
-}
+//
 
 inline const std::wstring A2WStr(const std::string_view& sv)
 {
 	return std::wstring(sv.begin(), sv.end());
 }
 
-
+//
 // converting strings of different formats
+//
 
 std::string ConvertWideToANSI(const std::wstring& wstr);
 
