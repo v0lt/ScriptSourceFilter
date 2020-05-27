@@ -68,6 +68,8 @@ static const FmtParams_t s_FormatTable[] = {
 	{FCC('YV16'),                MEDIASUBTYPE_YV16,         VideoInfo::CS_YV16,       pfYUV422P8,    "YV16",         1, 4,       8,     3,     16},
 	{FCC('YV24'),                MEDIASUBTYPE_YV24,         VideoInfo::CS_YV24,       pfYUV444P8,    "YV24",         1, 6,       8,     3,     24},
 	{MAKEFOURCC('Y','3',11,10),  MEDIASUBTYPE_LAV_RAWVIDEO, VideoInfo::CS_YUV420P10,  pfYUV420P10,   "YUV420P10",    2, 3,       10,    3,     24},
+	{MAKEFOURCC('Y','3',11,12),  MEDIASUBTYPE_LAV_RAWVIDEO, VideoInfo::CS_YUV420P12,  pfYUV420P12,   "YUV420P12",    2, 3,       10,    3,     24},
+	{MAKEFOURCC('Y','3',11,14),  MEDIASUBTYPE_LAV_RAWVIDEO, VideoInfo::CS_YUV420P14,  pfYUV420P14,   "YUV420P14",    2, 3,       10,    3,     24},
 	{MAKEFOURCC('Y','3',11,16),  MEDIASUBTYPE_LAV_RAWVIDEO, VideoInfo::CS_YUV420P16,  pfYUV420P16,   "YUV420P16",    2, 3,       16,    3,     24},
 	{MAKEFOURCC('Y','3',10,10),  MEDIASUBTYPE_LAV_RAWVIDEO, VideoInfo::CS_YUV422P10,  pfYUV422P10,   "YUV422P10",    2, 4,       10,    3,     32},
 	{MAKEFOURCC('Y','3',10,16),  MEDIASUBTYPE_LAV_RAWVIDEO, VideoInfo::CS_YUV422P16,  pfYUV422P16,   "YUV422P16",    2, 4,       16,    3,     32},
