@@ -120,12 +120,12 @@ CAviSynthStream::CAviSynthStream(const WCHAR* name, CSource* pParent, HRESULT* p
 
 		ColorInfo = GetColorInfoFromVUIOptions(name);
 
-		DLog(L"Open clip %S %dx%d %.03f fps", m_Format.str, m_Width, m_Height, (double)m_fpsNum / m_fpsDen);
+		DLog(L"Open clip %s %dx%d %.03f fps", m_Format.str, m_Width, m_Height, (double)m_fpsNum / m_fpsDen);
 
 		hr = S_OK;
 	}
 	catch (const std::exception& e) {
-		DLog(L"%S\n%s", e.what(), error.c_str());
+		DLog(L"%s\n%s", A2WStr(e.what()), error);
 
 		m_Format     = GetFormatParamsAviSynth(VideoInfo::CS_BGR32);
 
@@ -468,7 +468,7 @@ HRESULT CAviSynthStream::SetMediaType(const CMediaType* pMediaType)
 		ASSERT(m_PitchBuff >= m_Pitch);
 		m_BufferSize = m_PitchBuff * abs(vih2->bmiHeader.biHeight) * m_Format.buffCoeff / 2;
 
-		DLog(L"SetMediaType with subtype %s", GUIDtoWString(m_mt.subtype).c_str());
+		DLog(L"SetMediaType with subtype %s", GUIDtoWString(m_mt.subtype));
 	}
 
 	return hr;

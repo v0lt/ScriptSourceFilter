@@ -27,14 +27,18 @@
                   (((DWORD)(ch4) & 0xFF000000) >> 24))
 #endif
 
+template <typename... Args>
+inline void DebugLogFmtPrintf(const wchar_t* format, const Args &...args)
+{
+	DbgLogInfo(LOG_TRACE, 3, fmt::sprintf(format, args...).c_str());
+}
+
 #ifdef _DEBUG
-#define DLog(...) DbgLogInfo(LOG_TRACE, 3, __VA_ARGS__)
-#define DLogIf(f,...) {if (f) DbgLogInfo(LOG_TRACE, 3, __VA_ARGS__);}
-#define DLogError(...) DbgLogInfo(LOG_ERROR, 3, __VA_ARGS__)
+#define DLog(...) DebugLogFmtPrintf(__VA_ARGS__)
+#define DLogIf(f,...) {if (f) DebugLogFmtPrintf(__VA_ARGS__);}
 #else
 #define DLog(...) __noop
 #define DLogIf(f,...) __noop
-#define DLogError(...) __noop
 #endif
 
 #define SAFE_RELEASE(p)      { if (p) { (p)->Release(); (p) = nullptr; } }

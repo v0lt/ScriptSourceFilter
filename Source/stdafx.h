@@ -41,3 +41,4 @@
 
 #include "../BaseClasses/streams.h"
 #include "../external/fmt/include/fmt/format.h"
+#include "../external/fmt/include/fmt/printf.h"

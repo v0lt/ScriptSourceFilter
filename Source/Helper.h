@@ -26,16 +26,16 @@
 LPCWSTR GetNameAndVersion();
 
 struct FmtParams_t {
-	DWORD       fourcc;
-	GUID        subtype;
-	int         ASformat;
-	int         VSformat;
-	const char* str;
-	int         Packsize;
-	int         buffCoeff;
-	int         CDepth;
-	int         planes;
-	int         bitCount;
+	DWORD          fourcc;
+	GUID           subtype;
+	int            ASformat;
+	int            VSformat;
+	const wchar_t* str;
+	int            Packsize;
+	int            buffCoeff;
+	int            CDepth;
+	int            planes;
+	int            bitCount;
 };
 
 const FmtParams_t& GetFormatParamsAviSynth(const int asFormat);
