@@ -416,7 +416,7 @@ HRESULT CVapourSynthStream::FillBuffer(IMediaSample* pSample)
 			const VSFrameRef* frame = m_vsAPI->getFrame(m_CurrentFrame, m_vsNode, m_vsErrorMessage, sizeof(m_vsErrorMessage));
 			if (!frame) {
 				std::wstring error = ConvertUtf8ToWide(m_vsErrorMessage);
-				DLog(error.c_str());
+				DLog(error);
 				return E_FAIL;
 			}
 
