@@ -41,7 +41,7 @@ CScriptSource::CScriptSource(LPUNKNOWN lpunk, HRESULT* phr)
 	DbgSetModuleLevel(LOG_ERROR, DWORD_MAX);
 #endif
 
-	DLog(L"Windows %s", GetWindowsVersion());
+	DLog(L"Windows {}", GetWindowsVersion());
 	DLog(GetNameAndVersion());
 
 	HRESULT hr = S_OK;
