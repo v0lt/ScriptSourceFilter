@@ -28,7 +28,7 @@
 class __declspec(uuid("D36E542D-8645-4F2C-A758-55C6FDF67E50"))
 	CISMainPPage : public CBasePropertyPage, public CWindow
 {
-	CComQIPtr<IScriptSource> m_pFilter;
+	CComQIPtr<IScriptSource> m_pScriptSource;
 
 public:
 	CISMainPPage(LPUNKNOWN lpunk, HRESULT* phr);

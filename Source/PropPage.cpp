@@ -83,7 +83,7 @@ CISMainPPage::~CISMainPPage()
 void CISMainPPage::SetControls()
 {
 	std::wstring strInfo;
-	m_pFilter->GetScriptInfo(strInfo);
+	m_pScriptSource->GetScriptInfo(strInfo);
 	SetDlgItemTextW(IDC_EDIT1, strInfo.c_str());
 }
 
@@ -91,8 +91,8 @@ HRESULT CISMainPPage::OnConnect(IUnknown *pUnk)
 {
 	if (pUnk == nullptr) return E_POINTER;
 
-	m_pFilter = pUnk;
-	if (!m_pFilter) {
+	m_pScriptSource = pUnk;
+	if (!m_pScriptSource) {
 		return E_NOINTERFACE;
 	}
 
@@ -101,11 +101,11 @@ HRESULT CISMainPPage::OnConnect(IUnknown *pUnk)
 
 HRESULT CISMainPPage::OnDisconnect()
 {
-	if (m_pFilter == nullptr) {
+	if (m_pScriptSource == nullptr) {
 		return E_UNEXPECTED;
 	}
 
-	m_pFilter.Release();
+	m_pScriptSource.Release();
 
 	return S_OK;
 }
