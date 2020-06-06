@@ -141,7 +141,7 @@ STDMETHODIMP CScriptSource::GetPages(CAUUID* pPages)
 		return E_OUTOFMEMORY;
 	}
 
-	pPages->pElems[0] = __uuidof(CISMainPPage);
+	pPages->pElems[0] = __uuidof(CSSMainPPage);
 
 	return S_OK;
 }
@@ -156,8 +156,7 @@ STDMETHODIMP_(bool) CScriptSource::GetActive()
 STDMETHODIMP CScriptSource::GetScriptInfo(std::wstring& str)
 {
 	if (GetActive()) {
-		str.assign(L"filter is active");
-		// TODO
+		str.assign(m_StreamInfo);
 		return S_OK;
 	} else {
 		str.assign(L"filter is not active");

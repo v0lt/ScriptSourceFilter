@@ -37,8 +37,10 @@ class __declspec(uuid("7D3BBD5A-880D-4A30-A2D1-7B8C2741AFEF"))
 {
 private:
 	friend class CAviSynthStream;
+	friend class CVapourSynthStream;
 
 	std::wstring m_fn;
+	std::wstring m_StreamInfo;
 
 public:
 	CScriptSource(LPUNKNOWN lpunk, HRESULT* phr);

@@ -23,16 +23,17 @@
 #include "../BaseClasses/streams.h"
 #include "IScriptSource.h"
 
-// CISMainPPage
+// CSSMainPPage
 
 class __declspec(uuid("D36E542D-8645-4F2C-A758-55C6FDF67E50"))
-	CISMainPPage : public CBasePropertyPage, public CWindow
+	CSSMainPPage : public CBasePropertyPage, public CWindow
 {
+	HFONT m_hMonoFont = nullptr;
 	CComQIPtr<IScriptSource> m_pScriptSource;
 
 public:
-	CISMainPPage(LPUNKNOWN lpunk, HRESULT* phr);
-	~CISMainPPage();
+	CSSMainPPage(LPUNKNOWN lpunk, HRESULT* phr);
+	~CSSMainPPage();
 
 private:
 	void SetControls();

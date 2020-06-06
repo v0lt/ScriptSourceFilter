@@ -44,7 +44,7 @@ const AMOVIESETUP_FILTER sudFilter[] = {
 
 CFactoryTemplate g_Templates[] = {
 	{sudFilter[0].strName, sudFilter[0].clsID, CreateInstance<CScriptSource>, nullptr, &sudFilter[0]},
-	{L"MainProp", &__uuidof(CISMainPPage), CreateInstance<CISMainPPage>, nullptr, nullptr},
+	{L"MainProp", &__uuidof(CSSMainPPage), CreateInstance<CSSMainPPage>, nullptr, nullptr},
 };
 
 int g_cTemplates = std::size(g_Templates);

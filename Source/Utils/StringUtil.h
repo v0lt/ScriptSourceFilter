@@ -21,6 +21,7 @@
 #pragma once
 
 #include <cctype>
+#include <locale>
 
 //
 // convert string to lower or upper case
@@ -40,12 +41,12 @@ inline void str_toupper(std::string& s)
 
 inline void str_tolower(std::wstring& s)
 {
-	std::transform(s.begin(), s.end(), s.begin(), std::tolower);
+	std::transform(s.begin(), s.end(), s.begin(), ::tolower);
 }
 
 inline void str_toupper(std::wstring& s)
 {
-	std::transform(s.begin(), s.end(), s.begin(), std::toupper);
+	std::transform(s.begin(), s.end(), s.begin(), ::toupper);
 }
 
 inline void str_tolower_all(std::wstring& s)
@@ -85,6 +86,27 @@ inline const std::wstring str_trim(const std::wstring_view& sv)
 	auto sback = std::find_if_not(sv.rbegin(), sv.rend(), [](int c) {return iswspace(c); }).base();
 	return (sback <= sfront ? std::wstring() : std::wstring(sfront, sback));
 }
+
+//
+// trimming a character at the end
+//
+
+inline void str_trim_end(std::string& s, const char ch)
+{
+	s.erase(s.find_last_not_of(ch) + 1);
+}
+
+inline void str_trim_end(std::wstring& s, const wchar_t ch)
+{
+	s.erase(s.find_last_not_of(ch) + 1);
+}
+
+//
+//
+//
+
+void str_replace(std::string& s, const std::string& from, const std::string& to);
+void str_replace(std::wstring& s, const std::wstring& from, const std::wstring& to);
 
 //
 // simple convert ANSI string to wide character string

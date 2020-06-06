@@ -65,29 +65,35 @@ void ComboBox_SelectByItemData(HWND hWnd, int nIDComboBox, LONG_PTR data)
 }
 
 
-// CISMainPPage
+// CSSMainPPage
 
 // https://msdn.microsoft.com/ru-ru/library/windows/desktop/dd375010(v=vs.85).aspx
 
-CISMainPPage::CISMainPPage(LPUNKNOWN lpunk, HRESULT* phr) :
+CSSMainPPage::CSSMainPPage(LPUNKNOWN lpunk, HRESULT* phr) :
 	CBasePropertyPage(L"MainProp", lpunk, IDD_MAINPROPPAGE, IDS_MAINPROPPAGE_TITLE)
 {
-	DLog(L"CISMainPPage()");
+	DLog(L"CSSMainPPage()");
 }
 
-CISMainPPage::~CISMainPPage()
+CSSMainPPage::~CSSMainPPage()
 {
-	DLog(L"~CISMainPPage()");
+	DLog(L"~CSSMainPPage()");
+
+	if (m_hMonoFont) {
+		DeleteObject(m_hMonoFont);
+		m_hMonoFont = 0;
+	}
 }
 
-void CISMainPPage::SetControls()
+void CSSMainPPage::SetControls()
 {
 	std::wstring strInfo;
 	m_pScriptSource->GetScriptInfo(strInfo);
+	str_replace(strInfo, L"\n", L"\r\n");
 	SetDlgItemTextW(IDC_EDIT1, strInfo.c_str());
 }
 
-HRESULT CISMainPPage::OnConnect(IUnknown *pUnk)
+HRESULT CSSMainPPage::OnConnect(IUnknown *pUnk)
 {
 	if (pUnk == nullptr) return E_POINTER;
 
@@ -99,7 +105,7 @@ HRESULT CISMainPPage::OnConnect(IUnknown *pUnk)
 	return S_OK;
 }
 
-HRESULT CISMainPPage::OnDisconnect()
+HRESULT CSSMainPPage::OnDisconnect()
 {
 	if (m_pScriptSource == nullptr) {
 		return E_UNEXPECTED;
@@ -110,27 +116,38 @@ HRESULT CISMainPPage::OnDisconnect()
 	return S_OK;
 }
 
-HRESULT CISMainPPage::OnActivate()
+HRESULT CSSMainPPage::OnActivate()
 {
 	// set m_hWnd for CWindow
 	m_hWnd = m_hwnd;
 
-	SetDlgItemTextW(IDC_EDIT3, GetNameAndVersion());
+	// init monospace font
+	LOGFONTW lf = {};
+	HDC hdc = GetWindowDC();
+	lf.lfHeight = -MulDiv(9, GetDeviceCaps(hdc, LOGPIXELSY), 72);
+	ReleaseDC(hdc);
+	lf.lfPitchAndFamily = FIXED_PITCH | FF_MODERN;
+	wcscpy_s(lf.lfFaceName, L"Consolas");
+	m_hMonoFont = CreateFontIndirectW(&lf);
+
+	GetDlgItem(IDC_EDIT1).SetFont(m_hMonoFont);
 
 	SetControls();
+
+	SetDlgItemTextW(IDC_EDIT3, GetNameAndVersion());
 
 	SetCursor(m_hWnd, IDC_ARROW);
 
 	return S_OK;
 }
 
-INT_PTR CISMainPPage::OnReceiveMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+INT_PTR CSSMainPPage::OnReceiveMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	// Let the parent class handle the message.
 	return CBasePropertyPage::OnReceiveMessage(hwnd, uMsg, wParam, lParam);
 }
 
-HRESULT CISMainPPage::OnApplyChanges()
+HRESULT CSSMainPPage::OnApplyChanges()
 {
 	return S_OK;
 }

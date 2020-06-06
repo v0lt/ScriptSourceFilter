@@ -20,6 +20,7 @@
 
 #include "stdafx.h"
 #include "VUIOptions.h"
+#include "ScriptSource.h"
 
 #include "VapourSynthStream.h"
 
@@ -153,6 +154,12 @@ CVapourSynthStream::CVapourSynthStream(const WCHAR* name, CSource* pParent, HRES
 		}
 
 		ColorInfo = GetColorInfoFromVUIOptions(name);
+
+		((CScriptSource*)pParent)->m_StreamInfo = fmt::format(
+			L"Script type : VapourSynth\n"
+			L"Video stream: {} {}x{} {:.3f} fps",
+			m_Format.str, m_Width, m_Height, (double)m_fpsNum/m_fpsDen
+		);
 
 		DLog(L"Open clip {} {}x{} {:.3f} fps", m_Format.str, m_Width, m_Height, (double)m_fpsNum/m_fpsDen);
 
