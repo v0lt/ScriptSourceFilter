@@ -155,7 +155,7 @@ CVapourSynthStream::CVapourSynthStream(const WCHAR* name, CSource* pParent, HRES
 
 		ColorInfo = GetColorInfoFromVUIOptions(name);
 
-		((CScriptSource*)pParent)->m_StreamInfo = fmt::format(
+		static_cast<CScriptSource*>(pParent)->m_StreamInfo = fmt::format(
 			L"Script type : VapourSynth\n"
 			L"Video stream: {} {}x{} {:.3f} fps",
 			m_Format.str, m_Width, m_Height, (double)m_fpsNum/m_fpsDen
@@ -422,8 +422,7 @@ HRESULT CVapourSynthStream::FillBuffer(IMediaSample* pSample)
 		else {
 			const VSFrameRef* frame = m_vsAPI->getFrame(m_CurrentFrame, m_vsNode, m_vsErrorMessage, sizeof(m_vsErrorMessage));
 			if (!frame) {
-				std::wstring error = ConvertUtf8ToWide(m_vsErrorMessage);
-				DLog(error);
+				DLog(ConvertUtf8ToWide(m_vsErrorMessage));
 				return E_FAIL;
 			}
 
