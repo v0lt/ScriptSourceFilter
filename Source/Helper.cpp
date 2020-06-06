@@ -63,17 +63,21 @@ static const FmtParams_t s_FormatTable[] = {
 	// YUV packed
 	{FCC('YUY2'),                MEDIASUBTYPE_YUY2,         VideoInfo::CS_YUY2,       pfCompatYUY2,  L"YUY2",         2, 2,       8,     1,     16},
 	// YUV planar
-	{FCC('YV12'),                MEDIASUBTYPE_YV12,         VideoInfo::CS_I420,       0,             L"I420",         1, 3,       8,     3,     12}, // for tests
+	{FCC('YV12'),                MEDIASUBTYPE_YV12,         VideoInfo::CS_I420,       0,             L"I420",         1, 3,       8,     3,     12},
 	{FCC('YV12'),                MEDIASUBTYPE_YV12,         VideoInfo::CS_YV12,       pfYUV420P8,    L"YV12",         1, 3,       8,     3,     12},
-	{FCC('YV16'),                MEDIASUBTYPE_YV16,         VideoInfo::CS_YV16,       pfYUV422P8,    L"YV16",         1, 4,       8,     3,     16},
-	{FCC('YV24'),                MEDIASUBTYPE_YV24,         VideoInfo::CS_YV24,       pfYUV444P8,    L"YV24",         1, 6,       8,     3,     24},
 	{MAKEFOURCC('Y','3',11,10),  MEDIASUBTYPE_LAV_RAWVIDEO, VideoInfo::CS_YUV420P10,  pfYUV420P10,   L"YUV420P10",    2, 3,       10,    3,     24},
-	{MAKEFOURCC('Y','3',11,12),  MEDIASUBTYPE_LAV_RAWVIDEO, VideoInfo::CS_YUV420P12,  pfYUV420P12,   L"YUV420P12",    2, 3,       10,    3,     24},
-	{MAKEFOURCC('Y','3',11,14),  MEDIASUBTYPE_LAV_RAWVIDEO, VideoInfo::CS_YUV420P14,  pfYUV420P14,   L"YUV420P14",    2, 3,       10,    3,     24},
+	{MAKEFOURCC('Y','3',11,12),  MEDIASUBTYPE_LAV_RAWVIDEO, VideoInfo::CS_YUV420P12,  pfYUV420P12,   L"YUV420P12",    2, 3,       12,    3,     24},
+	{MAKEFOURCC('Y','3',11,14),  MEDIASUBTYPE_LAV_RAWVIDEO, VideoInfo::CS_YUV420P14,  pfYUV420P14,   L"YUV420P14",    2, 3,       14,    3,     24},
 	{MAKEFOURCC('Y','3',11,16),  MEDIASUBTYPE_LAV_RAWVIDEO, VideoInfo::CS_YUV420P16,  pfYUV420P16,   L"YUV420P16",    2, 3,       16,    3,     24},
+	{FCC('YV16'),                MEDIASUBTYPE_YV16,         VideoInfo::CS_YV16,       pfYUV422P8,    L"YV16",         1, 4,       8,     3,     16},
 	{MAKEFOURCC('Y','3',10,10),  MEDIASUBTYPE_LAV_RAWVIDEO, VideoInfo::CS_YUV422P10,  pfYUV422P10,   L"YUV422P10",    2, 4,       10,    3,     32},
+	{MAKEFOURCC('Y','3',10,12),  MEDIASUBTYPE_LAV_RAWVIDEO, VideoInfo::CS_YUV422P12,  pfYUV422P12,   L"YUV422P12",    2, 4,       12,    3,     32},
+	{MAKEFOURCC('Y','3',10,14),  MEDIASUBTYPE_LAV_RAWVIDEO, VideoInfo::CS_YUV422P14,  pfYUV422P14,   L"YUV422P14",    2, 4,       14,    3,     32},
 	{MAKEFOURCC('Y','3',10,16),  MEDIASUBTYPE_LAV_RAWVIDEO, VideoInfo::CS_YUV422P16,  pfYUV422P16,   L"YUV422P16",    2, 4,       16,    3,     32},
+	{FCC('YV24'),                MEDIASUBTYPE_YV24,         VideoInfo::CS_YV24,       pfYUV444P8,    L"YV24",         1, 6,       8,     3,     24},
 	{MAKEFOURCC('Y','3',0,10),   MEDIASUBTYPE_LAV_RAWVIDEO, VideoInfo::CS_YUV444P10,  pfYUV444P10,   L"YUV444P10",    2, 6,       10,    3,     48},
+	{MAKEFOURCC('Y','3',0,12),   MEDIASUBTYPE_LAV_RAWVIDEO, VideoInfo::CS_YUV444P12,  pfYUV444P12,   L"YUV444P12",    2, 6,       12,    3,     48},
+	{MAKEFOURCC('Y','3',0,14),   MEDIASUBTYPE_LAV_RAWVIDEO, VideoInfo::CS_YUV444P14,  pfYUV444P14,   L"YUV444P14",    2, 6,       14,    3,     48},
 	{MAKEFOURCC('Y','3',0,16),   MEDIASUBTYPE_LAV_RAWVIDEO, VideoInfo::CS_YUV444P16,  pfYUV444P16,   L"YUV444P16",    2, 6,       16,    3,     48},
 	// YUV planar whith alpha
 	{MAKEFOURCC('Y','4',0,8),    MEDIASUBTYPE_LAV_RAWVIDEO, VideoInfo::CS_YUVA444,    0,             L"YUVA444P8",    1, 8,       8,     4,     32},
