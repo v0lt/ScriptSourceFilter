@@ -59,6 +59,7 @@ public:
 
 	// IScriptSource
 	STDMETHODIMP_(bool) GetActive();
+	STDMETHODIMP GetScriptInfo(std::wstring& str);
 
 	// IExFilterConfig
 	STDMETHODIMP GetInt64(LPCSTR field, __int64* value) override;

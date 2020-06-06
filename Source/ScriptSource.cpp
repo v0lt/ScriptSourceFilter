@@ -153,6 +153,18 @@ STDMETHODIMP_(bool) CScriptSource::GetActive()
 	return (GetPinCount() > 0);
 }
 
+STDMETHODIMP CScriptSource::GetScriptInfo(std::wstring& str)
+{
+	if (GetActive()) {
+		str.assign(L"filter is active");
+		// TODO
+		return S_OK;
+	} else {
+		str.assign(L"filter is not active");
+		return S_FALSE;
+	}
+}
+
 // IExFilterConfig
 
 STDMETHODIMP CScriptSource::GetInt64(LPCSTR field, __int64 *value)
