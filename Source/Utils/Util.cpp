@@ -21,14 +21,6 @@
 #include "stdafx.h"
 #include "Util.h"
 
-#ifndef _WIN32_WINNT_WINTHRESHOLD
-#define _WIN32_WINNT_WINTHRESHOLD 0x0A00
-VERSIONHELPERAPI IsWindows10OrGreater()
-{
-	return IsWindowsVersionOrGreater(HIBYTE(_WIN32_WINNT_WINTHRESHOLD), LOBYTE(_WIN32_WINNT_WINTHRESHOLD), 0);
-}
-#endif
-
 LPCWSTR GetWindowsVersion()
 {
 	if (IsWindows10OrGreater()) {
@@ -68,6 +60,7 @@ std::wstring HR2Str(const HRESULT hr)
 		UNPACK_VALUE(E_HANDLE);
 		UNPACK_VALUE(E_OUTOFMEMORY);
 		UNPACK_VALUE(E_INVALIDARG);
+		UNPACK_VALUE(REGDB_E_CLASSNOTREG);
 		// some System Error Codes
 		UNPACK_HR_WIN32(ERROR_INVALID_WINDOW_HANDLE);
 		UNPACK_HR_WIN32(ERROR_CLASS_ALREADY_EXISTS);
@@ -85,7 +78,7 @@ std::wstring HR2Str(const HRESULT hr)
 		UNPACK_VALUE(D3DERR_WASSTILLDRAWING);
 #endif
 	default:
-		str = fmt::format(L"{:#010x}", hr);
+		str = fmt::format(L"{:#010x}", (uint32_t)hr);
 	};
 #undef UNPACK_VALUE
 #undef UNPACK_HR_WIN32
