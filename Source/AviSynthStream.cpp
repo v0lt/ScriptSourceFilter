@@ -167,7 +167,7 @@ CAviSynthStream::CAviSynthStream(const WCHAR* name, CSource* pParent, HRESULT* p
 		m_mt.SetSampleSize(m_BufferSize);
 
 		VIDEOINFOHEADER2* vih2 = (VIDEOINFOHEADER2*)m_mt.AllocFormatBuffer(sizeof(VIDEOINFOHEADER2));
-		memset(vih2, 0, sizeof(VIDEOINFOHEADER2));
+		ZeroMemory(vih2, sizeof(VIDEOINFOHEADER2));
 		vih2->rcSource = { 0, 0, (long)m_Width, (long)m_Height };
 		vih2->rcTarget = vih2->rcSource;
 		vih2->AvgTimePerFrame         = m_AvgTimePerFrame;
