@@ -1,5 +1,5 @@
 /*
- * (C) 2020 see Authors.txt
+ * (C) 2020-2021 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -171,10 +171,10 @@ STDMETHODIMP CScriptSource::GetInt64(LPCSTR field, __int64 *value)
 	CheckPointer(value, E_POINTER);
 
 	if (!strcmp(field, "version")) {
-		*value  = ((uint64_t)MPCSS_VERSION_MAJOR << 48)
-				| ((uint64_t)MPCSS_VERSION_MINOR << 32)
-				| ((uint64_t)MPCSS_VERSION_BUILD << 16)
-				| ((uint64_t)MPCSS_REV_NUM);
+		*value  = ((uint64_t)VER_MAJOR << 48)
+				| ((uint64_t)VER_MINOR << 32)
+				| ((uint64_t)VER_BUILD << 16)
+				| ((uint64_t)REV_NUM);
 		return S_OK;
 	}
 

@@ -2,26 +2,26 @@
 
 #include "../revision.h"
 
-#ifndef MPCSS_REV_DATE
-#define MPCSS_REV_DATE      0
+#ifndef REV_DATE
+#define REV_DATE       0
 #endif
 
-#ifndef MPCSS_REV_HASH
-#define MPCSS_REV_HASH      0
+#ifndef REV_HASH
+#define REV_HASH       0
 #endif
 
-#ifndef MPCSS_REV_NUM
-#define MPCSS_REV_NUM       0
+#ifndef REV_NUM
+#define REV_NUM        0
 #endif
 
-#define DO_MAKE_STR(x)      #x
-#define MAKE_STR(x)         DO_MAKE_STR(x)
+#define DO_MAKE_STR(x) #x
+#define MAKE_STR(x)    DO_MAKE_STR(x)
 
-#define MPCSS_RELEASE       0
+#define VER_RELEASE    0
 
-#define MPCSS_VERSION_MAJOR 0
-#define MPCSS_VERSION_MINOR 1
-#define MPCSS_VERSION_BUILD 1
+#define VER_MAJOR      0
+#define VER_MINOR      2
+#define VER_BUILD      0
 
-#define MPCSS_VERSION_NUM   MPCSS_VERSION_MAJOR,MPCSS_VERSION_MINOR,MPCSS_VERSION_BUILD,MPCSS_REV_NUM
-#define MPCSS_VERSION_STR   MAKE_STR(MPCSS_VERSION_MAJOR) "." MAKE_STR(MPCSS_VERSION_MINOR) "." MAKE_STR(MPCSS_VERSION_BUILD) "." MAKE_STR(MPCSS_REV_NUM)
+#define VERSION_NUM    VER_MAJOR,VER_MINOR,VER_BUILD,REV_NUM
+#define VERSION_STR    MAKE_STR(VER_MAJOR) "." MAKE_STR(VER_MINOR) "." MAKE_STR(VER_BUILD) "." MAKE_STR(REV_NUM)
