@@ -51,12 +51,12 @@ IF NOT EXIST "%LOG_DIR%" MD "%LOG_DIR%"
 CALL "%TOOLSET%" -no_logo -arch=x86
 REM again set the source directory (fix possible bug in VS2017)
 CD /D %~dp0
-CALL :SubMPCVR x86
+CALL :SubCompiling x86
 
 CALL "%TOOLSET%" -no_logo -arch=amd64
 REM again set the source directory (fix possible bug in VS2017)
 CD /D %~dp0
-CALL :SubMPCVR x64
+CALL :SubCompiling x64
 
 IF /I "%SIGN%" == "True" (
   SET FILES="%~dp0_bin\Filters_x86%SUFFIX%\MpcScriptSource.ax" "%~dp0_bin\Filters_x64%SUFFIX%\MpcScriptSource64.ax"
@@ -126,7 +126,7 @@ FOR /F "tokens=2*" %%A IN (
    REG QUERY "HKLM\SOFTWARE\Wow6432Node\7-Zip" /v "Path" 2^>NUL ^| FIND "REG_SZ"') DO SET "SEVENZIP=%%B\7z.exe"
 EXIT /B
 
-:SubMPCVR
+:SubCompiling
 TITLE Compiling MPC Image Source - %BUILDCFG%^|%1...
 MSBuild.exe MpcScriptSource.sln %MSBUILD_SWITCHES%^
  /target:%BUILDTYPE% /p:Configuration="%BUILDCFG%" /p:Platform=%1^
