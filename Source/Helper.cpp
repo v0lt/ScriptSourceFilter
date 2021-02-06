@@ -35,7 +35,7 @@
 std::wstring GetVersionStr()
 {
 	std::wstring version = _CRT_WIDE(VERSION_STR);
-#if MPCIS_RELEASE != 1
+#if VER_RELEASE != 1
 	version += fmt::format(L" (git-{}-{})",
 		_CRT_WIDE(_CRT_STRINGIZE(REV_DATE)),
 		_CRT_WIDE(_CRT_STRINGIZE(REV_HASH))
