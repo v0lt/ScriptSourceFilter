@@ -59,7 +59,7 @@ CD /D %~dp0
 CALL :SubCompiling x64
 
 IF /I "%SIGN%" == "True" (
-  SET FILES="%~dp0_bin\Filters_x86%SUFFIX%\MpcScriptSource.ax" "%~dp0_bin\Filters_x64%SUFFIX%\MpcScriptSource64.ax"
+  SET FILES="%~dp0_bin\Filter_x86%SUFFIX%\MpcScriptSource.ax" "%~dp0_bin\Filter_x64%SUFFIX%\MpcScriptSource64.ax"
   CALL "%~dp0\sign.cmd" !FILES! || (CALL :SubMsg "ERROR" "Problem signing !FILES!" & EXIT /B)
   CALL :SubMsg "INFO" "!FILES! signed successfully."
 )
@@ -91,8 +91,8 @@ IF DEFINED SEVENZIP (
 
     TITLE Creating archive %PCKG_NAME%.zip...
     START "7z" /B /WAIT "%SEVENZIP%" a -tzip -mx9 "_bin\%PCKG_NAME%.zip" ^
-.\_bin\Filters_x86%SUFFIX%\MpcScriptSource.ax ^
-.\_bin\Filters_x64%SUFFIX%\MpcScriptSource64.ax ^
+.\_bin\Filter_x86%SUFFIX%\MpcScriptSource.ax ^
+.\_bin\Filter_x64%SUFFIX%\MpcScriptSource64.ax ^
 .\distrib\Install_MpcScriptSource_32.cmd ^
 .\distrib\Install_MpcScriptSource_64.cmd ^
 .\distrib\Uninstall_MpcScriptSource_32.cmd ^
