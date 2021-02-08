@@ -1,5 +1,5 @@
 /*
- * (C) 2020 see Authors.txt
+ * (C) 2020-2021 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -39,5 +39,5 @@
 #include <vector>
 #include <exception>
 
-#include "../BaseClasses/streams.h"
+#include "../external/BaseClasses/streams.h"
 #include "../external/fmt/include/fmt/format.h"
