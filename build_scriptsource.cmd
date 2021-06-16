@@ -16,7 +16,7 @@ REM
 REM You should have received a copy of the GNU General Public License
 REM along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-SETLOCAL ENABLEDELAYEDEXPANSION
+SETLOCAL
 CD /D %~dp0
 
 SET "MSBUILD_SWITCHES=/nologo /consoleloggerparameters:Verbosity=minimal /maxcpucount /nodeReuse:true"
@@ -60,8 +60,12 @@ CALL :SubCompiling x64
 
 IF /I "%SIGN%" == "True" (
   SET FILES="%~dp0_bin\Filter_x86%SUFFIX%\MpcScriptSource.ax" "%~dp0_bin\Filter_x64%SUFFIX%\MpcScriptSource64.ax"
-  CALL "%~dp0\sign.cmd" !FILES! || (CALL :SubMsg "ERROR" "Problem signing !FILES!" & EXIT /B)
-  CALL :SubMsg "INFO" "!FILES! signed successfully."
+  CALL "%~dp0\sign.cmd" %%FILES%%
+  IF %ERRORLEVEL% NEQ 0 (
+    CALL :SubMsg "ERROR" "Problem signing files."
+  ) ELSE (
+    CALL :SubMsg "INFO" "Files signed successfully."
+  )
 )
 
 FOR /F "tokens=3,4 delims= " %%A IN (
@@ -78,11 +82,17 @@ FOR /F "tokens=3,4 delims= " %%A IN (
   'FINDSTR /I /L /C:"define REV_HASH" "revision.h"') DO (SET "REVHASH=%%A")
 FOR /F "tokens=3,4 delims= " %%A IN (
   'FINDSTR /I /L /C:"define REV_NUM" "revision.h"') DO (SET "REVNUM=%%A")
+FOR /F "tokens=3,4 delims= " %%A IN (
+  'FINDSTR /I /L /C:"define REV_BRANCH" "revision.h"') DO (SET "REVBRANCH=%%A")
 
 IF /I "%VERRELEASE%" == "1" (
   SET "PCKG_NAME=MpcScriptSource-%VERMAJOR%.%VERMINOR%.%VERBUILD%.%REVNUM%%SUFFIX%"
 ) ELSE (
-  SET "PCKG_NAME=MpcScriptSource-%VERMAJOR%.%VERMINOR%.%VERBUILD%.%REVNUM%_git%REVDATE%-%REVHASH%%SUFFIX%"
+  IF /I "%REVBRANCH%" == "master" (
+    SET "PCKG_NAME=MpcScriptSource-%VERMAJOR%.%VERMINOR%.%VERBUILD%.%REVNUM%_git%REVDATE%-%REVHASH%%SUFFIX%"
+  ) ELSE (
+    SET "PCKG_NAME=MpcScriptSource-%VERMAJOR%.%VERMINOR%.%VERBUILD%.%REVNUM%.%REVBRANCH%_git%REVDATE%-%REVHASH%%SUFFIX%"
+  )
 )
 
 CALL :SubDetectSevenzipPath
@@ -105,7 +115,7 @@ IF DEFINED SEVENZIP (
     CALL :SubMsg "INFO" "%PCKG_NAME%.zip successfully created"
 )
 
-TITLE Compiling MPC Image Source [FINISHED]
+TITLE Compiling MPC Script Source [FINISHED]
 TIMEOUT /T 3
 ENDLOCAL
 EXIT
@@ -127,7 +137,7 @@ FOR /F "tokens=2*" %%A IN (
 EXIT /B
 
 :SubCompiling
-TITLE Compiling MPC Image Source - %BUILDCFG%^|%1...
+TITLE Compiling MPC Script Source - %BUILDCFG%^|%1...
 MSBuild.exe MpcScriptSource.sln %MSBUILD_SWITCHES%^
  /target:%BUILDTYPE% /p:Configuration="%BUILDCFG%" /p:Platform=%1^
  /flp1:LogFile=%LOG_DIR%\errors_%BUILDCFG%_%1.log;errorsonly;Verbosity=diagnostic^
