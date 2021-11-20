@@ -45,7 +45,7 @@ CVapourSynthStream::CVapourSynthStream(const WCHAR* name, CSource* pParent, HRES
 
 		struct extfunc {
 			void** adress;
-			char* name;
+			const char* name;
 		};
 #ifdef _WIN64
 		extfunc vsfuncs[] = {
