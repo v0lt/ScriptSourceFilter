@@ -85,10 +85,10 @@ static const FmtParams_t s_FormatTable[] = {
 	{MAKEFOURCC('Y','4',0,16),   MEDIASUBTYPE_LAV_RAWVIDEO, VideoInfo::CS_YUVA444P16, 0,             L"YUVA444P16",   2, 8,       16,    4,     64},
 	// RGB packed
 	{BI_RGB,                     MEDIASUBTYPE_RGB24,        VideoInfo::CS_BGR24,      0,             L"RGB24",        3, 2,       8,     1,     24},
-	{BI_RGB,                     MEDIASUBTYPE_RGB32,        VideoInfo::CS_BGR32,      pfCompatBGR32, L"RGB32",        4, 2,       8,     1,     32},
-	{BI_RGB,                     MEDIASUBTYPE_ARGB32,       0,                        0,             L"ARGB32",       4, 2,       8,     1,     32},
-	{MAKEFOURCC('B','G','R',48), MEDIASUBTYPE_RGB48,        VideoInfo::CS_BGR48,      0,             L"RGB48",        6, 2,       16,    1,     48},
-	{MAKEFOURCC('B','R','A',64), MEDIASUBTYPE_ARGB64,       VideoInfo::CS_BGR64,      0,             L"ARGB64",       8, 2,       16,    1,     64},
+	{BI_RGB,                     MEDIASUBTYPE_RGB32,        0,                        pfCompatBGR32, L"RGB32",        4, 2,       8,     1,     32},
+	{BI_RGB,                     MEDIASUBTYPE_ARGB32,       VideoInfo::CS_BGR32,      0,             L"ARGB32",       4, 2,       8,     1,     32},
+	{MAKEFOURCC('B','G','R',48), MEDIASUBTYPE_BGR48,        VideoInfo::CS_BGR48,      0,             L"BGR48",        6, 2,       16,    1,     48},
+	{MAKEFOURCC('B','R','A',64), MEDIASUBTYPE_BGRA64,       VideoInfo::CS_BGR64,      0,             L"BGRA64",       8, 2,       16,    1,     64},
 	// RGB planar
 	{MAKEFOURCC('G','3',0,8),    MEDIASUBTYPE_LAV_RAWVIDEO, VideoInfo::CS_RGBP,       pfRGB24,       L"RGBP8",        1, 6,       8,     3,     24},
 	{MAKEFOURCC('G','3',0,10),   MEDIASUBTYPE_LAV_RAWVIDEO, VideoInfo::CS_RGBP10,     pfRGB30,       L"RGBP10",       2, 6,       10,    3,     48},
