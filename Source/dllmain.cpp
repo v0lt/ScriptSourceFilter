@@ -56,7 +56,7 @@ STDAPI DllRegisterServer()
 
 STDAPI DllUnregisterServer()
 {
-	LPCWSTR strGuid = L"{7D3BBD5A-880D-4A30-A2D1-7B8C2741AFEF}";
+	LPCWSTR strGuid = _CRT_WIDE(STR_CLSID_ScriptSource);
 	DWORD type;
 	WCHAR data[40];
 	DWORD cbData;

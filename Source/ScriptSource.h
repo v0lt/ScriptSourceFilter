@@ -26,7 +26,9 @@
 #include "IScriptSource.h"
 #include "../Include/FilterInterfacesImpl.h"
 
-class __declspec(uuid("7D3BBD5A-880D-4A30-A2D1-7B8C2741AFEF"))
+#define STR_CLSID_ScriptSource "{7D3BBD5A-880D-4A30-A2D1-7B8C2741AFEF}"
+
+class __declspec(uuid(STR_CLSID_ScriptSource))
 	CScriptSource
 	: public CSource
 	, public IFileSourceFilter
