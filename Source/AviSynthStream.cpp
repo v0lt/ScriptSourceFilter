@@ -1,5 +1,5 @@
 /*
-* (C) 2020 see Authors.txt
+* (C) 2020-2022 see Authors.txt
 *
 * This file is part of MPC-BE.
 *
@@ -128,6 +128,40 @@ CAviSynthStream::CAviSynthStream(const WCHAR* name, CSource* pParent, HRESULT* p
 		);
 
 		DLog(L"Open clip {} {}x{} {:.3f} fps", m_Format.str, m_Width, m_Height, (double)m_fpsNum / m_fpsDen);
+
+#ifdef _DEBUG
+		bool has_at_least_v9 = true;
+		try {
+			m_ScriptEnvironment->CheckVersion(9);
+		}
+		catch (const AvisynthError&) {
+			has_at_least_v9 = false;
+		}
+
+		if (has_at_least_v9) {
+			auto& avsMap = VFrame->getConstProperties();
+			int numKeys = m_ScriptEnvironment->propNumKeys(&avsMap);
+
+			for (int i = 0; i < numKeys; i++) {
+				const char* keyName = m_ScriptEnvironment->propGetKey(&avsMap, i);
+				if (keyName) {
+					int64_t valueI64 = 0;
+					int err = 0;
+					const char keyType = m_ScriptEnvironment->propGetType(&avsMap, keyName);
+
+					if (keyType == PROPTYPE_INT) {
+						valueI64 = m_ScriptEnvironment->propGetInt(&avsMap, keyName, 0, &err);
+						if (!err) {
+							DLog(L"Property {}: <{}> '{}' = {}", i, keyType, A2WStr(keyName), valueI64);
+						}
+					}
+					else {
+						DLog(L"Property {}: <{}> '{}'", i, keyType, A2WStr(keyName));
+					}
+				}
+			}
+		}
+#endif
 
 		hr = S_OK;
 	}
