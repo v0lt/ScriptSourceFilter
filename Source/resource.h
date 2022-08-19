@@ -3,7 +3,9 @@
 // Used by MpcScriptSource.rc
 //
 #define IDD_MAINPROPPAGE                102
+#define IDD_INFOPROPPAGE                103
 #define IDS_MAINPROPPAGE_TITLE          104
+#define IDS_INFOPROPPAGE_TITLE          105
 #define IDC_STATIC1                     1001
 #define IDC_STATIC2                     1002
 #define IDC_STATIC3                     1003

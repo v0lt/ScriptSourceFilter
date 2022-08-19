@@ -1,5 +1,5 @@
 /*
- * (C) 2020 see Authors.txt
+ * (C) 2020-2022 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -44,7 +44,7 @@ const AMOVIESETUP_FILTER sudFilter[] = {
 
 CFactoryTemplate g_Templates[] = {
 	{sudFilter[0].strName, sudFilter[0].clsID, CreateInstance<CScriptSource>, nullptr, &sudFilter[0]},
-	{L"MainProp", &__uuidof(CSSMainPPage), CreateInstance<CSSMainPPage>, nullptr, nullptr},
+	{L"InfoProp", &__uuidof(CSSInfoPPage), CreateInstance<CSSInfoPPage>, nullptr, nullptr},
 };
 
 int g_cTemplates = (int)std::size(g_Templates);

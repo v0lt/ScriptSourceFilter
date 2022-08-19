@@ -121,13 +121,11 @@ CAviSynthStream::CAviSynthStream(const WCHAR* name, CSource* pParent, HRESULT* p
 
 		ColorInfo = GetColorInfoFromVUIOptions(name);
 
-		static_cast<CScriptSource*>(pParent)->m_StreamInfo = fmt::format(
+		std::wstring streamInfo = fmt::format(
 			L"Script type : AviSynth\n"
 			L"Video stream: {} {}x{} {:.3f} fps",
 			m_Format.str, m_Width, m_Height, (double)m_fpsNum/m_fpsDen
 		);
-
-		DLog(L"Open clip {} {}x{} {:.3f} fps", m_Format.str, m_Width, m_Height, (double)m_fpsNum / m_fpsDen);
 
 #ifdef _DEBUG
 		bool has_at_least_v9 = true;
@@ -141,6 +139,9 @@ CAviSynthStream::CAviSynthStream(const WCHAR* name, CSource* pParent, HRESULT* p
 		if (has_at_least_v9) {
 			auto& avsMap = VFrame->getConstProperties();
 			int numKeys = m_ScriptEnvironment->propNumKeys(&avsMap);
+			if (numKeys > 0) {
+				streamInfo += fmt::format(L"\nProperties [{}]:", numKeys);
+			}
 
 			for (int i = 0; i < numKeys; i++) {
 				const char* keyName = m_ScriptEnvironment->propGetKey(&avsMap, i);
@@ -148,36 +149,44 @@ CAviSynthStream::CAviSynthStream(const WCHAR* name, CSource* pParent, HRESULT* p
 					int64_t val_Int = 0;
 					double val_Float = 0;
 					const char* val_Data = 0;
-
 					int err = 0;
 					const char keyType = m_ScriptEnvironment->propGetType(&avsMap, keyName);
+
+					streamInfo += fmt::format(L"\n{:>2}: <{}> '{}'", i, keyType, A2WStr(keyName));
 
 					switch (keyType) {
 					case PROPTYPE_INT:
 						val_Int = m_ScriptEnvironment->propGetInt(&avsMap, keyName, 0, &err);
 						if (!err) {
-							DLog(L"Property {}: <{}> '{}' = {}", i, keyType, A2WStr(keyName), val_Int);
+							streamInfo += fmt::format(L" = {}", val_Int);
 						}
 						break;
 					case PROPTYPE_FLOAT:
 						val_Float = m_ScriptEnvironment->propGetFloat(&avsMap, keyName, 0, &err);
 						if (!err) {
-							DLog(L"Property {}: <{}> '{}' = {}", i, keyType, A2WStr(keyName), val_Float);
+							streamInfo += fmt::format(L" = {:.3f}", val_Float);
 						}
 						break;
 					case PROPTYPE_DATA:
 						val_Data = m_ScriptEnvironment->propGetData(&avsMap, keyName, 0, &err);
 						if (!err) {
-							DLog(L"Property {}: <{}> '{}' = {}", i, keyType, A2WStr(keyName), A2WStr(val_Data));
+							const int dataSize = m_ScriptEnvironment->propGetDataSize(&avsMap, keyName, 0, &err);
+							if (!err) {
+								if (dataSize == 1 && strcmp(keyName, "_PictType") == 0) {
+									streamInfo += fmt::format(L" = {}", val_Data[0]);
+								} else {
+									streamInfo += fmt::format(L", {} bytes", dataSize);
+								}
+							}
 						}
 						break;
-					default:
-						DLog(L"Property {}: <{}> '{}'", i, keyType, A2WStr(keyName));
 					}
 				}
 			}
 		}
 #endif
+		DLog(streamInfo);
+		static_cast<CScriptSource*>(pParent)->m_StreamInfo = streamInfo;
 
 		hr = S_OK;
 	}

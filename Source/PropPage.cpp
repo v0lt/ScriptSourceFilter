@@ -1,5 +1,5 @@
 /*
- * (C) 2020 see Authors.txt
+ * (C) 2020-2022 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -65,19 +65,19 @@ void ComboBox_SelectByItemData(HWND hWnd, int nIDComboBox, LONG_PTR data)
 }
 
 
-// CSSMainPPage
+// CSSInfoPPage
 
 // https://msdn.microsoft.com/ru-ru/library/windows/desktop/dd375010(v=vs.85).aspx
 
-CSSMainPPage::CSSMainPPage(LPUNKNOWN lpunk, HRESULT* phr) :
-	CBasePropertyPage(L"MainProp", lpunk, IDD_MAINPROPPAGE, IDS_MAINPROPPAGE_TITLE)
+CSSInfoPPage::CSSInfoPPage(LPUNKNOWN lpunk, HRESULT* phr) :
+	CBasePropertyPage(L"InfoProp", lpunk, IDD_INFOPROPPAGE, IDS_INFOPROPPAGE_TITLE)
 {
-	DLog(L"CSSMainPPage()");
+	DLog(L"CSSInfoPPage()");
 }
 
-CSSMainPPage::~CSSMainPPage()
+CSSInfoPPage::~CSSInfoPPage()
 {
-	DLog(L"~CSSMainPPage()");
+	DLog(L"~CSSInfoPPage()");
 
 	if (m_hMonoFont) {
 		DeleteObject(m_hMonoFont);
@@ -85,7 +85,7 @@ CSSMainPPage::~CSSMainPPage()
 	}
 }
 
-void CSSMainPPage::SetControls()
+void CSSInfoPPage::SetControls()
 {
 	std::wstring strInfo;
 	m_pScriptSource->GetScriptInfo(strInfo);
@@ -93,7 +93,7 @@ void CSSMainPPage::SetControls()
 	SetDlgItemTextW(IDC_EDIT1, strInfo.c_str());
 }
 
-HRESULT CSSMainPPage::OnConnect(IUnknown *pUnk)
+HRESULT CSSInfoPPage::OnConnect(IUnknown *pUnk)
 {
 	if (pUnk == nullptr) return E_POINTER;
 
@@ -105,7 +105,7 @@ HRESULT CSSMainPPage::OnConnect(IUnknown *pUnk)
 	return S_OK;
 }
 
-HRESULT CSSMainPPage::OnDisconnect()
+HRESULT CSSInfoPPage::OnDisconnect()
 {
 	if (m_pScriptSource == nullptr) {
 		return E_UNEXPECTED;
@@ -116,7 +116,7 @@ HRESULT CSSMainPPage::OnDisconnect()
 	return S_OK;
 }
 
-HRESULT CSSMainPPage::OnActivate()
+HRESULT CSSInfoPPage::OnActivate()
 {
 	// set m_hWnd for CWindow
 	m_hWnd = m_hwnd;
@@ -141,13 +141,18 @@ HRESULT CSSMainPPage::OnActivate()
 	return S_OK;
 }
 
-INT_PTR CSSMainPPage::OnReceiveMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+INT_PTR CSSInfoPPage::OnReceiveMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+	if (uMsg == WM_CLOSE) {
+		// fixed Esc handling when EDITTEXT control has ES_MULTILINE property and is in focus
+		return (LRESULT)1;
+	}
+
 	// Let the parent class handle the message.
 	return CBasePropertyPage::OnReceiveMessage(hwnd, uMsg, wParam, lParam);
 }
 
-HRESULT CSSMainPPage::OnApplyChanges()
+HRESULT CSSInfoPPage::OnApplyChanges()
 {
 	return S_OK;
 }

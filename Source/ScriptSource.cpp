@@ -1,5 +1,5 @@
 /*
- * (C) 2020-2021 see Authors.txt
+ * (C) 2020-2022 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -141,7 +141,7 @@ STDMETHODIMP CScriptSource::GetPages(CAUUID* pPages)
 		return E_OUTOFMEMORY;
 	}
 
-	pPages->pElems[0] = __uuidof(CSSMainPPage);
+	pPages->pElems[0] = __uuidof(CSSInfoPPage);
 
 	return S_OK;
 }

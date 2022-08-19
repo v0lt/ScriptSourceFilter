@@ -1,5 +1,5 @@
 /*
- * (C) 2020-2021 see Authors.txt
+ * (C) 2020-2022 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -22,17 +22,17 @@
 
 #include "IScriptSource.h"
 
-// CSSMainPPage
+// CSSInfoPPage
 
 class __declspec(uuid("D36E542D-8645-4F2C-A758-55C6FDF67E50"))
-	CSSMainPPage : public CBasePropertyPage, public CWindow
+	CSSInfoPPage : public CBasePropertyPage, public CWindow
 {
 	HFONT m_hMonoFont = nullptr;
 	CComQIPtr<IScriptSource> m_pScriptSource;
 
 public:
-	CSSMainPPage(LPUNKNOWN lpunk, HRESULT* phr);
-	~CSSMainPPage();
+	CSSInfoPPage(LPUNKNOWN lpunk, HRESULT* phr);
+	~CSSInfoPPage();
 
 private:
 	void SetControls();
