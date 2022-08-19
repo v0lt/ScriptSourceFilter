@@ -1,7 +1,10 @@
-v0.1.2.106 - 2022.01.05
+0.1.3
+-----------------------
+
+0.1.2.106 - 2022.01.05
 -----------------------
 Removed filter registration for .avs and .vpy extensions. This preserves the ability to open scripts using the "AVI/WAV File Source" system filter. Better solution is to add ScriptSourceFilter as an external filter in MPC-BE, MPC-HC and other players, set the priority as preferred and enable the filter when needed.
 
-v0.1.0.76 - 2020.06.16
+0.1.0.76 - 2020.06.16
 ----------------------
 The first official release.
