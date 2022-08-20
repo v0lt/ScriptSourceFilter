@@ -98,6 +98,7 @@ CAviSynthStream::CAviSynthStream(const WCHAR* name, CSource* pParent, HRESULT* p
 		m_NumFrames = VInfo.num_frames;
 		m_AvgTimePerFrame = UNITS * m_fpsDen / m_fpsNum; // no need any MulDiv here
 		m_rtDuration = m_rtStop = llMulDiv(UNITS * m_NumFrames, m_fpsDen, m_fpsNum, 0);
+		UINT color_info = 0;
 
 		if (VInfo.IsPlanar()) {
 			if (VInfo.IsYUV()) {
@@ -119,15 +120,12 @@ CAviSynthStream::CAviSynthStream(const WCHAR* name, CSource* pParent, HRESULT* p
 			m_Planes[3] = PLANAR_A;
 		}
 
-		ColorInfo = GetColorInfoFromVUIOptions(name);
-
 		std::wstring streamInfo = fmt::format(
 			L"Script type : AviSynth\n"
 			L"Video stream: {} {}x{} {:.3f} fps",
 			m_Format.str, m_Width, m_Height, (double)m_fpsNum/m_fpsDen
 		);
 
-#ifdef _DEBUG
 		bool has_at_least_v9 = true;
 		try {
 			m_ScriptEnvironment->CheckVersion(9);
@@ -159,6 +157,7 @@ CAviSynthStream::CAviSynthStream(const WCHAR* name, CSource* pParent, HRESULT* p
 						val_Int = m_ScriptEnvironment->propGetInt(&avsMap, keyName, 0, &err);
 						if (!err) {
 							streamInfo += fmt::format(L" = {}", val_Int);
+							SetColorInfoFromFrameFrops(color_info, keyName, val_Int);
 						}
 						break;
 					case PROPTYPE_FLOAT:
@@ -184,7 +183,12 @@ CAviSynthStream::CAviSynthStream(const WCHAR* name, CSource* pParent, HRESULT* p
 				}
 			}
 		}
-#endif
+
+		SetColorInfoFromVUIOptions(color_info, name);
+		if (color_info && VInfo.IsYUV()) {
+			ColorInfo = color_info | (AMCONTROL_USED | AMCONTROL_COLORINFO_PRESENT);
+		}
+
 		DLog(streamInfo);
 		static_cast<CScriptSource*>(pParent)->m_StreamInfo = streamInfo;
 

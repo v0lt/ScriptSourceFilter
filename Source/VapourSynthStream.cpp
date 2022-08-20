@@ -1,5 +1,5 @@
 /*
-* (C) 2020 see Authors.txt
+* (C) 2020-2022 see Authors.txt
 *
 * This file is part of MPC-BE.
 *
@@ -132,6 +132,7 @@ CVapourSynthStream::CVapourSynthStream(const WCHAR* name, CSource* pParent, HRES
 		m_NumFrames  = m_vsInfo->numFrames;
 		m_AvgTimePerFrame = llMulDiv(UNITS, m_fpsDen, m_fpsNum, 0);
 		m_rtDuration = m_rtStop = llMulDiv(UNITS * m_NumFrames, m_fpsDen, m_fpsNum, 0);
+		UINT color_info = 0;
 
 		int k = m_vsInfo->format->id / cmGray;
 		if (k == (cmYUV / cmGray)) {
@@ -153,7 +154,10 @@ CVapourSynthStream::CVapourSynthStream(const WCHAR* name, CSource* pParent, HRES
 			m_Planes[2] = 0;
 		}
 
-		ColorInfo = GetColorInfoFromVUIOptions(name);
+		SetColorInfoFromVUIOptions(color_info, name);
+		if (color_info) {
+			ColorInfo = color_info | (AMCONTROL_USED | AMCONTROL_COLORINFO_PRESENT);
+		}
 
 		static_cast<CScriptSource*>(pParent)->m_StreamInfo = fmt::format(
 			L"Script type : VapourSynth\n"

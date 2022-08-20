@@ -1,5 +1,5 @@
 /*
- * (C) 2020 see Authors.txt
+ * (C) 2020-2022 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -20,4 +20,6 @@
 
 #pragma once
 
-UINT GetColorInfoFromVUIOptions(LPCWSTR scriptfile);
+bool SetColorInfoFromFrameFrops(UINT& extFmtValue, const char* keyName, int64_t value);
+
+bool SetColorInfoFromVUIOptions(UINT& extFmtValue, LPCWSTR scriptfile);

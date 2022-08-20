@@ -1,5 +1,5 @@
 /*
- * (C) 2020 see Authors.txt
+ * (C) 2020-2022 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -22,8 +22,57 @@
 #include <fstream>
 #include <d3d9types.h>
 #include <dxva2api.h>
+#include <mfobjects.h>
 #include "Helper.h"
 #include "VUIOptions.h"
+
+bool SetColorInfoFromFrameFrops(UINT& extFmtValue, const char* keyName, int64_t value)
+{
+	DXVA2_ExtendedFormat exFmt;
+	exFmt.value = extFmtValue;
+
+	if (strcmp(keyName, "_ChromaLocation") == 0) {
+		// 0=left, 1=center, 2=topleft, 3=top, 4=bottomleft, 5=bottom.
+		switch (value) {
+		case 0: exFmt.VideoChromaSubsampling = DXVA2_VideoChromaSubsampling_MPEG2; break;
+		case 1: exFmt.VideoChromaSubsampling = DXVA2_VideoChromaSubsampling_MPEG1; break;
+		case 2: exFmt.VideoChromaSubsampling = DXVA2_VideoChromaSubsampling_Cosited; break;
+		}
+	}
+	else if (strcmp(keyName, "_ColorRange") == 0) {
+		// 0=full range, 1=limited range
+		switch (value) {
+		case 0: exFmt.NominalRange = DXVA2_NominalRange_0_255; break;
+		case 1: exFmt.NominalRange = DXVA2_NominalRange_16_235; break;
+		}
+	}
+	else if (strcmp(keyName, "_Primaries") == 0) {
+		// TODO
+	}
+	else if (strcmp(keyName, "_Matrix") == 0) {
+		switch (value) {
+		case 0: exFmt.VideoTransferMatrix = DXVA2_VideoTransferMatrix_BT709; break;
+		case 4: exFmt.VideoTransferMatrix = VIDEOTRANSFERMATRIX_FCC; break;
+		case 5:
+		case 6: exFmt.VideoTransferMatrix = DXVA2_VideoTransferMatrix_BT601; break;
+		case 7: exFmt.VideoTransferMatrix = DXVA2_VideoTransferMatrix_SMPTE240M; break;
+		case 8: exFmt.VideoTransferMatrix = VIDEOTRANSFERMATRIX_YCgCo; break;
+		case 10:
+		case 11: exFmt.VideoTransferMatrix = MFVideoTransferMatrix_BT2020_10; break;
+		}
+	}
+	else if (strcmp(keyName, "_Transfer") == 0) {
+		// TODO
+	}
+
+	if (exFmt.value != extFmtValue) {
+		extFmtValue = exFmt.value;
+		return true;
+	}
+	else {
+		return false;
+	}
+}
 
 /*
 "Video Usability Info" https://code.videolan.org/videolan/x264/-/blob/master/x264.c
@@ -103,9 +152,11 @@ static const str_value vui_chromaloc[] {
 	{ "2",     DXVA2_VideoChromaSubsampling_Cosited },
 };
 
-UINT GetColorInfoFromVUIOptions(LPCWSTR scriptfile)
+bool SetColorInfoFromVUIOptions(UINT& extFmtValue, LPCWSTR scriptfile)
 {
-	DXVA2_ExtendedFormat exFmt = {};
+	DXVA2_ExtendedFormat exFmt;
+	exFmt.value = extFmtValue;
+
 	std::string vui_options;
 	std::ifstream scrypt(scriptfile);
 
@@ -176,11 +227,13 @@ UINT GetColorInfoFromVUIOptions(LPCWSTR scriptfile)
 			}
 			i++;
 		}
-
-		if (exFmt.value) {
-			exFmt.value |= (AMCONTROL_USED | AMCONTROL_COLORINFO_PRESENT);
-		}
 	}
 
-	return exFmt.value;
+	if (exFmt.value != extFmtValue) {
+		extFmtValue = exFmt.value;
+		return true;
+	}
+	else {
+		return false;
+	}
 }
