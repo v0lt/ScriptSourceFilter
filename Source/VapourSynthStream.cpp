@@ -154,18 +154,70 @@ CVapourSynthStream::CVapourSynthStream(const WCHAR* name, CSource* pParent, HRES
 			m_Planes[2] = 0;
 		}
 
+		std::wstring streamInfo = fmt::format(
+			L"Script type : VapourSynth\n"
+			L"Video stream: {} {}x{} {:.3f} fps",
+			m_Format.str, m_Width, m_Height, (double)m_fpsNum / m_fpsDen
+		);
+
+		const VSMap* vsMap = m_vsAPI->getFramePropsRO(frame);
+		if (vsMap) {
+			int numKeys = m_vsAPI->propNumKeys(vsMap);
+			if (numKeys > 0) {
+				streamInfo += fmt::format(L"\nProperties [{}]:", numKeys);
+			}
+
+			for (int i = 0; i < numKeys; i++) {
+				const char* keyName = m_vsAPI->propGetKey(vsMap, i);
+				if (keyName) {
+					int64_t val_Int = 0;
+					double val_Float = 0;
+					const char* val_Data = 0;
+					int err = 0;
+					const char keyType = m_vsAPI->propGetType(vsMap, keyName);
+
+					streamInfo += fmt::format(L"\n{:>2}: <{}> '{}'", i, keyType, A2WStr(keyName));
+
+					switch (keyType) {
+					case ptInt:
+						val_Int = m_vsAPI->propGetInt(vsMap, keyName, 0, &err);
+						if (!err) {
+							streamInfo += fmt::format(L" = {}", val_Int);
+							SetColorInfoFromFrameFrops(color_info, keyName, val_Int);
+						}
+						break;
+					case ptFloat:
+						val_Float = m_vsAPI->propGetFloat(vsMap, keyName, 0, &err);
+						if (!err) {
+							streamInfo += fmt::format(L" = {:.3f}", val_Float);
+						}
+						break;
+					case ptData:
+						val_Data = m_vsAPI->propGetData(vsMap, keyName, 0, &err);
+						if (!err) {
+							const int dataSize = m_vsAPI->propGetDataSize(vsMap, keyName, 0, &err);
+							if (!err) {
+								if (dataSize == 1 && strcmp(keyName, "_PictType") == 0) {
+									streamInfo += fmt::format(L" = {}", val_Data[0]);
+								}
+								else {
+									streamInfo += fmt::format(L", {} bytes", dataSize);
+								}
+							}
+						}
+						break;
+					}
+				}
+			}
+		}
+
 		SetColorInfoFromVUIOptions(color_info, name);
 		if (color_info) {
 			ColorInfo = color_info | (AMCONTROL_USED | AMCONTROL_COLORINFO_PRESENT);
 		}
 
-		static_cast<CScriptSource*>(pParent)->m_StreamInfo = fmt::format(
-			L"Script type : VapourSynth\n"
-			L"Video stream: {} {}x{} {:.3f} fps",
-			m_Format.str, m_Width, m_Height, (double)m_fpsNum/m_fpsDen
-		);
-
-		DLog(L"Open clip {} {}x{} {:.3f} fps", m_Format.str, m_Width, m_Height, (double)m_fpsNum/m_fpsDen);
+		DLog(streamInfo);
+		static_cast<CScriptSource*>(pParent)->m_StreamInfo = streamInfo;
 
 		hr = S_OK;
 	}
