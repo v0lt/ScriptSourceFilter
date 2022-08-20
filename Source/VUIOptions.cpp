@@ -34,35 +34,57 @@ bool SetColorInfoFromFrameFrops(UINT& extFmtValue, const char* keyName, int64_t 
 	if (strcmp(keyName, "_ChromaLocation") == 0) {
 		// 0=left, 1=center, 2=topleft, 3=top, 4=bottomleft, 5=bottom.
 		switch (value) {
-		case 0: exFmt.VideoChromaSubsampling = DXVA2_VideoChromaSubsampling_MPEG2; break;
-		case 1: exFmt.VideoChromaSubsampling = DXVA2_VideoChromaSubsampling_MPEG1; break;
+		case 0: exFmt.VideoChromaSubsampling = DXVA2_VideoChromaSubsampling_MPEG2;   break;
+		case 1: exFmt.VideoChromaSubsampling = DXVA2_VideoChromaSubsampling_MPEG1;   break;
 		case 2: exFmt.VideoChromaSubsampling = DXVA2_VideoChromaSubsampling_Cosited; break;
 		}
 	}
 	else if (strcmp(keyName, "_ColorRange") == 0) {
 		// 0=full range, 1=limited range
 		switch (value) {
-		case 0: exFmt.NominalRange = DXVA2_NominalRange_0_255; break;
+		case 0: exFmt.NominalRange = DXVA2_NominalRange_0_255;  break;
 		case 1: exFmt.NominalRange = DXVA2_NominalRange_16_235; break;
 		}
 	}
 	else if (strcmp(keyName, "_Primaries") == 0) {
-		// TODO
+		switch (value) {
+		case 1:  exFmt.VideoPrimaries = DXVA2_VideoPrimaries_BT709;         break;
+		case 4:  exFmt.VideoPrimaries = DXVA2_VideoPrimaries_BT470_2_SysM;  break;
+		case 5:  exFmt.VideoPrimaries = DXVA2_VideoPrimaries_BT470_2_SysBG; break;
+		case 6:  exFmt.VideoPrimaries = DXVA2_VideoPrimaries_SMPTE170M;     break;
+		case 7:  exFmt.VideoPrimaries = DXVA2_VideoPrimaries_SMPTE240M;     break;
+		case 9:  exFmt.VideoPrimaries = MFVideoPrimaries_BT2020;            break;
+		case 10: exFmt.VideoPrimaries = MFVideoPrimaries_XYZ;               break;
+		case 11: exFmt.VideoPrimaries = MFVideoPrimaries_DCI_P3;            break;
+		}
 	}
 	else if (strcmp(keyName, "_Matrix") == 0) {
 		switch (value) {
-		case 0: exFmt.VideoTransferMatrix = DXVA2_VideoTransferMatrix_BT709; break;
-		case 4: exFmt.VideoTransferMatrix = VIDEOTRANSFERMATRIX_FCC; break;
+		case 0:  exFmt.VideoTransferMatrix = DXVA2_VideoTransferMatrix_BT709;     break;
+		case 4:  exFmt.VideoTransferMatrix = VIDEOTRANSFERMATRIX_FCC;             break;
 		case 5:
-		case 6: exFmt.VideoTransferMatrix = DXVA2_VideoTransferMatrix_BT601; break;
-		case 7: exFmt.VideoTransferMatrix = DXVA2_VideoTransferMatrix_SMPTE240M; break;
-		case 8: exFmt.VideoTransferMatrix = VIDEOTRANSFERMATRIX_YCgCo; break;
+		case 6:  exFmt.VideoTransferMatrix = DXVA2_VideoTransferMatrix_BT601;     break;
+		case 7:  exFmt.VideoTransferMatrix = DXVA2_VideoTransferMatrix_SMPTE240M; break;
+		case 8:  exFmt.VideoTransferMatrix = VIDEOTRANSFERMATRIX_YCgCo;           break;
 		case 10:
-		case 11: exFmt.VideoTransferMatrix = MFVideoTransferMatrix_BT2020_10; break;
+		case 11: exFmt.VideoTransferMatrix = MFVideoTransferMatrix_BT2020_10;     break;
 		}
 	}
 	else if (strcmp(keyName, "_Transfer") == 0) {
-		// TODO
+		switch (value) {
+		case 1:
+		case 6:
+		case 14:
+		case 15: exFmt.VideoTransferFunction = DXVA2_VideoTransFunc_709;  break;
+		case 4:  exFmt.VideoTransferFunction = DXVA2_VideoTransFunc_22;   break;
+		case 5:  exFmt.VideoTransferFunction = DXVA2_VideoTransFunc_28;   break;
+		case 7:  exFmt.VideoTransferFunction = DXVA2_VideoTransFunc_240M; break;
+		case 8:  exFmt.VideoTransferFunction = DXVA2_VideoTransFunc_10;   break;
+		case 9:  exFmt.VideoTransferFunction = MFVideoTransFunc_Log_100;  break;
+		case 10: exFmt.VideoTransferFunction = MFVideoTransFunc_Log_316;  break;
+		case 16: exFmt.VideoTransferFunction = MFVideoTransFunc_2084;     break;
+		case 18: exFmt.VideoTransferFunction = MFVideoTransFunc_HLG;      break;
+		}
 	}
 
 	if (exFmt.value != extFmtValue) {
