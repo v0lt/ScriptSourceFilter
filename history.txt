@@ -1,5 +1,7 @@
 0.1.3
 -----------------------
+Added Frame Properties support for AviSynth+ and VapourSynth R59.
+Recommended versions are AviSynth+ 3.7.2 or later, VapourSynth R59 or later.
 
 0.1.2.106 - 2022.01.05
 -----------------------
