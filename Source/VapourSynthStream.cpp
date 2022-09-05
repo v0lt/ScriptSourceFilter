@@ -183,7 +183,16 @@ CVapourSynthStream::CVapourSynthStream(const WCHAR* name, CSource* pParent, HRES
 						val_Int = m_vsAPI->propGetInt(vsMap, keyName, 0, &err);
 						if (!err) {
 							streamInfo += fmt::format(L" = {}", val_Int);
-							SetColorInfoFromFrameFrops(color_info, keyName, val_Int);
+							streamInfo += fmt::format(L" = {}", val_Int);
+							if (strcmp(keyName, "_SARNum") == 0) {
+								m_Sar.num = val_Int;
+							}
+							else if (strcmp(keyName, "_SARDen") == 0) {
+								m_Sar.den = val_Int;
+							}
+							else {
+								SetColorInfoFromFrameFrops(color_info, keyName, val_Int);
+							}
 						}
 						break;
 					case ptFloat:
@@ -213,7 +222,7 @@ CVapourSynthStream::CVapourSynthStream(const WCHAR* name, CSource* pParent, HRES
 
 		SetColorInfoFromVUIOptions(color_info, name);
 		if (color_info) {
-			ColorInfo = color_info | (AMCONTROL_USED | AMCONTROL_COLORINFO_PRESENT);
+			m_ColorInfo = color_info | (AMCONTROL_USED | AMCONTROL_COLORINFO_PRESENT);
 		}
 
 		DLog(streamInfo);
@@ -232,6 +241,7 @@ CVapourSynthStream::CVapourSynthStream(const WCHAR* name, CSource* pParent, HRES
 		m_Pitch      = m_Width * 4;
 		m_PitchBuff  = m_Pitch;
 		m_BufferSize = m_PitchBuff * m_Height * m_Format.buffCoeff / 2;
+		m_Sar = {};
 
 		m_fpsNum     = 1;
 		m_fpsDen     = 1;
@@ -270,7 +280,17 @@ CVapourSynthStream::CVapourSynthStream(const WCHAR* name, CSource* pParent, HRES
 		vih2->bmiHeader.biCompression = m_Format.fourcc;
 		vih2->bmiHeader.biSizeImage   = m_BufferSize;
 
-		vih2->dwControlFlags = ColorInfo;
+		vih2->dwControlFlags = m_ColorInfo;
+
+		if (m_Sar.num && m_Sar.den && m_Sar.num < INT16_MAX && m_Sar.den < INT16_MAX) {
+			auto parX = m_Sar.num * m_Width;
+			auto parY = m_Sar.den * m_Height;
+			const auto gcd = std::gcd(parX, parY);
+			parX /= gcd;
+			parY /= gcd;
+			vih2->dwPictAspectRatioX = parX;
+			vih2->dwPictAspectRatioY = parY;
+		}
 	}
 
 	*phr = hr;

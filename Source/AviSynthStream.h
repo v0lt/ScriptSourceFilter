@@ -1,5 +1,5 @@
 /*
-* (C) 2020 see Authors.txt
+* (C) 2020-2022 see Authors.txt
 *
 * This file is part of MPC-BE.
 *
@@ -50,12 +50,17 @@ private:
 	BOOL m_bFlushing = FALSE;
 
 	FmtParams_t m_Format = {};
-	UINT ColorInfo = 0;
 	UINT m_Width   = 0;
 	UINT m_Height  = 0;
 	UINT m_Pitch   = 0;
 	UINT m_PitchBuff  = 0;
 	UINT m_BufferSize = 0;
+
+	UINT m_ColorInfo = 0;
+	struct {
+		int64_t num = 0;
+		int64_t den = 0;
+	} m_Sar;
 
 	int m_NumFrames = 0;
 	unsigned m_fpsNum = 1;
