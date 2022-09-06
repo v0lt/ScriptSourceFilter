@@ -282,7 +282,7 @@ CVapourSynthStream::CVapourSynthStream(const WCHAR* name, CSource* pParent, HRES
 
 		vih2->dwControlFlags = m_ColorInfo;
 
-		if (m_Sar.num && m_Sar.den && m_Sar.num < INT16_MAX && m_Sar.den < INT16_MAX) {
+		if (m_Sar.num > 0 && m_Sar.den > 0 && m_Sar.num < INT16_MAX && m_Sar.den < INT16_MAX) {
 			auto parX = m_Sar.num * m_Width;
 			auto parY = m_Sar.den * m_Height;
 			const auto gcd = std::gcd(parX, parY);
