@@ -1,5 +1,5 @@
 /*
- * (C) 2020-2022 see Authors.txt
+ * (C) 2020-2023 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -86,12 +86,12 @@ STDMETHODIMP CScriptSource::Load(LPCOLESTR pszFileName, const AM_MEDIA_TYPE* pmt
 
 	HRESULT hr = S_OK;
 	if (ext == L".avs") {
-		if (!(new CAviSynthStream(pszFileName, this, &hr))) {
+		if (!(new(std::nothrow) CAviSynthStream(pszFileName, this, &hr))) {
 			return E_OUTOFMEMORY;
 		}
 	}
 	else if (ext == L".vpy") {
-		if (!(new CVapourSynthStream(pszFileName, this, &hr))) {
+		if (!(new(std::nothrow) CVapourSynthStream(pszFileName, this, &hr))) {
 			return E_OUTOFMEMORY;
 		}
 	}
