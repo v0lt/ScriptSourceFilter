@@ -1,5 +1,5 @@
 /*
-* (C) 2020-2022 see Authors.txt
+* (C) 2020-2023 see Authors.txt
 *
 * This file is part of MPC-BE.
 *
@@ -78,7 +78,7 @@ CVapourSynthStream::CVapourSynthStream(const WCHAR* name, CSource* pParent, HRES
 		for (auto& vsfunc : vsfuncs) {
 			*(vsfunc.adress) = GetProcAddress(m_hVSScriptDll, vsfunc.name);
 			if (nullptr == *(vsfunc.adress)) {
-				throw std::exception(fmt::format("Cannot resolve VapourSynth {} function", vsfunc.name).c_str());
+				throw std::exception(std::format("Cannot resolve VapourSynth {} function", vsfunc.name).c_str());
 			}
 		}
 
@@ -111,7 +111,7 @@ CVapourSynthStream::CVapourSynthStream(const WCHAR* name, CSource* pParent, HRES
 		m_Format = GetFormatParamsVapourSynth(m_vsInfo->format->id);
 
 		if (m_Format.fourcc == DWORD(-1) || m_Format.planes != m_vsInfo->format->numPlanes) {
-			throw std::exception(fmt::format("Unsuported pixel type {}", m_vsInfo->format->name).c_str());
+			throw std::exception(std::format("Unsuported pixel type {}", m_vsInfo->format->name).c_str());
 		}
 
 		const VSFrameRef* frame = m_vsAPI->getFrame(0, m_vsNode, m_vsErrorMessage, sizeof(m_vsErrorMessage));
@@ -154,7 +154,7 @@ CVapourSynthStream::CVapourSynthStream(const WCHAR* name, CSource* pParent, HRES
 			m_Planes[2] = 0;
 		}
 
-		std::wstring streamInfo = fmt::format(
+		std::wstring streamInfo = std::format(
 			L"Script type : VapourSynth\n"
 			L"Video stream: {} {}x{} {:.3f} fps",
 			m_Format.str, m_Width, m_Height, (double)m_fpsNum / m_fpsDen
@@ -164,7 +164,7 @@ CVapourSynthStream::CVapourSynthStream(const WCHAR* name, CSource* pParent, HRES
 		if (vsMap) {
 			int numKeys = m_vsAPI->propNumKeys(vsMap);
 			if (numKeys > 0) {
-				streamInfo += fmt::format(L"\nProperties [{}]:", numKeys);
+				streamInfo += std::format(L"\nProperties [{}]:", numKeys);
 			}
 
 			for (int i = 0; i < numKeys; i++) {
@@ -176,14 +176,14 @@ CVapourSynthStream::CVapourSynthStream(const WCHAR* name, CSource* pParent, HRES
 					int err = 0;
 					const char keyType = m_vsAPI->propGetType(vsMap, keyName);
 
-					streamInfo += fmt::format(L"\n{:>2}: <{}> '{}'", i, keyType, A2WStr(keyName));
+					streamInfo += std::format(L"\n{:>2}: <{}> '{}'", i, keyType, A2WStr(keyName));
 
 					switch (keyType) {
 					case ptInt:
 						val_Int = m_vsAPI->propGetInt(vsMap, keyName, 0, &err);
 						if (!err) {
-							streamInfo += fmt::format(L" = {}", val_Int);
-							streamInfo += fmt::format(L" = {}", val_Int);
+							streamInfo += std::format(L" = {}", val_Int);
+							streamInfo += std::format(L" = {}", val_Int);
 							if (strcmp(keyName, "_SARNum") == 0) {
 								m_Sar.num = val_Int;
 							}
@@ -198,7 +198,7 @@ CVapourSynthStream::CVapourSynthStream(const WCHAR* name, CSource* pParent, HRES
 					case ptFloat:
 						val_Float = m_vsAPI->propGetFloat(vsMap, keyName, 0, &err);
 						if (!err) {
-							streamInfo += fmt::format(L" = {:.3f}", val_Float);
+							streamInfo += std::format(L" = {:.3f}", val_Float);
 						}
 						break;
 					case ptData:
@@ -207,10 +207,10 @@ CVapourSynthStream::CVapourSynthStream(const WCHAR* name, CSource* pParent, HRES
 							const int dataSize = m_vsAPI->propGetDataSize(vsMap, keyName, 0, &err);
 							if (!err) {
 								if (dataSize == 1 && strcmp(keyName, "_PictType") == 0) {
-									streamInfo += fmt::format(L" = {}", val_Data[0]);
+									streamInfo += std::format(L" = {}", val_Data[0]);
 								}
 								else {
-									streamInfo += fmt::format(L", {} bytes", dataSize);
+									streamInfo += std::format(L", {} bytes", dataSize);
 								}
 							}
 						}

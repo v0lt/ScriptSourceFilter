@@ -1,5 +1,5 @@
 /*
-* (C) 2020-2022 see Authors.txt
+* (C) 2020-2023 see Authors.txt
 *
 * This file is part of MPC-BE.
 *
@@ -82,7 +82,7 @@ CAviSynthStream::CAviSynthStream(const WCHAR* name, CSource* pParent, HRESULT* p
 		m_Format = GetFormatParamsAviSynth(VInfo.pixel_type);
 
 		if (m_Format.fourcc == DWORD(-1)) {
-			throw std::exception(fmt::format("Unsuported pixel_type {:#010x} ({})", (uint32_t)VInfo.pixel_type, VInfo.pixel_type).c_str());
+			throw std::exception(std::format("Unsuported pixel_type {:#010x} ({})", (uint32_t)VInfo.pixel_type, VInfo.pixel_type).c_str());
 		}
 
 		auto VFrame = Clip->GetFrame(0, m_ScriptEnvironment);
@@ -120,7 +120,7 @@ CAviSynthStream::CAviSynthStream(const WCHAR* name, CSource* pParent, HRESULT* p
 			m_Planes[3] = PLANAR_A;
 		}
 
-		std::wstring streamInfo = fmt::format(
+		std::wstring streamInfo = std::format(
 			L"Script type : AviSynth\n"
 			L"Video stream: {} {}x{} {:.3f} fps",
 			m_Format.str, m_Width, m_Height, (double)m_fpsNum/m_fpsDen
@@ -138,7 +138,7 @@ CAviSynthStream::CAviSynthStream(const WCHAR* name, CSource* pParent, HRESULT* p
 			auto& avsMap = VFrame->getConstProperties();
 			int numKeys = m_ScriptEnvironment->propNumKeys(&avsMap);
 			if (numKeys > 0) {
-				streamInfo += fmt::format(L"\nProperties [{}]:", numKeys);
+				streamInfo += std::format(L"\nProperties [{}]:", numKeys);
 			}
 
 			for (int i = 0; i < numKeys; i++) {
@@ -150,13 +150,13 @@ CAviSynthStream::CAviSynthStream(const WCHAR* name, CSource* pParent, HRESULT* p
 					int err = 0;
 					const char keyType = m_ScriptEnvironment->propGetType(&avsMap, keyName);
 
-					streamInfo += fmt::format(L"\n{:>2}: <{}> '{}'", i, keyType, A2WStr(keyName));
+					streamInfo += std::format(L"\n{:>2}: <{}> '{}'", i, keyType, A2WStr(keyName));
 
 					switch (keyType) {
 					case PROPTYPE_INT:
 						val_Int = m_ScriptEnvironment->propGetInt(&avsMap, keyName, 0, &err);
 						if (!err) {
-							streamInfo += fmt::format(L" = {}", val_Int);
+							streamInfo += std::format(L" = {}", val_Int);
 							if (strcmp(keyName, "_SARNum") == 0) {
 								m_Sar.num = val_Int;
 							}
@@ -171,7 +171,7 @@ CAviSynthStream::CAviSynthStream(const WCHAR* name, CSource* pParent, HRESULT* p
 					case PROPTYPE_FLOAT:
 						val_Float = m_ScriptEnvironment->propGetFloat(&avsMap, keyName, 0, &err);
 						if (!err) {
-							streamInfo += fmt::format(L" = {:.3f}", val_Float);
+							streamInfo += std::format(L" = {:.3f}", val_Float);
 						}
 						break;
 					case PROPTYPE_DATA:
@@ -180,9 +180,9 @@ CAviSynthStream::CAviSynthStream(const WCHAR* name, CSource* pParent, HRESULT* p
 							const int dataSize = m_ScriptEnvironment->propGetDataSize(&avsMap, keyName, 0, &err);
 							if (!err) {
 								if (dataSize == 1 && strcmp(keyName, "_PictType") == 0) {
-									streamInfo += fmt::format(L" = {}", val_Data[0]);
+									streamInfo += std::format(L" = {}", val_Data[0]);
 								} else {
-									streamInfo += fmt::format(L", {} bytes", dataSize);
+									streamInfo += std::format(L", {} bytes", dataSize);
 								}
 							}
 						}

@@ -1,5 +1,5 @@
 /*
-* (C) 2020-2021 see Authors.txt
+* (C) 2020-2023 see Authors.txt
 *
 * This file is part of MPC-BE.
 *
@@ -27,10 +27,16 @@
                   (((DWORD)(ch4) & 0xFF000000) >> 24))
 #endif
 
+#ifndef DEFINE_MEDIATYPE_GUID
+#define DEFINE_MEDIATYPE_GUID(name, format) \
+    DEFINE_GUID(name,                       \
+    format, 0x0000, 0x0010, 0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71);
+#endif
+
 template <typename... Args>
-inline void DebugLogFmt(const std::wstring_view& format, const Args &...args)
+inline void DebugLogFmt(std::wstring_view format, Args&& ...args)
 {
-	DbgLogInfo(LOG_TRACE, 3, fmt::format(format, args...).c_str());
+	DbgLogInfo(LOG_TRACE, 3, std::vformat(format, std::make_wformat_args(args...)).c_str());
 }
 
 #ifdef _DEBUG
@@ -51,48 +57,30 @@ inline void DebugLogFmt(const std::wstring_view& format, const Args &...args)
 #define __ALIGN_MASK(x, mask) (((x)+(mask))&~(mask))
 
 // Media subtypes
-DEFINE_GUID(MEDIASUBTYPE_Y8,           0x20203859, 0x0000, 0x0010, 0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71);
-DEFINE_GUID(MEDIASUBTYPE_Y800,         0x30303859, 0x0000, 0x0010, 0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71);
-DEFINE_GUID(MEDIASUBTYPE_Y16,          0x10003159, 0x0000, 0x0010, 0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71); // Y1[0][16]
-DEFINE_GUID(MEDIASUBTYPE_YV16,         0x36315659, 0x0000, 0x0010, 0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71);
-DEFINE_GUID(MEDIASUBTYPE_YV24,         0x34325659, 0x0000, 0x0010, 0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71);
-DEFINE_GUID(MEDIASUBTYPE_Y410,         0x30313459, 0x0000, 0x0010, 0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71);
-DEFINE_GUID(MEDIASUBTYPE_Y416,         0x36313459, 0x0000, 0x0010, 0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71);
-DEFINE_GUID(MEDIASUBTYPE_BGR48,        0x30524742, 0x0000, 0x0010, 0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71); // BGR[48] (BGR0)
-DEFINE_GUID(MEDIASUBTYPE_BGRA64,       0x40415242, 0x0000, 0x0010, 0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71); // BRA[64] (BRA@)
-DEFINE_GUID(MEDIASUBTYPE_b48r,         0x72383462, 0x0000, 0x0010, 0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71);
-DEFINE_GUID(MEDIASUBTYPE_b64a,         0x61343662, 0x0000, 0x0010, 0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71);
+DEFINE_MEDIATYPE_GUID(MEDIASUBTYPE_Y8,        0x20203859);
+DEFINE_MEDIATYPE_GUID(MEDIASUBTYPE_Y800,      0x30303859);
+DEFINE_MEDIATYPE_GUID(MEDIASUBTYPE_Y16,       0x10003159); // Y1[0][16]
+DEFINE_MEDIATYPE_GUID(MEDIASUBTYPE_YV16,      0x36315659);
+DEFINE_MEDIATYPE_GUID(MEDIASUBTYPE_YV24,      0x34325659);
+DEFINE_MEDIATYPE_GUID(MEDIASUBTYPE_I420,      0x30323449); // from "wmcodecdsp.h"
+DEFINE_MEDIATYPE_GUID(MEDIASUBTYPE_Y42B,      0x42323459);
+DEFINE_MEDIATYPE_GUID(MEDIASUBTYPE_444P,      0x50343434);
+DEFINE_MEDIATYPE_GUID(MEDIASUBTYPE_Y210,      0x30313259);
+DEFINE_MEDIATYPE_GUID(MEDIASUBTYPE_Y216,      0x36313259);
+DEFINE_MEDIATYPE_GUID(MEDIASUBTYPE_Y410,      0x30313459);
+DEFINE_MEDIATYPE_GUID(MEDIASUBTYPE_Y416,      0x36313459);
+DEFINE_MEDIATYPE_GUID(MEDIASUBTYPE_YUV444P16, 0x10003359); // Y3[0][16]
+DEFINE_MEDIATYPE_GUID(MEDIASUBTYPE_RGB48,     0x30424752); // RGB[48] (RGB0)
+DEFINE_MEDIATYPE_GUID(MEDIASUBTYPE_BGR48,     0x30524742); // BGR[48] (BGR0)
+DEFINE_MEDIATYPE_GUID(MEDIASUBTYPE_BGRA64,    0x40415242); // BRA[64] (BRA@)
+DEFINE_MEDIATYPE_GUID(MEDIASUBTYPE_b48r,      0x72383462);
+DEFINE_MEDIATYPE_GUID(MEDIASUBTYPE_b64a,      0x61343662);
+DEFINE_MEDIATYPE_GUID(MEDIASUBTYPE_r210,      0x30313272);
 DEFINE_GUID(MEDIASUBTYPE_LAV_RAWVIDEO, 0xd80fa03c, 0x35c1, 0x4fa1, 0x8c, 0x8e, 0x37, 0x5c, 0x86, 0x67, 0x16, 0x6e);
 
-#define VIDEOTRANSFERMATRIX_BT2020_10 4
-#define VIDEOTRANSFERMATRIX_BT2020_12 5
-#define VIDEOTRANSFERMATRIX_FCC       6 // non-standard
-#define VIDEOTRANSFERMATRIX_YCgCo     7 // non-standard
-
-#define VIDEOPRIMARIES_BT2020  9
-#define VIDEOPRIMARIES_XYZ    10
-#define VIDEOPRIMARIES_DCI_P3 11
-#define VIDEOPRIMARIES_ACES   12
-
-#define VIDEOTRANSFUNC_Log_100     9
-#define VIDEOTRANSFUNC_Log_316    10
-#define VIDEOTRANSFUNC_709_sym    11
-#define VIDEOTRANSFUNC_2020_const 12
-#define VIDEOTRANSFUNC_2020       13
-#define VIDEOTRANSFUNC_26         14
-#define VIDEOTRANSFUNC_2084       15
-#define VIDEOTRANSFUNC_HLG        16
-#define VIDEOTRANSFUNC_10_rel     17
-
-// A byte that is not initialized to std::vector when using the resize method.
-struct NoInitByte
-{
-	uint8_t value;
-	NoInitByte() {
-		// do nothing
-		static_assert(sizeof(*this) == sizeof (value), "invalid size");
-	}
-};
+// non-standard values for Transfer Matrix
+#define VIDEOTRANSFERMATRIX_FCC     6
+#define VIDEOTRANSFERMATRIX_YCgCo   7
 
 template <typename T>
 // If the specified value is out of range, set to default values.
@@ -118,11 +106,14 @@ LPCWSTR GetWindowsVersion();
 
 inline std::wstring GUIDtoWString(const GUID& guid)
 {
-	WCHAR buff[40];
-	if (StringFromGUID2(guid, buff, 39) <= 0) {
-		StringFromGUID2(GUID_NULL, buff, 39);
+	std::wstring str(39, 0);
+	int ret = StringFromGUID2(guid, &str[0], 39);
+	if (ret) {
+		str.resize(ret - 1);
+	} else {
+		str.clear();
 	}
-	return std::wstring(buff);
+	return str;
 }
 
 std::wstring HR2Str(const HRESULT hr);

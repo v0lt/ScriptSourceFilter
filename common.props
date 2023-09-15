@@ -15,7 +15,7 @@
       <DisableSpecificWarnings>4244; 4838; 26451</DisableSpecificWarnings>
       <ExceptionHandling>Sync</ExceptionHandling>
       <FunctionLevelLinking>true</FunctionLevelLinking>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <PreprocessorDefinitions>_WINDOWS;WINDOWS;WINVER=0x06010000;_WIN32_WINNT=0x06010000;_USRDLL;__STDC_CONSTANT_MACROS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(NOMINMAX)'!='False'">NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>

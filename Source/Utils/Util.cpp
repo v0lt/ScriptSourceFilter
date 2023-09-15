@@ -1,5 +1,5 @@
 /*
-* (C) 2020 see Authors.txt
+* (C) 2020-2022 see Authors.txt
 *
 * This file is part of MPC-BE.
 *
@@ -21,9 +21,30 @@
 #include "stdafx.h"
 #include "Util.h"
 
+VERSIONHELPERAPI
+IsWindows11OrGreater() // https://walbourn.github.io/windows-sdk-for-windows-11/
+{
+	OSVERSIONINFOEXW osvi = { sizeof(osvi), 0, 0, 0, 0, {0}, 0, 0 };
+	DWORDLONG const dwlConditionMask = VerSetConditionMask(
+		VerSetConditionMask(
+		VerSetConditionMask(
+			0, VER_MAJORVERSION, VER_GREATER_EQUAL),
+			   VER_MINORVERSION, VER_GREATER_EQUAL),
+			   VER_BUILDNUMBER, VER_GREATER_EQUAL);
+
+	osvi.dwMajorVersion = HIBYTE(_WIN32_WINNT_WIN10);
+	osvi.dwMinorVersion = LOBYTE(_WIN32_WINNT_WIN10);
+	osvi.dwBuildNumber = 22000;
+
+	return VerifyVersionInfoW(&osvi, VER_MAJORVERSION | VER_MINORVERSION | VER_BUILDNUMBER, dwlConditionMask) != FALSE;
+}
+
 LPCWSTR GetWindowsVersion()
 {
-	if (IsWindows10OrGreater()) {
+	if (IsWindows11OrGreater()) {
+		return L"11";
+	}
+	else if (IsWindows10OrGreater()) {
 		return L"10";
 	}
 	else if (IsWindows8Point1OrGreater()) {
@@ -47,7 +68,7 @@ std::wstring HR2Str(const HRESULT hr)
 #define UNPACK_VALUE(VALUE) case VALUE: str = L#VALUE; break;
 #define UNPACK_HR_WIN32(VALUE) case (((VALUE) & 0x0000FFFF) | (FACILITY_WIN32 << 16) | 0x80000000): str = L#VALUE; break;
 	switch (hr) {
-		// common HRESULT values https://docs.microsoft.com/en-us/windows/desktop/seccrypto/common-hresult-values
+		// Common HRESULT Values https://docs.microsoft.com/en-us/windows/desktop/seccrypto/common-hresult-values
 		UNPACK_VALUE(S_OK);
 #ifdef _WINERROR_
 		UNPACK_VALUE(S_FALSE);
@@ -61,8 +82,12 @@ std::wstring HR2Str(const HRESULT hr)
 		UNPACK_VALUE(E_HANDLE);
 		UNPACK_VALUE(E_OUTOFMEMORY);
 		UNPACK_VALUE(E_INVALIDARG);
+		// some COM Error Codes (Generic) https://docs.microsoft.com/en-us/windows/win32/com/com-error-codes-1
 		UNPACK_VALUE(REGDB_E_CLASSNOTREG);
-		// some System Error Codes
+		// some System Error Codes https://docs.microsoft.com/en-us/windows/win32/debug/system-error-codes
+		UNPACK_HR_WIN32(ERROR_GEN_FAILURE);
+		UNPACK_HR_WIN32(ERROR_NOT_SUPPORTED);
+		UNPACK_HR_WIN32(ERROR_INSUFFICIENT_BUFFER);
 		UNPACK_HR_WIN32(ERROR_MOD_NOT_FOUND);
 		UNPACK_HR_WIN32(ERROR_INVALID_WINDOW_HANDLE);
 		UNPACK_HR_WIN32(ERROR_CLASS_ALREADY_EXISTS);
@@ -82,7 +107,7 @@ std::wstring HR2Str(const HRESULT hr)
 		UNPACK_VALUE(D3DERR_NOTAVAILABLE);
 #endif
 	default:
-		str = fmt::format(L"{:#010x}", (uint32_t)hr);
+		str = std::format(L"{:#010x}", (uint32_t)hr);
 	};
 #undef UNPACK_VALUE
 #undef UNPACK_HR_WIN32

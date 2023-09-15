@@ -1,5 +1,5 @@
 /*
- * (C) 2020-2022 see Authors.txt
+ * (C) 2020-2023 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -142,7 +142,7 @@ static const str_value vui_colorprim[] {
 	{ "bt470bg",   DXVA2_VideoPrimaries_BT470_2_SysBG },
 	{ "smpte170m", DXVA2_VideoPrimaries_SMPTE170M },
 	{ "smpte240m", DXVA2_VideoPrimaries_SMPTE240M },
-	{ "bt2020",    VIDEOPRIMARIES_BT2020 },
+	{ "bt2020",    MFVideoPrimaries_BT2020 },
 };
 
 static const str_value vui_transfer[] {
@@ -152,10 +152,10 @@ static const str_value vui_transfer[] {
 	{ "smpte170m",    DXVA2_VideoTransFunc_709 },
 	{ "smpte240m",    DXVA2_VideoTransFunc_240M },
 	{ "linear",       DXVA2_VideoTransFunc_10 },
-	{ "log100",       VIDEOTRANSFUNC_Log_100 },
-	{ "log316",       VIDEOTRANSFUNC_Log_316 },
-	{ "smpte2084",    VIDEOTRANSFUNC_2084 },
-	{ "arib-std-b67", VIDEOTRANSFUNC_HLG },
+	{ "log100",       MFVideoTransFunc_Log_100 },
+	{ "log316",       MFVideoTransFunc_Log_316 },
+	{ "smpte2084",    MFVideoTransFunc_2084 },
+	{ "arib-std-b67", MFVideoTransFunc_HLG },
 };
 
 static const str_value vui_colormatrix[] {
@@ -164,8 +164,8 @@ static const str_value vui_colormatrix[] {
 	{ "bt470bg",   DXVA2_VideoTransferMatrix_BT601 },
 	{ "smpte240m", DXVA2_VideoTransferMatrix_SMPTE240M },
 	{ "YCgCo",     VIDEOTRANSFERMATRIX_YCgCo },
-	{ "bt2020nc",  VIDEOTRANSFERMATRIX_BT2020_10 },
-	{ "bt2020c",   VIDEOTRANSFERMATRIX_BT2020_10 },
+	{ "bt2020nc",  MFVideoTransferMatrix_BT2020_10 },
+	{ "bt2020c",   MFVideoTransferMatrix_BT2020_10 },
 };
 
 static const str_value vui_chromaloc[] {

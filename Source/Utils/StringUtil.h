@@ -1,5 +1,5 @@
 /*
-* (C) 2020-2021 see Authors.txt
+* (C) 2020-2023 see Authors.txt
 *
 * This file is part of MPC-BE.
 *
@@ -52,13 +52,13 @@ inline void str_toupper(std::wstring& s)
 inline void str_tolower_all(std::wstring& s)
 {
 	const std::ctype<wchar_t>& f = std::use_facet<std::ctype<wchar_t>>(std::locale());
-	f.tolower(&s[0], &s[0] + s.size());
+	std::ignore = f.tolower(&s[0], &s[0] + s.size());
 }
 
 inline void str_toupper_all(std::wstring& s)
 {
 	const std::ctype<wchar_t>& f = std::use_facet<std::ctype<wchar_t>>(std::locale());
-	f.toupper(&s[0], &s[0] + s.size());
+	std::ignore = f.toupper(&s[0], &s[0] + s.size());
 }
 
 //
@@ -73,14 +73,14 @@ void str_split(const std::wstring& wstr, std::vector<std::wstring>& tokens, wcha
 // trimming whitespace
 //
 
-inline const std::string str_trim(const std::string_view& sv)
+inline const std::string str_trim(const std::string_view sv)
 {
 	auto sfront = std::find_if_not(sv.begin(), sv.end(), [](int c) {return isspace(c); });
 	auto sback = std::find_if_not(sv.rbegin(), sv.rend(), [](int c) {return isspace(c); }).base();
 	return (sback <= sfront ? std::string() : std::string(sfront, sback));
 }
 
-inline const std::wstring str_trim(const std::wstring_view& sv)
+inline const std::wstring str_trim(const std::wstring_view sv)
 {
 	auto sfront = std::find_if_not(sv.begin(), sv.end(), [](int c) {return iswspace(c); });
 	auto sback = std::find_if_not(sv.rbegin(), sv.rend(), [](int c) {return iswspace(c); }).base();
@@ -112,7 +112,7 @@ void str_replace(std::wstring& s, const std::wstring_view from, const std::wstri
 // simple convert ANSI string to wide character string
 //
 
-inline const std::wstring A2WStr(const std::string_view& sv)
+inline const std::wstring A2WStr(const std::string_view sv)
 {
 	return std::wstring(sv.begin(), sv.end());
 }
