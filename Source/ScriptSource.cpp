@@ -1,5 +1,5 @@
 /*
- * (C) 2020-2023 see Authors.txt
+ * (C) 2020-2024 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -166,7 +166,7 @@ STDMETHODIMP CScriptSource::GetScriptInfo(std::wstring& str)
 
 // IExFilterConfig
 
-STDMETHODIMP CScriptSource::GetInt64(LPCSTR field, __int64 *value)
+STDMETHODIMP CScriptSource::Flt_GetInt64(LPCSTR field, __int64 *value)
 {
 	CheckPointer(value, E_POINTER);
 
