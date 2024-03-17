@@ -1,22 +1,22 @@
-/*
-* (C) 2020-2022 see Authors.txt
-*
-* This file is part of MPC-BE.
-*
-* MPC-BE is free software; you can redistribute it and/or modify
-* it under the terms of the GNU General Public License as published by
-* the Free Software Foundation; either version 3 of the License, or
-* (at your option) any later version.
-*
-* MPC-BE is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU General Public License for more details.
-*
-* You should have received a copy of the GNU General Public License
-* along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*
-*/
+// Copyright (c) 2020-2024 v0lt, Aleksoid
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+// 
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
 
 #include "stdafx.h"
 #include "Util.h"
@@ -68,7 +68,7 @@ std::wstring HR2Str(const HRESULT hr)
 #define UNPACK_VALUE(VALUE) case VALUE: str = L#VALUE; break;
 #define UNPACK_HR_WIN32(VALUE) case (((VALUE) & 0x0000FFFF) | (FACILITY_WIN32 << 16) | 0x80000000): str = L#VALUE; break;
 	switch (hr) {
-		// Common HRESULT Values https://docs.microsoft.com/en-us/windows/desktop/seccrypto/common-hresult-values
+		// Common HRESULT Values https://learn.microsoft.com/en-us/windows/win32/seccrypto/common-hresult-values
 		UNPACK_VALUE(S_OK);
 #ifdef _WINERROR_
 		UNPACK_VALUE(S_FALSE);
@@ -82,9 +82,19 @@ std::wstring HR2Str(const HRESULT hr)
 		UNPACK_VALUE(E_HANDLE);
 		UNPACK_VALUE(E_OUTOFMEMORY);
 		UNPACK_VALUE(E_INVALIDARG);
-		// some COM Error Codes (Generic) https://docs.microsoft.com/en-us/windows/win32/com/com-error-codes-1
+		// some COM Error Codes (Generic) https://learn.microsoft.com/en-us/windows/win32/com/com-error-codes-1
 		UNPACK_VALUE(REGDB_E_CLASSNOTREG);
-		// some System Error Codes https://docs.microsoft.com/en-us/windows/win32/debug/system-error-codes
+		// some COM Error Codes (UI, Audio, DirectX, Codec) https://learn.microsoft.com/en-us/windows/win32/com/com-error-codes-10
+		UNPACK_VALUE(DXGI_STATUS_OCCLUDED);
+		UNPACK_VALUE(DXGI_STATUS_MODE_CHANGED);
+		UNPACK_VALUE(DXGI_ERROR_INVALID_CALL);
+		UNPACK_VALUE(DXGI_ERROR_DEVICE_REMOVED);
+		UNPACK_VALUE(DXGI_ERROR_DEVICE_RESET);
+		UNPACK_VALUE(DXGI_ERROR_SDK_COMPONENT_MISSING);
+		UNPACK_VALUE(WINCODEC_ERR_COMPONENTNOTFOUND);
+		UNPACK_VALUE(WINCODEC_ERR_UNSUPPORTEDPIXELFORMAT);
+		UNPACK_VALUE(WINCODEC_ERR_PROPERTYUNEXPECTEDTYPE);
+		// some System Error Codes https://learn.microsoft.com/en-us/windows/win32/debug/system-error-codes
 		UNPACK_HR_WIN32(ERROR_GEN_FAILURE);
 		UNPACK_HR_WIN32(ERROR_NOT_SUPPORTED);
 		UNPACK_HR_WIN32(ERROR_INSUFFICIENT_BUFFER);
@@ -92,8 +102,11 @@ std::wstring HR2Str(const HRESULT hr)
 		UNPACK_HR_WIN32(ERROR_INVALID_WINDOW_HANDLE);
 		UNPACK_HR_WIN32(ERROR_CLASS_ALREADY_EXISTS);
 #endif
+#ifdef _MFERROR_H
+		UNPACK_VALUE(MF_E_INVALID_FORMAT);
+#endif
 #ifdef _D3D9_H_
-		// some D3DERR values https://docs.microsoft.com/en-us/windows/desktop/direct3d9/d3derr
+		// some D3DERR values https://learn.microsoft.com/en-us/windows/win32/direct3d9/d3derr
 		UNPACK_VALUE(S_PRESENT_OCCLUDED);
 		UNPACK_VALUE(S_PRESENT_MODE_CHANGED);
 		UNPACK_VALUE(D3DERR_DEVICEHUNG);
