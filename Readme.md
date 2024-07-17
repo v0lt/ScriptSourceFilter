@@ -9,7 +9,7 @@ MPC Script Source is a free and open-source DirectShow filter. The filter allows
 
 ## License
 
-MPC Script Source's code is licensed under [GPL v3].
+MPC Script Source's code is licensed under [LGPL v2.1].
 
 ## Links
 
