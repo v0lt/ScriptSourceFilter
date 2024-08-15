@@ -76,6 +76,7 @@ private:
 
 public:
 	CAviSynthVideoStream(CAviSynthFile* pAviSynthFile, CSource* pParent, HRESULT* phr);
+	CAviSynthVideoStream(std::wstring_view error_str, CSource* pParent, HRESULT* phr);
 	virtual ~CAviSynthVideoStream();
 
 	STDMETHODIMP NonDelegatingQueryInterface(REFIID riid, void** ppv) override;

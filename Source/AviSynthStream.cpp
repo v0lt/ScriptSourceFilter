@@ -20,9 +20,6 @@ const AVS_Linkage* AVS_linkage = NULL;
 
 CAviSynthFile::CAviSynthFile(const WCHAR* name, CSource* pParent, HRESULT* phr)
 {
-	HRESULT hr;
-	std::wstring error;
-
 	try {
 		m_hAviSynthDll = LoadLibraryW(L"Avisynth.dll");
 		if (!m_hAviSynthDll) {
@@ -42,7 +39,17 @@ CAviSynthFile::CAviSynthFile(const WCHAR* name, CSource* pParent, HRESULT* phr)
 		}
 
 		AVS_linkage = m_Linkage = m_ScriptEnvironment->GetAVSLinkage();
+	}
+	catch (const std::exception& e) {
+		DLog(L"{}", A2WStr(e.what()));
+		*phr = E_FAIL;
+		return;
+	}
 
+	HRESULT hr;
+	std::wstring error;
+
+	try {
 		std::string utf8file = ConvertWideToUtf8(name);
 		AVSValue args[2] = { utf8file.c_str(), true };
 		const char* const arg_names[2] = { 0, "utf8" };
@@ -67,8 +74,10 @@ CAviSynthFile::CAviSynthFile(const WCHAR* name, CSource* pParent, HRESULT* phr)
 				throw std::exception(std::format("Unsuported pixel_type {:#010x} ({})", (uint32_t)VInfo.pixel_type, VInfo.pixel_type).c_str());
 			}
 
-			new CAviSynthVideoStream(this, pParent, &hr);
+			auto pVideoStream = new CAviSynthVideoStream(this, pParent, &hr);
 			if (FAILED(hr)) {
+				pParent->RemovePin(pVideoStream);
+				delete pVideoStream;
 				throw std::exception("AviSynth+ script returned unsupported video");
 			}
 		}
@@ -85,7 +94,12 @@ CAviSynthFile::CAviSynthFile(const WCHAR* name, CSource* pParent, HRESULT* phr)
 	catch (const std::exception& e) {
 		DLog(L"{}\n{}", A2WStr(e.what()), error);
 
-		hr = E_FAIL;
+		new CAviSynthVideoStream(error, pParent, &hr);
+		if (SUCCEEDED(hr)) {
+			hr = S_FALSE;
+		} else {
+			hr = E_FAIL;
+		}
 	}
 
 	*phr = hr;
@@ -247,39 +261,6 @@ CAviSynthVideoStream::CAviSynthVideoStream(CAviSynthFile* pAviSynthFile, CSource
 			m_ColorInfo = color_info | (AMCONTROL_USED | AMCONTROL_COLORINFO_PRESENT);
 		}
 
-		DLog(m_StreamInfo);
-
-		hr = S_OK;
-	}
-	catch (const std::exception& e) {
-		DLog(L"{}\n{}", A2WStr(e.what()), error);
-
-		m_Format     = GetFormatParamsAviSynth(VideoInfo::CS_BGR32);
-
-		m_Width      = 640;
-		m_Height     = 360;
-		m_Pitch      = m_Width * 4;
-		m_PitchBuff  = m_Pitch;
-		m_BufferSize = m_PitchBuff * m_Height * m_Format.buffCoeff / 2;
-		m_Sar = {};
-
-		m_fpsNum     = 1;
-		m_fpsDen     = 1;
-		m_NumFrames  = 10;
-		m_AvgTimePerFrame = UNITS;
-		m_rtDuration = m_rtStop = UNITS * m_NumFrames;
-
-		std::wstring str = A2WStr(e.what()) + L"\n\n" + error;
-		m_BitmapError = GetBitmapWithText(str, m_Width, m_Height);
-
-		if (m_BitmapError) {
-			hr = S_FALSE;
-		} else {
-			hr = E_FAIL;
-		}
-	}
-
-	if (SUCCEEDED(hr)) {
 		m_mt.InitMediaType();
 		m_mt.SetType(&MEDIATYPE_Video);
 		m_mt.SetSubtype(&m_Format.subtype);
@@ -311,9 +292,48 @@ CAviSynthVideoStream::CAviSynthVideoStream(CAviSynthFile* pAviSynthFile, CSource
 			vih2->dwPictAspectRatioX = parX;
 			vih2->dwPictAspectRatioY = parY;
 		}
+
+		DLog(m_StreamInfo);
+
+		hr = S_OK;
+	}
+	catch (const std::exception& e) {
+		DLog(L"{}\n{}", A2WStr(e.what()), error);
+
+		hr = E_FAIL;
 	}
 
 	*phr = hr;
+}
+
+CAviSynthVideoStream::CAviSynthVideoStream(std::wstring_view error_str, CSource* pParent, HRESULT* phr)
+	: CSourceStream(L"Video", phr, pParent, L"Video")
+	, CSourceSeeking(L"Video", (IPin*)this, phr, &m_cSharedState)
+	, m_pAviSynthFile(nullptr)
+{
+	m_Format = GetFormatParamsAviSynth(VideoInfo::CS_BGR32);
+
+	m_Width = 640;
+	m_Height = 360;
+	m_Pitch = m_Width * 4;
+	m_PitchBuff = m_Pitch;
+	m_BufferSize = m_PitchBuff * m_Height * m_Format.buffCoeff / 2;
+	m_Sar = {};
+
+	m_fpsNum = 1;
+	m_fpsDen = 1;
+	m_NumFrames = 10;
+	m_AvgTimePerFrame = UNITS;
+	m_rtDuration = m_rtStop = UNITS * m_NumFrames;
+
+	std::wstring str(error_str);
+	m_BitmapError = GetBitmapWithText(str, m_Width, m_Height);
+
+	if (m_BitmapError) {
+		*phr = S_FALSE;
+	} else {
+		*phr = E_FAIL;
+	}
 }
 
 CAviSynthVideoStream::~CAviSynthVideoStream()
