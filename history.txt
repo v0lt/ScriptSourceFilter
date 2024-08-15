@@ -1,4 +1,4 @@
-0.1.5 dev
+0.2.0 dev
 -----------------------
 The license has been changed to LGPL-2.1.
 
