@@ -62,7 +62,7 @@ private:
 	UINT m_PitchBuff  = 0;
 	UINT m_BufferSize = 0;
 
-	UINT m_ColorInfo = 0; // TODO
+	UINT m_ColorInfo = 0;
 	struct {
 		int64_t num = 0;
 		int64_t den = 0;
@@ -127,7 +127,6 @@ private:
 	int m_BitDepth = 0;
 	int m_SampleType = 0;
 
-	//UINT m_BufferSize = 0;
 	int m_BufferSamples = 0;
 
 	int64_t m_SampleCounter = 0;

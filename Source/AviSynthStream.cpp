@@ -148,7 +148,6 @@ CAviSynthVideoStream::CAviSynthVideoStream(CAviSynthFile* pAviSynthFile, CSource
 		m_NumFrames = VInfo.num_frames;
 		m_AvgTimePerFrame = UNITS * m_fpsDen / m_fpsNum; // no need any MulDiv here
 		m_rtDuration = m_rtStop = llMulDiv(UNITS * m_NumFrames, m_fpsDen, m_fpsNum, 0);
-		UINT color_info = 0;
 
 		if (VInfo.IsPlanar()) {
 			if (VInfo.IsYUV()) {
@@ -169,6 +168,8 @@ CAviSynthVideoStream::CAviSynthVideoStream(CAviSynthFile* pAviSynthFile, CSource
 			}
 			m_Planes[3] = PLANAR_A;
 		}
+
+		UINT color_info = 0;
 
 		m_StreamInfo = std::format(
 			L"Script type : AviSynth\n"
@@ -240,6 +241,10 @@ CAviSynthVideoStream::CAviSynthVideoStream(CAviSynthFile* pAviSynthFile, CSource
 					}
 				}
 			}
+		}
+
+		if (color_info) {
+			m_ColorInfo = color_info | (AMCONTROL_USED | AMCONTROL_COLORINFO_PRESENT);
 		}
 
 		DLog(m_StreamInfo);

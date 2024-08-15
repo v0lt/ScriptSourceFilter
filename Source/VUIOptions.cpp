@@ -12,6 +12,9 @@
 #include "Helper.h"
 #include "VUIOptions.h"
 
+// Rec. ITU-T H.264
+// https://www.itu.int/itu-t/recommendations/rec.aspx?rec=14659
+
 bool SetColorInfoFromFrameFrops(UINT& extFmtValue, const char* keyName, int64_t value)
 {
 	DXVA2_ExtendedFormat exFmt;
@@ -46,7 +49,7 @@ bool SetColorInfoFromFrameFrops(UINT& extFmtValue, const char* keyName, int64_t 
 	}
 	else if (strcmp(keyName, "_Matrix") == 0) {
 		switch (value) {
-		case 0:  exFmt.VideoTransferMatrix = DXVA2_VideoTransferMatrix_BT709;     break;
+		case 1:  exFmt.VideoTransferMatrix = DXVA2_VideoTransferMatrix_BT709;     break;
 		case 4:  exFmt.VideoTransferMatrix = VIDEOTRANSFERMATRIX_FCC;             break;
 		case 5:
 		case 6:  exFmt.VideoTransferMatrix = DXVA2_VideoTransferMatrix_BT601;     break;
