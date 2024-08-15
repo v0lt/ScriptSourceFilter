@@ -2,7 +2,7 @@
 -----------------------
 The license has been changed to LGPL-2.1.
 Added audio support for AviSynth+ scripts.
-ScriptSourceFilter will not show a video with an error if it cannot connect to AviSynth+. This will allow the player to try other filters.
+ScriptSourceFilter will not show a video with an error if it cannot connect to AviSynth+ or VapourSynth. This will allow the player to try other filters.
 
 0.1.4.128 - 2022-09-21
 -----------------------

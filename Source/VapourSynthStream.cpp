@@ -20,9 +20,6 @@ CVapourSynthStream::CVapourSynthStream(const WCHAR* name, CSource* pParent, HRES
 {
 	CAutoLock cAutoLock(&m_cSharedState);
 
-	HRESULT hr;
-	std::wstring error;
-
 	try {
 		m_hVSScriptDll = LoadLibraryW(L"vsscript.dll");
 		if (!m_hVSScriptDll) {
@@ -77,7 +74,18 @@ CVapourSynthStream::CVapourSynthStream(const WCHAR* name, CSource* pParent, HRES
 		if (!m_vsAPI) {
 			throw std::exception("Failed to call VapourSynth vsscript_getVSApi");
 		}
+	}
+	catch (const std::exception& e) {
+		VapourSynthFree();
+		DLog(A2WStr(e.what()));
+		*phr = E_FAIL;
+		return;
+	}
 
+	HRESULT hr;
+	std::wstring error;
+
+	try {
 		std::string utf8file = ConvertWideToUtf8(name);
 		if (vs_evaluateFile(&m_vsScript, utf8file.c_str(), 0)) {
 			error = ConvertUtf8ToWide(vs_getError(m_vsScript));
