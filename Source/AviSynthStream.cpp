@@ -10,18 +10,16 @@
 
 #include "AviSynthStream.h"
 
+#include <mmreg.h>
+
 const AVS_Linkage* AVS_linkage = NULL;
 
 //
-// CAviSynthStream
+// CAviSynthFile
 //
 
-CAviSynthStream::CAviSynthStream(const WCHAR* name, CSource* pParent, HRESULT* phr)
-	: CSourceStream(name, phr, pParent, L"Output")
-	, CSourceSeeking(name, (IPin*)this, phr, &m_cSharedState)
+CAviSynthFile::CAviSynthFile(const WCHAR* name, CSource* pParent, HRESULT* phr)
 {
-	CAutoLock cAutoLock(&m_cSharedState);
-
 	HRESULT hr;
 	std::wstring error;
 
@@ -31,8 +29,8 @@ CAviSynthStream::CAviSynthStream(const WCHAR* name, CSource* pParent, HRESULT* p
 			throw std::exception("Failed to load AviSynth+");
 		}
 
-		IScriptEnvironment* (WINAPI *CreateScriptEnvironment)(int version) =
-			(IScriptEnvironment * (WINAPI *)(int)) GetProcAddress(m_hAviSynthDll, "CreateScriptEnvironment");
+		IScriptEnvironment* (WINAPI* CreateScriptEnvironment)(int version) =
+			(IScriptEnvironment * (WINAPI*)(int)) GetProcAddress(m_hAviSynthDll, "CreateScriptEnvironment");
 
 		if (!CreateScriptEnvironment) {
 			throw std::exception("Cannot resolve AviSynth+ CreateScriptEnvironment function");
@@ -61,17 +59,83 @@ CAviSynthStream::CAviSynthStream(const WCHAR* name, CSource* pParent, HRESULT* p
 		}
 
 		auto Clip = m_AVSValue.AsClip();
-
 		auto VInfo = Clip->GetVideoInfo();
-		UINT bitdepth = VInfo.BitsPerPixel();
+
+		if (VInfo.HasVideo()) {
+			auto Format = GetFormatParamsAviSynth(VInfo.pixel_type);
+			if (Format.fourcc == DWORD(-1)) {
+				throw std::exception(std::format("Unsuported pixel_type {:#010x} ({})", (uint32_t)VInfo.pixel_type, VInfo.pixel_type).c_str());
+			}
+
+			new CAviSynthVideoStream(this, pParent, &hr);
+			if (FAILED(hr)) {
+				throw std::exception("AviSynth+ script returned unsupported video");
+			}
+		}
+		
+		if (VInfo.HasAudio()) {
+			new CAviSynthAudioStream(this, pParent, &hr);
+			if (FAILED(hr)) {
+				DLog(L"AviSynth+ script returned unsupported audio");
+			}
+		}
+
+		hr = S_OK;
+	}
+	catch (const std::exception& e) {
+		DLog(L"{}\n{}", A2WStr(e.what()), error);
+
+		hr = E_FAIL;
+	}
+
+	*phr = hr;
+}
+
+CAviSynthFile::~CAviSynthFile()
+{
+	AVS_linkage = m_Linkage;
+
+	m_AVSValue = 0;
+
+	if (m_ScriptEnvironment) {
+		m_ScriptEnvironment->DeleteScriptEnvironment();
+		m_ScriptEnvironment = nullptr;
+	}
+
+	AVS_linkage = nullptr;
+	m_Linkage = nullptr;
+
+	if (m_hAviSynthDll) {
+		FreeLibrary(m_hAviSynthDll);
+	}
+}
+
+//
+// CAviSynthVideoStream
+//
+
+CAviSynthVideoStream::CAviSynthVideoStream(CAviSynthFile* pAviSynthFile, CSource* pParent, HRESULT* phr)
+	: CSourceStream(L"Video", phr, pParent, L"Video")
+	, CSourceSeeking(L"Video", (IPin*)this, phr, &m_cSharedState)
+	, m_pAviSynthFile(pAviSynthFile)
+{
+	CAutoLock cAutoLock(&m_cSharedState);
+
+	HRESULT hr;
+	std::wstring error;
+
+	try {
+		auto Clip = m_pAviSynthFile->m_AVSValue.AsClip();
+		auto VInfo = Clip->GetVideoInfo();
 
 		m_Format = GetFormatParamsAviSynth(VInfo.pixel_type);
-
 		if (m_Format.fourcc == DWORD(-1)) {
 			throw std::exception(std::format("Unsuported pixel_type {:#010x} ({})", (uint32_t)VInfo.pixel_type, VInfo.pixel_type).c_str());
 		}
 
-		auto VFrame = Clip->GetFrame(0, m_ScriptEnvironment);
+		UINT bitdepth = VInfo.BitsPerPixel();
+
+		auto VFrame = Clip->GetFrame(0, m_pAviSynthFile->m_ScriptEnvironment);
 		m_Pitch = VFrame->GetPitch();
 
 		m_Width = VInfo.width;
@@ -106,7 +170,7 @@ CAviSynthStream::CAviSynthStream(const WCHAR* name, CSource* pParent, HRESULT* p
 			m_Planes[3] = PLANAR_A;
 		}
 
-		std::wstring streamInfo = std::format(
+		m_StreamInfo = std::format(
 			L"Script type : AviSynth\n"
 			L"Video stream: {} {}x{} {:.3f} fps",
 			m_Format.str, m_Width, m_Height, (double)m_fpsNum/m_fpsDen
@@ -114,7 +178,7 @@ CAviSynthStream::CAviSynthStream(const WCHAR* name, CSource* pParent, HRESULT* p
 
 		bool has_at_least_v9 = true;
 		try {
-			m_ScriptEnvironment->CheckVersion(9);
+			m_pAviSynthFile->m_ScriptEnvironment->CheckVersion(9);
 		}
 		catch (const AvisynthError&) {
 			has_at_least_v9 = false;
@@ -122,27 +186,27 @@ CAviSynthStream::CAviSynthStream(const WCHAR* name, CSource* pParent, HRESULT* p
 
 		if (has_at_least_v9) {
 			auto& avsMap = VFrame->getConstProperties();
-			int numKeys = m_ScriptEnvironment->propNumKeys(&avsMap);
+			int numKeys = m_pAviSynthFile->m_ScriptEnvironment->propNumKeys(&avsMap);
 			if (numKeys > 0) {
-				streamInfo += std::format(L"\nProperties [{}]:", numKeys);
+				m_StreamInfo += std::format(L"\nProperties [{}]:", numKeys);
 			}
 
 			for (int i = 0; i < numKeys; i++) {
-				const char* keyName = m_ScriptEnvironment->propGetKey(&avsMap, i);
+				const char* keyName = m_pAviSynthFile->m_ScriptEnvironment->propGetKey(&avsMap, i);
 				if (keyName) {
 					int64_t val_Int = 0;
 					double val_Float = 0;
 					const char* val_Data = 0;
 					int err = 0;
-					const char keyType = m_ScriptEnvironment->propGetType(&avsMap, keyName);
+					const char keyType = m_pAviSynthFile->m_ScriptEnvironment->propGetType(&avsMap, keyName);
 
-					streamInfo += std::format(L"\n{:>2}: <{}> '{}'", i, keyType, A2WStr(keyName));
+					m_StreamInfo += std::format(L"\n{:>2}: <{}> '{}'", i, keyType, A2WStr(keyName));
 
 					switch (keyType) {
 					case PROPTYPE_INT:
-						val_Int = m_ScriptEnvironment->propGetInt(&avsMap, keyName, 0, &err);
+						val_Int = m_pAviSynthFile->m_ScriptEnvironment->propGetInt(&avsMap, keyName, 0, &err);
 						if (!err) {
-							streamInfo += std::format(L" = {}", val_Int);
+							m_StreamInfo += std::format(L" = {}", val_Int);
 							if (strcmp(keyName, "_SARNum") == 0) {
 								m_Sar.num = val_Int;
 							}
@@ -155,20 +219,20 @@ CAviSynthStream::CAviSynthStream(const WCHAR* name, CSource* pParent, HRESULT* p
 						}
 						break;
 					case PROPTYPE_FLOAT:
-						val_Float = m_ScriptEnvironment->propGetFloat(&avsMap, keyName, 0, &err);
+						val_Float = m_pAviSynthFile->m_ScriptEnvironment->propGetFloat(&avsMap, keyName, 0, &err);
 						if (!err) {
-							streamInfo += std::format(L" = {:.3f}", val_Float);
+							m_StreamInfo += std::format(L" = {:.3f}", val_Float);
 						}
 						break;
 					case PROPTYPE_DATA:
-						val_Data = m_ScriptEnvironment->propGetData(&avsMap, keyName, 0, &err);
+						val_Data = m_pAviSynthFile->m_ScriptEnvironment->propGetData(&avsMap, keyName, 0, &err);
 						if (!err) {
-							const int dataSize = m_ScriptEnvironment->propGetDataSize(&avsMap, keyName, 0, &err);
+							const int dataSize = m_pAviSynthFile->m_ScriptEnvironment->propGetDataSize(&avsMap, keyName, 0, &err);
 							if (!err) {
 								if (dataSize == 1 && strcmp(keyName, "_PictType") == 0) {
-									streamInfo += std::format(L" = {}", val_Data[0]);
+									m_StreamInfo += std::format(L" = {}", val_Data[0]);
 								} else {
-									streamInfo += std::format(L", {} bytes", dataSize);
+									m_StreamInfo += std::format(L", {} bytes", dataSize);
 								}
 							}
 						}
@@ -178,13 +242,7 @@ CAviSynthStream::CAviSynthStream(const WCHAR* name, CSource* pParent, HRESULT* p
 			}
 		}
 
-		SetColorInfoFromVUIOptions(color_info, name);
-		if (color_info && VInfo.IsYUV()) {
-			m_ColorInfo = color_info | (AMCONTROL_USED | AMCONTROL_COLORINFO_PRESENT);
-		}
-
-		DLog(streamInfo);
-		static_cast<CScriptSource*>(pParent)->m_StreamInfo = streamInfo;
+		DLog(m_StreamInfo);
 
 		hr = S_OK;
 	}
@@ -253,28 +311,11 @@ CAviSynthStream::CAviSynthStream(const WCHAR* name, CSource* pParent, HRESULT* p
 	*phr = hr;
 }
 
-CAviSynthStream::~CAviSynthStream()
+CAviSynthVideoStream::~CAviSynthVideoStream()
 {
-	CAutoLock cAutoLock(&m_cSharedState);
-
-	AVS_linkage = m_Linkage;
-
-	m_AVSValue = 0;
-
-	if (m_ScriptEnvironment) {
-		m_ScriptEnvironment->DeleteScriptEnvironment();
-		m_ScriptEnvironment = nullptr;
-	}
-
-	AVS_linkage = nullptr;
-	m_Linkage   = nullptr;
-
-	if (m_hAviSynthDll) {
-		FreeLibrary(m_hAviSynthDll);
-	}
 }
 
-STDMETHODIMP CAviSynthStream::NonDelegatingQueryInterface(REFIID riid, void** ppv)
+STDMETHODIMP CAviSynthVideoStream::NonDelegatingQueryInterface(REFIID riid, void** ppv)
 {
 	CheckPointer(ppv, E_POINTER);
 
@@ -282,7 +323,23 @@ STDMETHODIMP CAviSynthStream::NonDelegatingQueryInterface(REFIID riid, void** pp
 		: CSourceStream::NonDelegatingQueryInterface(riid, ppv);
 }
 
-void CAviSynthStream::UpdateFromSeek()
+HRESULT CAviSynthVideoStream::OnThreadCreate()
+{
+	CAutoLock cAutoLockShared(&m_cSharedState);
+
+	m_FrameCounter = 0;
+	m_CurrentFrame = (int)llMulDiv(m_rtStart, m_fpsNum, m_fpsDen * UNITS, 0); // round down
+
+	return CSourceStream::OnThreadCreate();
+}
+
+HRESULT CAviSynthVideoStream::OnThreadStartPlay()
+{
+	m_bDiscontinuity = TRUE;
+	return DeliverNewSegment(m_rtStart, m_rtStop, m_dRateSeeking);
+}
+
+void CAviSynthVideoStream::UpdateFromSeek()
 {
 	if (ThreadExists()) {
 		// next time around the loop, the worker thread will
@@ -305,7 +362,7 @@ void CAviSynthStream::UpdateFromSeek()
 	}
 }
 
-HRESULT CAviSynthStream::SetRate(double dRate)
+HRESULT CAviSynthVideoStream::SetRate(double dRate)
 {
 	if (dRate <= 0) {
 		return E_INVALIDARG;
@@ -321,13 +378,7 @@ HRESULT CAviSynthStream::SetRate(double dRate)
 	return S_OK;
 }
 
-HRESULT CAviSynthStream::OnThreadStartPlay()
-{
-	m_bDiscontinuity = TRUE;
-	return DeliverNewSegment(m_rtStart, m_rtStop, m_dRateSeeking);
-}
-
-HRESULT CAviSynthStream::ChangeStart()
+HRESULT CAviSynthVideoStream::ChangeStart()
 {
 	{
 		CAutoLock lock(CSourceSeeking::m_pLock);
@@ -340,7 +391,7 @@ HRESULT CAviSynthStream::ChangeStart()
 	return S_OK;
 }
 
-HRESULT CAviSynthStream::ChangeStop()
+HRESULT CAviSynthVideoStream::ChangeStop()
 {
 	{
 		CAutoLock lock(CSourceSeeking::m_pLock);
@@ -355,17 +406,7 @@ HRESULT CAviSynthStream::ChangeStop()
 	return S_OK;
 }
 
-HRESULT CAviSynthStream::OnThreadCreate()
-{
-	CAutoLock cAutoLockShared(&m_cSharedState);
-
-	m_FrameCounter = 0;
-	m_CurrentFrame = (int)llMulDiv(m_rtStart, m_fpsNum, m_fpsDen * UNITS, 0); // round down
-
-	return CSourceStream::OnThreadCreate();
-}
-
-HRESULT CAviSynthStream::DecideBufferSize(IMemAllocator* pAlloc, ALLOCATOR_PROPERTIES* pProperties)
+HRESULT CAviSynthVideoStream::DecideBufferSize(IMemAllocator* pAlloc, ALLOCATOR_PROPERTIES* pProperties)
 {
 	//CAutoLock cAutoLock(m_pFilter->pStateLock());
 
@@ -390,7 +431,7 @@ HRESULT CAviSynthStream::DecideBufferSize(IMemAllocator* pAlloc, ALLOCATOR_PROPE
 	return NOERROR;
 }
 
-HRESULT CAviSynthStream::FillBuffer(IMediaSample* pSample)
+HRESULT CAviSynthVideoStream::FillBuffer(IMediaSample* pSample)
 {
 	{
 		CAutoLock cAutoLockShared(&m_cSharedState);
@@ -440,9 +481,9 @@ HRESULT CAviSynthStream::FillBuffer(IMediaSample* pSample)
 			}
 		}
 		else {
-			auto Clip = m_AVSValue.AsClip();
+			auto Clip = m_pAviSynthFile->m_AVSValue.AsClip();
 			auto VInfo = Clip->GetVideoInfo();
-			auto VFrame = Clip->GetFrame(m_CurrentFrame, m_ScriptEnvironment);
+			auto VFrame = Clip->GetFrame(m_CurrentFrame, m_pAviSynthFile->m_ScriptEnvironment);
 
 			const int num_planes = m_Format.planes;
 			for (int i = 0; i < num_planes; i++) {
@@ -484,7 +525,7 @@ HRESULT CAviSynthStream::FillBuffer(IMediaSample* pSample)
 		// The sample times are modified by the current rate.
 		if (m_dRateSeeking != 1.0) {
 			rtStart = static_cast<REFERENCE_TIME>(rtStart / m_dRateSeeking);
-			rtStop = static_cast<REFERENCE_TIME>(rtStop / m_dRateSeeking);
+			rtStop  = static_cast<REFERENCE_TIME>(rtStop / m_dRateSeeking);
 		}
 		pSample->SetTime(&rtStart, &rtStop);
 
@@ -502,7 +543,7 @@ HRESULT CAviSynthStream::FillBuffer(IMediaSample* pSample)
 	return S_OK;
 }
 
-HRESULT CAviSynthStream::GetMediaType(int iPosition, CMediaType* pmt)
+HRESULT CAviSynthVideoStream::GetMediaType(int iPosition, CMediaType* pmt)
 {
 	CAutoLock cAutoLock(m_pFilter->pStateLock());
 
@@ -518,7 +559,7 @@ HRESULT CAviSynthStream::GetMediaType(int iPosition, CMediaType* pmt)
 	return S_OK;
 }
 
-HRESULT CAviSynthStream::CheckMediaType(const CMediaType* pmt)
+HRESULT CAviSynthVideoStream::CheckMediaType(const CMediaType* pmt)
 {
 	if (pmt->majortype == MEDIATYPE_Video
 		&& pmt->subtype == m_Format.subtype
@@ -533,7 +574,7 @@ HRESULT CAviSynthStream::CheckMediaType(const CMediaType* pmt)
 	return E_INVALIDARG;
 }
 
-HRESULT CAviSynthStream::SetMediaType(const CMediaType* pMediaType)
+HRESULT CAviSynthVideoStream::SetMediaType(const CMediaType* pMediaType)
 {
 	HRESULT hr = __super::SetMediaType(pMediaType);
 
@@ -549,7 +590,306 @@ HRESULT CAviSynthStream::SetMediaType(const CMediaType* pMediaType)
 	return hr;
 }
 
-STDMETHODIMP CAviSynthStream::Notify(IBaseFilter* pSender, Quality q)
+//
+// CAviSynthAudioStream
+//
+
+CAviSynthAudioStream::CAviSynthAudioStream(CAviSynthFile* pAviSynthFile, CSource* pParent, HRESULT* phr)
+	: CSourceStream(L"Audio", phr, pParent, L"Audio")
+	, CSourceSeeking(L"Audio", (IPin*)this, phr, &m_cSharedState)
+	, m_pAviSynthFile(pAviSynthFile)
 {
-	return E_NOTIMPL;
+	CAutoLock cAutoLock(&m_cSharedState);
+
+	HRESULT hr;
+	std::wstring error;
+
+	try {
+		auto Clip = m_pAviSynthFile->m_AVSValue.AsClip();
+		auto VInfo = Clip->GetVideoInfo();
+	
+		if (VInfo.HasAudio()) {
+			m_Channels       = VInfo.AudioChannels();
+			m_SampleRate     = VInfo.SamplesPerSecond();
+			m_BytesPerSample = VInfo.BytesPerAudioSample();
+			m_BitDepth       = m_BytesPerSample * 8 / m_Channels;
+			m_SampleType     = VInfo.SampleType();
+			m_NumSamples     = VInfo.num_audio_samples;
+
+			WORD wFormatTag;
+			if (m_SampleType == SAMPLE_FLOAT) {
+				wFormatTag = WAVE_FORMAT_IEEE_FLOAT;
+				m_Subtype = MEDIASUBTYPE_IEEE_FLOAT;
+			} else {
+				wFormatTag = WAVE_FORMAT_PCM;
+				m_Subtype = MEDIASUBTYPE_PCM;
+			}
+
+			m_BufferSamples = m_SampleRate / 5; // 5 for 200 ms; 20 for 50 ms
+
+			m_rtDuration = m_rtStop = llMulDiv(m_NumSamples, UNITS, m_SampleRate, 0);
+
+			m_mt.InitMediaType();
+			m_mt.SetType(&MEDIATYPE_Audio);
+			m_mt.SetSubtype(&m_Subtype);
+			m_mt.SetFormatType(&FORMAT_WaveFormatEx);
+			m_mt.SetTemporalCompression(FALSE);
+			m_mt.SetSampleSize(m_BytesPerSample);
+
+			WAVEFORMATEX* wfe = (WAVEFORMATEX*)m_mt.AllocFormatBuffer(sizeof(WAVEFORMATEX));
+			wfe->wFormatTag      = wFormatTag;
+			wfe->nChannels       = m_Channels;
+			wfe->nSamplesPerSec  = m_SampleRate;
+			wfe->nAvgBytesPerSec = m_BytesPerSample * m_SampleRate;
+			wfe->nBlockAlign     = m_BytesPerSample;
+			wfe->wBitsPerSample  = m_BitDepth;
+			wfe->cbSize          = 0;
+
+			m_StreamInfo = std::format(L"Audio stream: {} channels, {} Hz, ", m_Channels, m_SampleRate);
+			switch (m_SampleType) {
+			case SAMPLE_INT8:  m_StreamInfo.append(L"int8"); break;
+			case SAMPLE_INT16: m_StreamInfo.append(L"int16"); break;
+			case SAMPLE_INT24: m_StreamInfo.append(L"int24"); break;
+			case SAMPLE_INT32: m_StreamInfo.append(L"int32"); break;
+			case SAMPLE_FLOAT: m_StreamInfo.append(L"float32"); break;
+			}
+			DLog(m_StreamInfo);
+
+			hr = S_OK;
+		}
+	}
+	catch (const std::exception& e) {
+		DLog(L"{}\n{}", A2WStr(e.what()), error);
+
+		hr = E_FAIL;
+	}
+
+	*phr = hr;
+}
+
+CAviSynthAudioStream::~CAviSynthAudioStream()
+{
+}
+
+STDMETHODIMP CAviSynthAudioStream::NonDelegatingQueryInterface(REFIID riid, void** ppv)
+{
+	CheckPointer(ppv, E_POINTER);
+
+	return (riid == IID_IMediaSeeking) ? CSourceSeeking::NonDelegatingQueryInterface(riid, ppv)
+		: CSourceStream::NonDelegatingQueryInterface(riid, ppv);
+}
+
+HRESULT CAviSynthAudioStream::OnThreadCreate()
+{
+	CAutoLock cAutoLockShared(&m_cSharedState);
+
+	m_SampleCounter = 0;
+	m_CurrentSample = (int)llMulDiv(m_rtStart, m_SampleRate, UNITS, 0); // round down
+
+	return CSourceStream::OnThreadCreate();
+}
+
+HRESULT CAviSynthAudioStream::OnThreadStartPlay()
+{
+	m_bDiscontinuity = TRUE;
+	return DeliverNewSegment(m_rtStart, m_rtStop, m_dRateSeeking);
+}
+
+void CAviSynthAudioStream::UpdateFromSeek()
+{
+	if (ThreadExists()) {
+		// next time around the loop, the worker thread will
+		// pick up the position change.
+		// We need to flush all the existing data - we must do that here
+		// as our thread will probably be blocked in GetBuffer otherwise
+
+		m_bFlushing = TRUE;
+
+		DeliverBeginFlush();
+		// make sure we have stopped pushing
+		Stop();
+		// complete the flush
+		DeliverEndFlush();
+
+		m_bFlushing = FALSE;
+
+		// restart
+		Run();
+	}
+}
+
+HRESULT CAviSynthAudioStream::SetRate(double dRate)
+{
+	if (dRate <= 0) {
+		return E_INVALIDARG;
+	}
+
+	{
+		CAutoLock lock(CSourceSeeking::m_pLock);
+		m_dRateSeeking = dRate;
+	}
+
+	UpdateFromSeek();
+
+	return S_OK;
+}
+
+HRESULT CAviSynthAudioStream::ChangeStart()
+{
+	{
+		CAutoLock lock(CSourceSeeking::m_pLock);
+		m_SampleCounter = 0;
+		m_CurrentSample = (int)llMulDiv(m_rtStart, m_SampleRate, UNITS, 0); // round down
+	}
+
+	UpdateFromSeek();
+
+	return S_OK;
+}
+
+HRESULT CAviSynthAudioStream::ChangeStop()
+{
+	{
+		CAutoLock lock(CSourceSeeking::m_pLock);
+		if (m_CurrentSample < m_NumSamples) {
+			return S_OK;
+		}
+	}
+
+	// We're already past the new stop time -- better flush the graph.
+	UpdateFromSeek();
+
+	return S_OK;
+}
+
+HRESULT CAviSynthAudioStream::DecideBufferSize(IMemAllocator* pAlloc, ALLOCATOR_PROPERTIES* pProperties)
+{
+	//CAutoLock cAutoLock(m_pFilter->pStateLock());
+
+	ASSERT(pAlloc);
+	ASSERT(pProperties);
+
+	HRESULT hr = NOERROR;
+
+	pProperties->cBuffers = 1;
+	pProperties->cbBuffer = m_BufferSamples * m_BytesPerSample;
+
+	ALLOCATOR_PROPERTIES Actual;
+	if (FAILED(hr = pAlloc->SetProperties(pProperties, &Actual))) {
+		return hr;
+	}
+
+	if (Actual.cbBuffer < pProperties->cbBuffer) {
+		return E_FAIL;
+	}
+	ASSERT(Actual.cBuffers == pProperties->cBuffers);
+
+	return NOERROR;
+}
+
+HRESULT CAviSynthAudioStream::FillBuffer(IMediaSample* pSample)
+{
+	{
+		CAutoLock cAutoLockShared(&m_cSharedState);
+
+		if (m_CurrentSample >= m_NumSamples) {
+			return S_FALSE;
+		}
+
+		AM_MEDIA_TYPE* pmt;
+		if (SUCCEEDED(pSample->GetMediaType(&pmt)) && pmt) {
+			CMediaType mt(*pmt);
+			SetMediaType(&mt);
+			DeleteMediaType(pmt);
+		}
+
+		if (m_mt.formattype != FORMAT_WaveFormatEx) {
+			return S_FALSE;
+		}
+
+		BYTE* dst_data = nullptr;
+		HRESULT hr = pSample->GetPointer(&dst_data);
+		if (FAILED(hr) || !dst_data) {
+			return S_FALSE;
+		}
+
+		long buffSize = pSample->GetSize();
+		if (buffSize < (long)(m_BufferSamples * m_BytesPerSample)) {
+			return S_FALSE;
+		}
+
+		auto Clip = m_pAviSynthFile->m_AVSValue.AsClip();
+		auto VInfo = Clip->GetVideoInfo();
+		int64_t count = std::min<int64_t>(m_BufferSamples, m_NumSamples - m_CurrentSample);
+		Clip->GetAudio(dst_data, m_CurrentSample, count, m_pAviSynthFile->m_ScriptEnvironment);
+
+		pSample->SetActualDataLength(count * m_BytesPerSample);
+
+		// Sample time
+		REFERENCE_TIME rtStart = llMulDiv(m_SampleCounter, UNITS, m_SampleRate, 0);
+		REFERENCE_TIME rtStop  = llMulDiv(m_SampleCounter + count, UNITS, m_SampleRate, 0);
+		// The sample times are modified by the current rate.
+		if (m_dRateSeeking != 1.0) {
+			rtStart = static_cast<REFERENCE_TIME>(rtStart / m_dRateSeeking);
+			rtStop  = static_cast<REFERENCE_TIME>(rtStop / m_dRateSeeking);
+		}
+		pSample->SetTime(&rtStart, &rtStop);
+
+		m_SampleCounter += count;
+		m_CurrentSample += count;
+	}
+
+	pSample->SetSyncPoint(TRUE);
+
+	if (m_bDiscontinuity) {
+		pSample->SetDiscontinuity(TRUE);
+		m_bDiscontinuity = FALSE;
+	}
+
+	return S_OK;
+}
+
+HRESULT CAviSynthAudioStream::GetMediaType(int iPosition, CMediaType* pmt)
+{
+	CAutoLock cAutoLock(m_pFilter->pStateLock());
+
+	if (iPosition < 0) {
+		return E_INVALIDARG;
+	}
+	if (iPosition >= 1) {
+		return VFW_S_NO_MORE_ITEMS;
+	}
+
+	*pmt = m_mt;
+
+	return S_OK;
+}
+
+HRESULT CAviSynthAudioStream::CheckMediaType(const CMediaType* pmt)
+{
+	if (pmt->majortype == MEDIATYPE_Audio
+		&& pmt->subtype == m_Subtype
+		&& pmt->formattype == FORMAT_WaveFormatEx) {
+
+		WAVEFORMATEX* wfe = (WAVEFORMATEX*)pmt->Format();
+		if ((int)wfe->nChannels >= m_Channels
+				&& (int)wfe->nSamplesPerSec == m_SampleRate
+				&& (int)wfe->nBlockAlign == m_BytesPerSample
+				&& (int)wfe->wBitsPerSample == m_BitDepth) {
+			return S_OK;
+		}
+	}
+
+	return E_INVALIDARG;
+}
+
+HRESULT CAviSynthAudioStream::SetMediaType(const CMediaType* pMediaType)
+{
+	HRESULT hr = __super::SetMediaType(pMediaType);
+
+	if (SUCCEEDED(hr)) {
+		DLog(L"SetMediaType with subtype {}", GUIDtoWString(m_mt.subtype));
+	}
+
+	return hr;
 }

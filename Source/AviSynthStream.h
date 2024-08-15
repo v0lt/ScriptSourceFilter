@@ -11,29 +11,49 @@
 #endif
 #include "Helper.h"
 
-class CAviSynthStream
+ //
+ // CAviSynthFile
+ //
+
+class CAviSynthFile
+{
+	friend class CAviSynthVideoStream;
+	friend class CAviSynthAudioStream;
+
+	HMODULE m_hAviSynthDll = nullptr;
+	IScriptEnvironment* m_ScriptEnvironment = nullptr;
+	AVSValue            m_AVSValue;
+	const AVS_Linkage*  m_Linkage = nullptr;
+
+public:
+	CAviSynthFile(const WCHAR* filepath, CSource* pParent, HRESULT* phr);
+	~CAviSynthFile();
+};
+
+//
+// CAviSynthVideoStream
+//
+
+class CAviSynthVideoStream
 	: public CSourceStream
 	, public CSourceSeeking
 {
 private:
 	CCritSec m_cSharedState;
 
-	HMODULE m_hAviSynthDll = nullptr;
+	const CAviSynthFile* m_pAviSynthFile;
 
-	IScriptEnvironment* m_ScriptEnvironment = nullptr;
-	AVSValue            m_AVSValue;
-	PVideoFrame         m_Frame;
-	const AVS_Linkage*  m_Linkage = nullptr;
-	int                 m_Planes[4] = {};
+	BOOL m_bDiscontinuity = FALSE;
+	BOOL m_bFlushing = FALSE;
+
+	PVideoFrame m_Frame;
+	int         m_Planes[4] = {};
 
 	std::unique_ptr<BYTE[]> m_BitmapError;
 
 	REFERENCE_TIME m_AvgTimePerFrame = 0;
 	int m_FrameCounter = 0;
 	int m_CurrentFrame = 0;
-
-	BOOL m_bDiscontinuity = FALSE;
-	BOOL m_bFlushing = FALSE;
 
 	FmtParams_t m_Format = {};
 	UINT m_Width   = 0;
@@ -42,7 +62,7 @@ private:
 	UINT m_PitchBuff  = 0;
 	UINT m_BufferSize = 0;
 
-	UINT m_ColorInfo = 0;
+	UINT m_ColorInfo = 0; // TODO
 	struct {
 		int64_t num = 0;
 		int64_t den = 0;
@@ -52,27 +72,95 @@ private:
 	unsigned m_fpsNum = 1;
 	unsigned m_fpsDen = 1;
 
-	HRESULT OnThreadStartPlay();
-	HRESULT OnThreadCreate();
-
-	void UpdateFromSeek();
-	STDMETHODIMP SetRate(double dRate);
-
-	HRESULT ChangeStart();
-	HRESULT ChangeStop();
-	HRESULT ChangeRate() { return S_OK; }
+	std::wstring m_StreamInfo;
 
 public:
-	CAviSynthStream(const WCHAR* name, CSource* pParent, HRESULT* phr);
-	virtual ~CAviSynthStream();
+	CAviSynthVideoStream(CAviSynthFile* pAviSynthFile, CSource* pParent, HRESULT* phr);
+	virtual ~CAviSynthVideoStream();
 
-	STDMETHODIMP NonDelegatingQueryInterface(REFIID riid, void** ppv);
+	STDMETHODIMP NonDelegatingQueryInterface(REFIID riid, void** ppv) override;
 
-	HRESULT DecideBufferSize(IMemAllocator* pIMemAlloc, ALLOCATOR_PROPERTIES* pProperties);
-	HRESULT FillBuffer(IMediaSample* pSample);
-	HRESULT CheckMediaType(const CMediaType* pMediaType);
-	HRESULT SetMediaType(const CMediaType* pMediaType);
-	HRESULT GetMediaType(int iPosition, CMediaType* pmt);
+private:
+	HRESULT OnThreadCreate() override;
+	HRESULT OnThreadStartPlay() override;
 
-	STDMETHODIMP Notify(IBaseFilter* pSender, Quality q);
+	void UpdateFromSeek();
+
+	// IMediaSeeking
+	STDMETHODIMP SetRate(double dRate) override;
+
+	HRESULT ChangeStart() override;
+	HRESULT ChangeStop() override;
+	HRESULT ChangeRate() override { return S_OK; }
+
+public:
+	HRESULT DecideBufferSize(IMemAllocator* pIMemAlloc, ALLOCATOR_PROPERTIES* pProperties) override;
+	HRESULT FillBuffer(IMediaSample* pSample) override;
+	HRESULT CheckMediaType(const CMediaType* pMediaType) override;
+	HRESULT SetMediaType(const CMediaType* pMediaType) override;
+	HRESULT GetMediaType(int iPosition, CMediaType* pmt) override;
+
+	// IQualityControl
+	STDMETHODIMP Notify(IBaseFilter* pSender, Quality q) override { return E_NOTIMPL; }
+};
+
+//
+// CAviSynthAudioStream
+//
+
+class CAviSynthAudioStream
+	: public CSourceStream
+	, public CSourceSeeking
+{
+private:
+	CCritSec m_cSharedState;
+
+	const CAviSynthFile* m_pAviSynthFile;
+
+	BOOL m_bDiscontinuity = FALSE;
+	BOOL m_bFlushing = FALSE;
+
+	GUID m_Subtype = {};
+	int m_Channels = 0;
+	int m_SampleRate = 0;
+	int m_BytesPerSample = 0; // for all audio channels
+	int m_BitDepth = 0;
+	int m_SampleType = 0;
+
+	//UINT m_BufferSize = 0;
+	int m_BufferSamples = 0;
+
+	int64_t m_SampleCounter = 0;
+	int64_t m_CurrentSample = 0;
+	int64_t m_NumSamples = 0;
+
+	std::wstring m_StreamInfo;
+
+public:
+	CAviSynthAudioStream(CAviSynthFile* pAviSynthFile, CSource* pParent, HRESULT* phr);
+	virtual ~CAviSynthAudioStream();
+
+	STDMETHODIMP NonDelegatingQueryInterface(REFIID riid, void** ppv) override;
+
+private:
+	HRESULT OnThreadCreate() override;
+	HRESULT OnThreadStartPlay() override;
+	void UpdateFromSeek();
+
+	// IMediaSeeking
+	STDMETHODIMP SetRate(double dRate) override;
+
+	HRESULT ChangeStart() override;
+	HRESULT ChangeStop() override;
+	HRESULT ChangeRate() override { return S_OK; }
+
+public:
+	HRESULT DecideBufferSize(IMemAllocator* pIMemAlloc, ALLOCATOR_PROPERTIES* pProperties) override;
+	HRESULT FillBuffer(IMediaSample* pSample) override;
+	HRESULT CheckMediaType(const CMediaType* pMediaType) override;
+	HRESULT SetMediaType(const CMediaType* pMediaType) override;
+	HRESULT GetMediaType(int iPosition, CMediaType* pmt) override;
+
+	// IQualityControl
+	STDMETHODIMP Notify(IBaseFilter* pSender, Quality q) override { return E_NOTIMPL; }
 };
