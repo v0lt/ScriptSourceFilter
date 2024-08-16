@@ -26,36 +26,21 @@ CVapourSynthStream::CVapourSynthStream(const WCHAR* name, CSource* pParent, HRES
 			throw std::exception("Failed to load VapourSynt");
 		}
 
+		const VSSCRIPTAPI* (WINAPI* getVSScriptAPI)(int version) =
+			(const VSSCRIPTAPI* (WINAPI*)(int))GetProcAddress(m_hVSScriptDll, "getVSScriptAPI");
+
+		/*
 		struct extfunc {
 			void** adress;
 			const char* name;
 		};
 #ifdef _WIN64
 		extfunc vsfuncs[] = {
-			{(void**)&vs_init,           "vsscript_init"          },
-			{(void**)&vs_finalize,       "vsscript_finalize"      },
-			{(void**)&vs_evaluateScript, "vsscript_evaluateScript"},
-			{(void**)&vs_evaluateFile,   "vsscript_evaluateFile"  },
-			{(void**)&vs_freeScript,     "vsscript_freeScript"    },
-			{(void**)&vs_getError,       "vsscript_getError"      },
-			{(void**)&vs_getOutput,      "vsscript_getOutput"     },
-			{(void**)&vs_clearOutput,    "vsscript_clearOutput"   },
-			{(void**)&vs_getCore,        "vsscript_getCore"       },
-			{(void**)&vs_getVSApi,       "vsscript_getVSApi"      }
+			{(void**)&getVSScriptAPI,    "getVSScriptAPI"         },
 		};
 #else
 		extfunc vsfuncs[] = {
-			// TODO
-			{(void**)&vs_init,           "_vsscript_init@0"           },
-			{(void**)&vs_finalize,       "_vsscript_finalize@0"       },
-			{(void**)&vs_evaluateScript, "_vsscript_evaluateScript@16"},
-			{(void**)&vs_evaluateFile,   "_vsscript_evaluateFile@12"  },
-			{(void**)&vs_freeScript,     "_vsscript_freeScript@4"     },
-			{(void**)&vs_getError,       "_vsscript_getError@4"       },
-			{(void**)&vs_getOutput,      "_vsscript_getOutput@8"      },
-			{(void**)&vs_clearOutput,    "_vsscript_clearOutput@8"    },
-			{(void**)&vs_getCore,        "_vsscript_getCore@4"        },
-			{(void**)&vs_getVSApi,       "_vsscript_getVSApi@0"       }
+			{(void**)&getVSScriptAPI,    "_getVSScriptAPI@4"          }
 		};
 #endif
 		for (auto& vsfunc : vsfuncs) {
@@ -64,16 +49,15 @@ CVapourSynthStream::CVapourSynthStream(const WCHAR* name, CSource* pParent, HRES
 				throw std::exception(std::format("Cannot resolve VapourSynth {} function", vsfunc.name).c_str());
 			}
 		}
+		*/
 
-		m_vsInit = vs_init();
-		if (!m_vsInit) {
-			throw std::exception("Failed to initialize VapourSynth");
+		m_vsScriptAPI = getVSScriptAPI(VSSCRIPT_API_VERSION);
+		if (!m_vsScriptAPI) {
+			throw std::exception("Failed to get VSScriptAPI");
 		}
 
-		m_vsAPI = vs_getVSApi();
-		if (!m_vsAPI) {
-			throw std::exception("Failed to call VapourSynth vsscript_getVSApi");
-		}
+		m_vsAPI = m_vsScriptAPI->getVSAPI(VAPOURSYNTH_API_VERSION);
+		ASSERT(m_vsAPI);
 	}
 	catch (const std::exception& e) {
 		VapourSynthFree();
@@ -86,96 +70,77 @@ CVapourSynthStream::CVapourSynthStream(const WCHAR* name, CSource* pParent, HRES
 	std::wstring error;
 
 	try {
+		m_vsScript = m_vsScriptAPI->createScript(nullptr);
+		//vssapi->evalSetWorkingDir(se, 1);
+
 		std::string utf8file = ConvertWideToUtf8(name);
-		if (vs_evaluateFile(&m_vsScript, utf8file.c_str(), 0)) {
-			error = ConvertUtf8ToWide(vs_getError(m_vsScript));
-			throw std::exception("Failed to call VapourSynth vsscript_evaluateFile");
+		if (m_vsScriptAPI->evaluateFile(m_vsScript, utf8file.c_str())) {
+			error = ConvertUtf8ToWide(m_vsScriptAPI->getError(m_vsScript));
+			throw std::exception("Failed to call VapourSynth evaluateFile");
 		}
 
-		m_vsNode = vs_getOutput(m_vsScript, 0);
+
+		m_vsNode = m_vsScriptAPI->getOutputNode(m_vsScript, 0);
 		if (!m_vsNode) {
-			throw std::exception("Failed to get VapourSynth output");
+			throw std::exception("Failed to get VapourSynth output node");
 		}
 
-		m_vsInfo = m_vsAPI->getVideoInfo(m_vsNode);
-		if (!m_vsInfo) {
-			throw std::exception("Failed to get VapourSynth info");
+		m_vsVideoInfo = m_vsAPI->getVideoInfo(m_vsNode);
+
+		m_Format = GetFormatParamsVapourSynth(m_vsAPI, m_vsVideoInfo->format);
+
+		char formatname[32] = {};
+		m_vsAPI->getVideoFormatName(&m_vsVideoInfo->format, formatname);
+
+		if (m_Format.fourcc == DWORD(-1) || m_Format.planes != m_vsVideoInfo->format.numPlanes) {
+			throw std::exception(std::format("Unsuported pixel type {}", formatname).c_str());
 		}
 
-		m_Format = GetFormatParamsVapourSynth(m_vsInfo->format->id);
-
-		if (m_Format.fourcc == DWORD(-1) || m_Format.planes != m_vsInfo->format->numPlanes) {
-			throw std::exception(std::format("Unsuported pixel type {}", m_vsInfo->format->name).c_str());
-		}
-
-		const VSFrameRef* frame = m_vsAPI->getFrame(0, m_vsNode, m_vsErrorMessage, sizeof(m_vsErrorMessage));
-		if (!frame) {
-			error = ConvertUtf8ToWide(m_vsErrorMessage);
-			throw std::exception("Failed to call getFrame(0)");
-		}
-		m_Pitch = m_vsAPI->getStride(frame, 0);
-		m_vsAPI->freeFrame(frame);
-
-		m_Width      = m_vsInfo->width;
-		m_Height     = m_vsInfo->height;
-		m_PitchBuff  = m_Pitch;
-		m_BufferSize = m_PitchBuff * m_Height * m_Format.buffCoeff / 2;
-
-		m_fpsNum     = m_vsInfo->fpsNum;
-		m_fpsDen     = m_vsInfo->fpsDen;
-		m_NumFrames  = m_vsInfo->numFrames;
+		m_Width = m_vsVideoInfo->width;
+		m_Height = m_vsVideoInfo->height;
+		m_fpsNum = m_vsVideoInfo->fpsNum;
+		m_fpsDen = m_vsVideoInfo->fpsDen;
+		m_NumFrames = m_vsVideoInfo->numFrames;
 		m_AvgTimePerFrame = llMulDiv(UNITS, m_fpsDen, m_fpsNum, 0);
 		m_rtDuration = m_rtStop = llMulDiv(UNITS * m_NumFrames, m_fpsDen, m_fpsNum, 0);
 
-		int k = m_vsInfo->format->id / cmGray;
-		if (k == (cmYUV / cmGray)) {
-			if (m_Format.CDepth == 8) {
-				// swap U and V for YV12, YV16, YV24.
-				m_Planes[0] = 0;
-				m_Planes[1] = 2;
-				m_Planes[2] = 1;
-			} else {
-				m_Planes[0] = 0;
-				m_Planes[1] = 1;
-				m_Planes[2] = 2;
-			}
-		}
-		else if (k == (cmRGB / cmGray)) {
-			// planar RGB
-			m_Planes[0] = 1;
-			m_Planes[1] = 2;
-			m_Planes[2] = 0;
-		}
-
 		UINT color_info = 0;
-
 		std::wstring streamInfo = std::format(
 			L"Script type : VapourSynth\n"
 			L"Video stream: {} {}x{} {:.3f} fps",
 			m_Format.str, m_Width, m_Height, (double)m_fpsNum / m_fpsDen
 		);
 
-		const VSMap* vsMap = m_vsAPI->getFramePropsRO(frame);
+		const VSFrame* frame = m_vsAPI->getFrame(0, m_vsNode, m_vsErrorMessage, sizeof(m_vsErrorMessage));
+		if (!frame) {
+			error = ConvertUtf8ToWide(m_vsErrorMessage);
+			throw std::exception("Failed to call getFrame(0)");
+		}
+		m_Pitch = m_vsAPI->getStride(frame, 0);
+		m_PitchBuff = m_Pitch;
+		m_BufferSize = m_PitchBuff * m_Height * m_Format.buffCoeff / 2;
+
+		const VSMap* vsMap = m_vsAPI->getFramePropertiesRO(frame);
 		if (vsMap) {
-			int numKeys = m_vsAPI->propNumKeys(vsMap);
+			int numKeys = m_vsAPI->mapNumKeys(vsMap);
 			if (numKeys > 0) {
 				streamInfo += std::format(L"\nProperties [{}]:", numKeys);
 			}
 
 			for (int i = 0; i < numKeys; i++) {
-				const char* keyName = m_vsAPI->propGetKey(vsMap, i);
-				if (keyName) {
+				const char* keyName = m_vsAPI->mapGetKey(vsMap, i);
+				if (keyName && keyName[0]) {
 					int64_t val_Int = 0;
 					double val_Float = 0;
 					const char* val_Data = 0;
 					int err = 0;
-					const char keyType = m_vsAPI->propGetType(vsMap, keyName);
+					const char keyType = m_vsAPI->mapGetType(vsMap, keyName);
 
 					streamInfo += std::format(L"\n{:>2}: <{}> '{}'", i, keyType, A2WStr(keyName));
 
 					switch (keyType) {
 					case ptInt:
-						val_Int = m_vsAPI->propGetInt(vsMap, keyName, 0, &err);
+						val_Int = m_vsAPI->mapGetInt(vsMap, keyName, 0, &err);
 						if (!err) {
 							streamInfo += std::format(L" = {}", val_Int);
 							streamInfo += std::format(L" = {}", val_Int);
@@ -191,15 +156,15 @@ CVapourSynthStream::CVapourSynthStream(const WCHAR* name, CSource* pParent, HRES
 						}
 						break;
 					case ptFloat:
-						val_Float = m_vsAPI->propGetFloat(vsMap, keyName, 0, &err);
+						val_Float = m_vsAPI->mapGetFloat(vsMap, keyName, 0, &err);
 						if (!err) {
 							streamInfo += std::format(L" = {:.3f}", val_Float);
 						}
 						break;
 					case ptData:
-						val_Data = m_vsAPI->propGetData(vsMap, keyName, 0, &err);
+						val_Data = m_vsAPI->mapGetData(vsMap, keyName, 0, &err);
 						if (!err) {
-							const int dataSize = m_vsAPI->propGetDataSize(vsMap, keyName, 0, &err);
+							const int dataSize = m_vsAPI->mapGetDataSize(vsMap, keyName, 0, &err);
 							if (!err) {
 								if (dataSize == 1 && strcmp(keyName, "_PictType") == 0) {
 									streamInfo += std::format(L" = {}", val_Data[0]);
@@ -212,6 +177,27 @@ CVapourSynthStream::CVapourSynthStream(const WCHAR* name, CSource* pParent, HRES
 						break;
 					}
 				}
+			}
+		}
+		m_vsAPI->freeFrame(frame);
+
+		if (m_vsVideoInfo->format.colorFamily == cfRGB) {
+			// planar RGB
+			m_Planes[0] = 1;
+			m_Planes[1] = 2;
+			m_Planes[2] = 0;
+		}
+		else if (m_vsVideoInfo->format.colorFamily == cfYUV) {
+			if (m_Format.CDepth == 8) {
+				// swap U and V for YV12, YV16, YV24.
+				m_Planes[0] = 0;
+				m_Planes[1] = 2;
+				m_Planes[2] = 1;
+			}
+			else {
+				m_Planes[0] = 0;
+				m_Planes[1] = 1;
+				m_Planes[2] = 2;
 			}
 		}
 
@@ -229,29 +215,7 @@ CVapourSynthStream::CVapourSynthStream(const WCHAR* name, CSource* pParent, HRES
 		VapourSynthFree();
 		DLog(L"{}\n{}", A2WStr(e.what()), error);
 
-		m_Format     = GetFormatParamsVapourSynth(pfCompatBGR32);
-
-		m_Width      = 640;
-		m_Height     = 360;
-		m_Pitch      = m_Width * 4;
-		m_PitchBuff  = m_Pitch;
-		m_BufferSize = m_PitchBuff * m_Height * m_Format.buffCoeff / 2;
-		m_Sar = {};
-
-		m_fpsNum     = 1;
-		m_fpsDen     = 1;
-		m_NumFrames  = 10;
-		m_AvgTimePerFrame = UNITS;
-		m_rtDuration = m_rtStop = UNITS * m_NumFrames;
-
-		std::wstring str = A2WStr(e.what()) + L"\n\n" + error;
-		m_BitmapError = GetBitmapWithText(str, m_Width, m_Height);
-
-		if (m_BitmapError) {
-			hr = S_FALSE;
-		} else {
-			hr = E_FAIL;
-		}
+		hr = E_FAIL;
 	}
 
 	if (SUCCEEDED(hr)) {
@@ -315,13 +279,14 @@ void CVapourSynthStream::VapourSynthFree()
 	}
 
 	if (m_vsScript) {
-		vs_freeScript(m_vsScript);
+		m_vsScriptAPI->freeScript(m_vsScript);
 		m_vsScript = nullptr;
 	}
 
-	if (m_vsInit) {
-		vs_finalize();
-		m_vsInit = 0;
+	m_vsScriptAPI = nullptr;
+
+	if (m_hVSScriptDll) {
+		FreeLibrary(m_hVSScriptDll);
 	}
 }
 
@@ -491,13 +456,13 @@ HRESULT CVapourSynthStream::FillBuffer(IMediaSample* pSample)
 			}
 		}
 		else {
-			const VSFrameRef* frame = m_vsAPI->getFrame(m_CurrentFrame, m_vsNode, m_vsErrorMessage, sizeof(m_vsErrorMessage));
+			const VSFrame* frame = m_vsAPI->getFrame(m_CurrentFrame, m_vsNode, m_vsErrorMessage, sizeof(m_vsErrorMessage));
 			if (!frame) {
 				DLog(ConvertUtf8ToWide(m_vsErrorMessage));
 				return E_FAIL;
 			}
 
-			const int num_planes = m_vsInfo->format->numPlanes;
+			const int num_planes = m_vsVideoInfo->format.numPlanes;
 			for (int i = 0; i < num_planes; i++) {
 				const int plane = m_Planes[i];
 				const BYTE* src_data = m_vsAPI->getReadPtr(frame, plane);
@@ -505,7 +470,7 @@ HRESULT CVapourSynthStream::FillBuffer(IMediaSample* pSample)
 				const UINT height = m_vsAPI->getFrameHeight(frame, plane);
 				UINT dst_pitch = m_PitchBuff;
 				if (i > 0) {
-					dst_pitch >>= m_vsInfo->format->subSamplingW;
+					dst_pitch >>= m_vsVideoInfo->format.subSamplingW;
 				}
 
 				if (m_Format.fourcc == BI_RGB) {

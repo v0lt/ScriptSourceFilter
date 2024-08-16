@@ -10,9 +10,6 @@
 #ifndef __AVISYNTH_7_H__
 #include "../Include/avisynth.h"
 #endif
-#ifndef VSSCRIPT_H
-#include "../Include/VSScript.h"
-#endif
 
 #include "Helper.h"
 
@@ -47,7 +44,7 @@ static const FmtParams_t s_FormatTable[] = {
 	// fourcc                   |   subtype                | ASformat                | VSformat      | str    |Packsize|buffCoeff|CDepth|planes|bitCount
 	{DWORD(-1),                  GUID_NULL,                 0,                        0,              nullptr,        0, 0,       0,     0,     0},
 	// YUV packed
-	{FCC('YUY2'),                MEDIASUBTYPE_YUY2,         VideoInfo::CS_YUY2,       pfCompatYUY2,  L"YUY2",         2, 2,       8,     1,     16},
+	{FCC('YUY2'),                MEDIASUBTYPE_YUY2,         VideoInfo::CS_YUY2,       0,             L"YUY2",         2, 2,       8,     1,     16},
 	// YUV planar
 	{FCC('YV12'),                MEDIASUBTYPE_YV12,         VideoInfo::CS_I420,       0,             L"I420",         1, 3,       8,     3,     12},
 	{FCC('YV12'),                MEDIASUBTYPE_YV12,         VideoInfo::CS_YV12,       pfYUV420P8,    L"YV12",         1, 3,       8,     3,     12},
@@ -71,7 +68,7 @@ static const FmtParams_t s_FormatTable[] = {
 	{MAKEFOURCC('Y','4',0,16),   MEDIASUBTYPE_LAV_RAWVIDEO, VideoInfo::CS_YUVA444P16, 0,             L"YUVA444P16",   2, 8,       16,    4,     64},
 	// RGB packed
 	{BI_RGB,                     MEDIASUBTYPE_RGB24,        VideoInfo::CS_BGR24,      0,             L"RGB24",        3, 2,       8,     1,     24},
-	{BI_RGB,                     MEDIASUBTYPE_RGB32,        0,                        pfCompatBGR32, L"RGB32",        4, 2,       8,     1,     32},
+	{BI_RGB,                     MEDIASUBTYPE_RGB32,        0,                        0,             L"RGB32",        4, 2,       8,     1,     32},
 	{BI_RGB,                     MEDIASUBTYPE_ARGB32,       VideoInfo::CS_BGR32,      0,             L"ARGB32",       4, 2,       8,     1,     32},
 	{MAKEFOURCC('B','G','R',48), MEDIASUBTYPE_BGR48,        VideoInfo::CS_BGR48,      0,             L"BGR48",        6, 2,       16,    1,     48},
 	{MAKEFOURCC('B','R','A',64), MEDIASUBTYPE_BGRA64,       VideoInfo::CS_BGR64,      0,             L"BGRA64",       8, 2,       16,    1,     64},
@@ -98,11 +95,16 @@ const FmtParams_t& GetFormatParamsAviSynth(const int asFormat)
 	return s_FormatTable[0];
 }
 
-const FmtParams_t& GetFormatParamsVapourSynth(const int vsFormat)
+const FmtParams_t& GetFormatParamsVapourSynth(const VSAPI* pVSApi, const VSVideoFormat& vsVideoFormat)
 {
 	for (const auto& f : s_FormatTable) {
-		if (f.VSformat == vsFormat) {
-			return f;
+		if (f.VSformat) {
+			VSVideoFormat vsvf;
+			if (pVSApi->getVideoFormatByID(&vsvf, f.VSformat, nullptr)) {
+				if (memcmp(&vsVideoFormat, &vsvf, sizeof(VSVideoFormat)) == 0) {
+					return f;
+				}
+			}
 		}
 	}
 	return s_FormatTable[0];
