@@ -11,8 +11,11 @@
 #include "../Include/avisynth.h"
 #endif
 
-#include "Helper.h"
+#ifndef VSSCRIPT_H
+#include "../Include/VSScript4.h"
+#endif
 
+#include "Helper.h"
 
 
 std::wstring GetVersionStr()
@@ -95,16 +98,11 @@ const FmtParams_t& GetFormatParamsAviSynth(const int asFormat)
 	return s_FormatTable[0];
 }
 
-const FmtParams_t& GetFormatParamsVapourSynth(const VSAPI* pVSApi, const VSVideoFormat& vsVideoFormat)
+const FmtParams_t& GetFormatParamsVapourSynth(const int vsVideoFormat)
 {
 	for (const auto& f : s_FormatTable) {
-		if (f.VSformat) {
-			VSVideoFormat vsvf;
-			if (pVSApi->getVideoFormatByID(&vsvf, f.VSformat, nullptr)) {
-				if (memcmp(&vsVideoFormat, &vsvf, sizeof(VSVideoFormat)) == 0) {
-					return f;
-				}
-			}
+		if (f.VSformat == vsVideoFormat) {
+			return f;
 		}
 	}
 	return s_FormatTable[0];

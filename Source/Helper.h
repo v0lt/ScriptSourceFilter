@@ -9,10 +9,6 @@
 #include "Utils/Util.h"
 #include "Utils/StringUtil.h"
 
-#ifndef VSSCRIPT_H
-#include "../Include/VSScript4.h"
-#endif
-
 LPCWSTR GetNameAndVersion();
 
 struct FmtParams_t {
@@ -29,6 +25,6 @@ struct FmtParams_t {
 };
 
 const FmtParams_t& GetFormatParamsAviSynth(const int asFormat);
-const FmtParams_t& GetFormatParamsVapourSynth(const VSAPI* pVSApi, const VSVideoFormat& vsVideoFormat);
+const FmtParams_t& GetFormatParamsVapourSynth(const int vsVideoFormat);
 
 std::unique_ptr<BYTE[]> GetBitmapWithText(const std::wstring text, const long width, const long height);

@@ -11,7 +11,9 @@
 #include "Helper.h"
 #include "IScriptSource.h"
 #include "../Include/FilterInterfacesImpl.h"
+
 #include "AviSynthStream.h"
+#include "VapourSynthStream.h"
 
 #define STR_CLSID_ScriptSource "{7D3BBD5A-880D-4A30-A2D1-7B8C2741AFEF}"
 
@@ -32,6 +34,7 @@ private:
 	std::wstring m_StreamInfo;
 
 	std::unique_ptr<CAviSynthFile> m_pAviSynthFile;
+	std::unique_ptr<CVapourSynthFile> m_pVapourSynthFile;
 
 public:
 	CScriptSource(LPUNKNOWN lpunk, HRESULT* phr);

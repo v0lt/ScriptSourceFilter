@@ -11,24 +11,35 @@
 #endif
 #include "Helper.h"
 
-class CVapourSynthStream
+class CVapourSynthFile
+{
+	friend class CVapourSynthVideoStream;
+	friend class CVapourSynthAudioStream;
+
+	HMODULE m_hVSScriptDll = nullptr;
+
+	const VSAPI* m_vsAPI = nullptr;
+	const VSSCRIPTAPI* m_vsScriptAPI = nullptr;
+	VSScript* m_vsScript = nullptr;
+	VSNode* m_vsNode = nullptr;
+
+public:
+	CVapourSynthFile(const WCHAR* filepath, CSource* pParent, HRESULT* phr);
+	~CVapourSynthFile();
+};
+
+class CVapourSynthVideoStream
 	: public CSourceStream
 	, public CSourceSeeking
 {
 private:
 	CCritSec m_cSharedState;
 
-	HMODULE m_hVSScriptDll = nullptr;
+	const CVapourSynthFile* m_pVapourSynthFile;
 
-	const VSAPI*       m_vsAPI        = nullptr;
-	const VSSCRIPTAPI* m_vsScriptAPI  = nullptr;
-	VSScript*          m_vsScript     = nullptr;
-	VSNode*            m_vsNode       = nullptr;
+	char m_vsErrorMessage[1024];
+
 	const VSVideoInfo* m_vsVideoInfo  = nullptr;
-
-	const VSFrame*     m_vsFrame  = nullptr;
-	
-	char               m_vsErrorMessage[1024];
 	int                m_Planes[4] = { 0, 1, 2, 3 };
 
 	std::unique_ptr<BYTE[]> m_BitmapError;
@@ -57,29 +68,32 @@ private:
 	int64_t m_fpsNum = 1;
 	int64_t m_fpsDen = 1;
 
-	void VapourSynthFree();
+public:
+	CVapourSynthVideoStream(CVapourSynthFile* pVapourSynthFile, CSource* pParent, HRESULT* phr);
+	virtual ~CVapourSynthVideoStream();
 
-	HRESULT OnThreadStartPlay();
-	HRESULT OnThreadCreate();
+	STDMETHODIMP NonDelegatingQueryInterface(REFIID riid, void** ppv) override;
+
+private:
+	HRESULT OnThreadCreate() override;
+	HRESULT OnThreadStartPlay() override;
 
 	void UpdateFromSeek();
-	STDMETHODIMP SetRate(double dRate);
 
-	HRESULT ChangeStart();
-	HRESULT ChangeStop();
-	HRESULT ChangeRate() { return S_OK; }
+	// IMediaSeeking
+	STDMETHODIMP SetRate(double dRate) override;
+
+	HRESULT ChangeStart() override;
+	HRESULT ChangeStop() override;
+	HRESULT ChangeRate() override { return S_OK; }
 
 public:
-	CVapourSynthStream(const WCHAR* name, CSource* pParent, HRESULT* phr);
-	virtual ~CVapourSynthStream();
+	HRESULT DecideBufferSize(IMemAllocator* pIMemAlloc, ALLOCATOR_PROPERTIES* pProperties) override;
+	HRESULT FillBuffer(IMediaSample* pSample) override;
+	HRESULT CheckMediaType(const CMediaType* pMediaType) override;
+	HRESULT SetMediaType(const CMediaType* pMediaType) override;
+	HRESULT GetMediaType(int iPosition, CMediaType* pmt) override;
 
-	STDMETHODIMP NonDelegatingQueryInterface(REFIID riid, void** ppv);
-
-	HRESULT DecideBufferSize(IMemAllocator* pIMemAlloc, ALLOCATOR_PROPERTIES* pProperties);
-	HRESULT FillBuffer(IMediaSample* pSample);
-	HRESULT CheckMediaType(const CMediaType* pMediaType);
-	HRESULT SetMediaType(const CMediaType* pMediaType);
-	HRESULT GetMediaType(int iPosition, CMediaType* pmt);
-
-	STDMETHODIMP Notify(IBaseFilter* pSender, Quality q);
+	// IQualityControl
+	STDMETHODIMP Notify(IBaseFilter* pSender, Quality q) override { return E_NOTIMPL; }
 };
