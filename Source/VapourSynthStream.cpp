@@ -26,30 +26,13 @@ CVapourSynthStream::CVapourSynthStream(const WCHAR* name, CSource* pParent, HRES
 			throw std::exception("Failed to load VapourSynt");
 		}
 
+#ifdef _WIN64
 		const VSSCRIPTAPI* (WINAPI* getVSScriptAPI)(int version) =
 			(const VSSCRIPTAPI* (WINAPI*)(int))GetProcAddress(m_hVSScriptDll, "getVSScriptAPI");
-
-		/*
-		struct extfunc {
-			void** adress;
-			const char* name;
-		};
-#ifdef _WIN64
-		extfunc vsfuncs[] = {
-			{(void**)&getVSScriptAPI,    "getVSScriptAPI"         },
-		};
 #else
-		extfunc vsfuncs[] = {
-			{(void**)&getVSScriptAPI,    "_getVSScriptAPI@4"          }
-		};
+		const VSSCRIPTAPI* (WINAPI * getVSScriptAPI)(int version) =
+			(const VSSCRIPTAPI * (WINAPI*)(int))GetProcAddress(m_hVSScriptDll, "_getVSScriptAPI@4");
 #endif
-		for (auto& vsfunc : vsfuncs) {
-			*(vsfunc.adress) = GetProcAddress(m_hVSScriptDll, vsfunc.name);
-			if (nullptr == *(vsfunc.adress)) {
-				throw std::exception(std::format("Cannot resolve VapourSynth {} function", vsfunc.name).c_str());
-			}
-		}
-		*/
 
 		m_vsScriptAPI = getVSScriptAPI(VSSCRIPT_API_VERSION);
 		if (!m_vsScriptAPI) {
@@ -71,7 +54,7 @@ CVapourSynthStream::CVapourSynthStream(const WCHAR* name, CSource* pParent, HRES
 
 	try {
 		m_vsScript = m_vsScriptAPI->createScript(nullptr);
-		//vssapi->evalSetWorkingDir(se, 1);
+		//m_vsScriptAPI->evalSetWorkingDir(m_vsScript, 1);
 
 		std::string utf8file = ConvertWideToUtf8(name);
 		if (m_vsScriptAPI->evaluateFile(m_vsScript, utf8file.c_str())) {
