@@ -158,7 +158,7 @@ void CVapourSynthFile::SetVSNodes()
 
 	auto ai = m_vsAPI->getAudioInfo(vsNode);
 
-	if (ai && ai->format.numChannels > 0 && ai->format.numChannels <= 32) {
+	if (ai && ai->format.numChannels > 0 && ai->format.numChannels <= 32 && (ai->format.channelLayout & 0xffffffff00000000ui64) == 0) {
 		m_vsNodeAudio = vsNode;
 		vsNode = nullptr;
 	}
@@ -174,8 +174,8 @@ void CVapourSynthFile::SetVSNodes()
 //
 
 CVapourSynthVideoStream::CVapourSynthVideoStream(CVapourSynthFile* pVapourSynthFile, CSource* pParent, HRESULT* phr)
-	: CSourceStream(L"Audio", phr, pParent, L"Audio")
-	, CSourceSeeking(L"Audio", (IPin*)this, phr, &m_cSharedState)
+	: CSourceStream(L"Video", phr, pParent, L"Video")
+	, CSourceSeeking(L"Video", (IPin*)this, phr, &m_cSharedState)
 	, m_pVapourSynthFile(pVapourSynthFile)
 {
 	CAutoLock cAutoLock(&m_cSharedState);
@@ -686,14 +686,17 @@ CVapourSynthAudioStream::CVapourSynthAudioStream(CVapourSynthFile* pVapourSynthF
 		m_mt.SetTemporalCompression(FALSE);
 		m_mt.SetSampleSize(m_BytesPerSample);
 
-		WAVEFORMATEX* wfe = (WAVEFORMATEX*)m_mt.AllocFormatBuffer(sizeof(WAVEFORMATEX));
-		wfe->wFormatTag = wFormatTag;
-		wfe->nChannels = m_Channels;
-		wfe->nSamplesPerSec = m_SampleRate;
-		wfe->nAvgBytesPerSec = m_BytesPerSample * m_SampleRate;
-		wfe->nBlockAlign = m_BytesPerSample;
-		wfe->wBitsPerSample = m_BitDepth;
-		wfe->cbSize = 0;
+		WAVEFORMATEXTENSIBLE* wfex = (WAVEFORMATEXTENSIBLE*)m_mt.AllocFormatBuffer(sizeof(WAVEFORMATEXTENSIBLE));
+		wfex->Format.wFormatTag           = WAVE_FORMAT_EXTENSIBLE;
+		wfex->Format.nChannels            = m_Channels;
+		wfex->Format.nSamplesPerSec       = m_SampleRate;
+		wfex->Format.nAvgBytesPerSec      = m_BytesPerSample * m_SampleRate;
+		wfex->Format.nBlockAlign          = m_BytesPerSample;
+		wfex->Format.wBitsPerSample       = m_BitDepth;
+		wfex->Format.cbSize               = sizeof(WAVEFORMATEXTENSIBLE) - sizeof(WAVEFORMATEX); // 22
+		wfex->Samples.wValidBitsPerSample = m_BitDepth;
+		wfex->dwChannelMask               = (DWORD)m_vsAudioInfo->format.channelLayout;
+		wfex->SubFormat                   = m_Subtype;
 
 		m_StreamInfo = std::format(L"Audio stream: {} channels, {} Hz, ", m_Channels, m_SampleRate);
 		if (m_SampleType == stFloat) {

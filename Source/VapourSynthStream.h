@@ -148,7 +148,7 @@ private:
 	int m_FrameCounter = 0;
 	int m_CurrentFrame = 0;
 
-	char m_vsErrorMessage[1024];
+	char m_vsErrorMessage[1024] = {};
 	std::wstring m_StreamInfo;
 
 public:
