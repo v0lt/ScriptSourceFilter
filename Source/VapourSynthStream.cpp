@@ -10,6 +10,8 @@
 
 #include "VapourSynthStream.h"
 
+#include <mmreg.h>
+
  //
  // CVapourSynthFile
  //
@@ -69,7 +71,7 @@ CVapourSynthFile::CVapourSynthFile(const WCHAR* name, CSource* pParent, HRESULT*
 		}
 
 		if (m_vsNodeAudio) {
-			//new CVapourSynthAudioStream(this, pParent, &hr);
+			new CVapourSynthAudioStream(this, pParent, &hr);
 			if (FAILED(hr)) {
 				DLog(L"AviSynth+ script returned unsupported audio");
 			}
@@ -607,6 +609,370 @@ HRESULT CVapourSynthVideoStream::SetMediaType(const CMediaType* pMediaType)
 }
 
 HRESULT CVapourSynthVideoStream::GetMediaType(int iPosition, CMediaType* pmt)
+{
+	CAutoLock cAutoLock(m_pFilter->pStateLock());
+
+	if (iPosition < 0) {
+		return E_INVALIDARG;
+	}
+	if (iPosition >= 1) {
+		return VFW_S_NO_MORE_ITEMS;
+	}
+
+	*pmt = m_mt;
+
+	return S_OK;
+}
+
+//
+// CVapourSynthAudioStream
+//
+
+CVapourSynthAudioStream::CVapourSynthAudioStream(CVapourSynthFile* pVapourSynthFile, CSource* pParent, HRESULT* phr)
+	: CSourceStream(L"Audio", phr, pParent, L"Audio")
+	, CSourceSeeking(L"Audio", (IPin*)this, phr, &m_cSharedState)
+	, m_pVapourSynthFile(pVapourSynthFile)
+{
+	CAutoLock cAutoLock(&m_cSharedState);
+
+	HRESULT hr;
+	std::wstring error;
+
+	try {
+		m_vsAudioInfo = m_pVapourSynthFile->m_vsAPI->getAudioInfo(m_pVapourSynthFile->m_vsNodeAudio);
+
+		m_Channels       = m_vsAudioInfo->format.numChannels;
+		m_SampleRate     = m_vsAudioInfo->sampleRate;
+		m_BytesPerSample = m_vsAudioInfo->format.bytesPerSample * m_Channels;
+		m_BitDepth       = m_vsAudioInfo->format.bitsPerSample;
+		m_SampleType     = (VSSampleType)m_vsAudioInfo->format.sampleType;
+		m_NumSamples     = m_vsAudioInfo->numSamples;
+		m_NumFrames      = m_vsAudioInfo->numFrames;
+
+		WORD wFormatTag;
+		if (m_SampleType == stFloat) {
+			wFormatTag = WAVE_FORMAT_IEEE_FLOAT;
+			m_Subtype = MEDIASUBTYPE_IEEE_FLOAT;
+		}
+		else if (m_SampleType == stInteger) {
+			wFormatTag = WAVE_FORMAT_PCM;
+			m_Subtype = MEDIASUBTYPE_PCM;
+		}
+		else {
+			throw std::exception("Invalid audio sample type");
+		}
+
+		const VSFrame* frame = m_pVapourSynthFile->m_vsAPI->getFrame(0, m_pVapourSynthFile->m_vsNodeAudio, m_vsErrorMessage, sizeof(m_vsErrorMessage));
+		if (!frame) {
+			error = ConvertUtf8ToWide(m_vsErrorMessage);
+			throw std::exception("Failed to call getFrame(0)");
+		}
+		m_FrameSamples = m_pVapourSynthFile->m_vsAPI->getFrameLength(frame);
+		m_pVapourSynthFile->m_vsAPI->freeFrame(frame);
+
+		m_rtDuration = m_rtStop = llMulDiv(m_NumSamples, UNITS, m_SampleRate, 0);
+
+		m_mt.InitMediaType();
+		m_mt.SetType(&MEDIATYPE_Audio);
+		m_mt.SetSubtype(&m_Subtype);
+		m_mt.SetFormatType(&FORMAT_WaveFormatEx);
+		m_mt.SetTemporalCompression(FALSE);
+		m_mt.SetSampleSize(m_BytesPerSample);
+
+		WAVEFORMATEX* wfe = (WAVEFORMATEX*)m_mt.AllocFormatBuffer(sizeof(WAVEFORMATEX));
+		wfe->wFormatTag = wFormatTag;
+		wfe->nChannels = m_Channels;
+		wfe->nSamplesPerSec = m_SampleRate;
+		wfe->nAvgBytesPerSec = m_BytesPerSample * m_SampleRate;
+		wfe->nBlockAlign = m_BytesPerSample;
+		wfe->wBitsPerSample = m_BitDepth;
+		wfe->cbSize = 0;
+
+		m_StreamInfo = std::format(L"Audio stream: {} channels, {} Hz, ", m_Channels, m_SampleRate);
+		switch (m_SampleType) {
+		case SAMPLE_INT8:  m_StreamInfo.append(L"int8"); break;
+		case SAMPLE_INT16: m_StreamInfo.append(L"int16"); break;
+		case SAMPLE_INT24: m_StreamInfo.append(L"int24"); break;
+		case SAMPLE_INT32: m_StreamInfo.append(L"int32"); break;
+		case SAMPLE_FLOAT: m_StreamInfo.append(L"float32"); break;
+		}
+		DLog(m_StreamInfo);
+
+		hr = S_OK;
+	}
+	catch (const std::exception& e) {
+		DLog(L"{}\n{}", A2WStr(e.what()), error);
+
+		hr = E_FAIL;
+	}
+
+	*phr = hr;
+}
+
+CVapourSynthAudioStream::~CVapourSynthAudioStream()
+{
+}
+
+STDMETHODIMP CVapourSynthAudioStream::NonDelegatingQueryInterface(REFIID riid, void** ppv)
+{
+	CheckPointer(ppv, E_POINTER);
+
+	return (riid == IID_IMediaSeeking) ? CSourceSeeking::NonDelegatingQueryInterface(riid, ppv)
+		: CSourceStream::NonDelegatingQueryInterface(riid, ppv);
+}
+
+HRESULT CVapourSynthAudioStream::OnThreadCreate()
+{
+	CAutoLock cAutoLockShared(&m_cSharedState);
+
+	m_FrameCounter = 0;
+	m_CurrentFrame = (int)llMulDiv(m_rtStart, m_SampleRate, m_FrameSamples * UNITS, 0); // round down
+
+	return CSourceStream::OnThreadCreate();
+}
+
+HRESULT CVapourSynthAudioStream::OnThreadStartPlay()
+{
+	m_bDiscontinuity = TRUE;
+	return DeliverNewSegment(m_rtStart, m_rtStop, m_dRateSeeking);
+}
+
+void CVapourSynthAudioStream::UpdateFromSeek()
+{
+	if (ThreadExists()) {
+		// next time around the loop, the worker thread will
+		// pick up the position change.
+		// We need to flush all the existing data - we must do that here
+		// as our thread will probably be blocked in GetBuffer otherwise
+
+		m_bFlushing = TRUE;
+
+		DeliverBeginFlush();
+		// make sure we have stopped pushing
+		Stop();
+		// complete the flush
+		DeliverEndFlush();
+
+		m_bFlushing = FALSE;
+
+		// restart
+		Run();
+	}
+}
+
+HRESULT CVapourSynthAudioStream::SetRate(double dRate)
+{
+	if (dRate <= 0) {
+		return E_INVALIDARG;
+	}
+
+	{
+		CAutoLock lock(CSourceSeeking::m_pLock);
+		m_dRateSeeking = dRate;
+	}
+
+	UpdateFromSeek();
+
+	return S_OK;
+}
+
+HRESULT CVapourSynthAudioStream::ChangeStart()
+{
+	{
+		CAutoLock lock(CSourceSeeking::m_pLock);
+		m_FrameCounter = 0;
+		m_CurrentFrame = (int)llMulDiv(m_rtStart, m_SampleRate, m_FrameSamples * UNITS, 0); // round down
+	}
+
+	UpdateFromSeek();
+
+	return S_OK;
+}
+
+HRESULT CVapourSynthAudioStream::ChangeStop()
+{
+	{
+		CAutoLock lock(CSourceSeeking::m_pLock);
+		if (m_CurrentFrame < m_NumFrames) {
+			return S_OK;
+		}
+	}
+
+	// We're already past the new stop time -- better flush the graph.
+	UpdateFromSeek();
+
+	return S_OK;
+}
+
+HRESULT CVapourSynthAudioStream::DecideBufferSize(IMemAllocator* pAlloc, ALLOCATOR_PROPERTIES* pProperties)
+{
+	//CAutoLock cAutoLock(m_pFilter->pStateLock());
+
+	ASSERT(pAlloc);
+	ASSERT(pProperties);
+
+	HRESULT hr = NOERROR;
+
+	pProperties->cBuffers = 1;
+	pProperties->cbBuffer = m_FrameSamples * m_BytesPerSample;
+
+	ALLOCATOR_PROPERTIES Actual;
+	if (FAILED(hr = pAlloc->SetProperties(pProperties, &Actual))) {
+		return hr;
+	}
+
+	if (Actual.cbBuffer < pProperties->cbBuffer) {
+		return E_FAIL;
+	}
+	ASSERT(Actual.cBuffers == pProperties->cBuffers);
+
+	return NOERROR;
+}
+
+HRESULT CVapourSynthAudioStream::FillBuffer(IMediaSample* pSample)
+{
+	{
+		CAutoLock cAutoLockShared(&m_cSharedState);
+
+		if (m_CurrentFrame >= m_NumFrames) {
+			return S_FALSE;
+		}
+
+		AM_MEDIA_TYPE* pmt;
+		if (SUCCEEDED(pSample->GetMediaType(&pmt)) && pmt) {
+			CMediaType mt(*pmt);
+			SetMediaType(&mt);
+			DeleteMediaType(pmt);
+		}
+
+		if (m_mt.formattype != FORMAT_WaveFormatEx) {
+			return S_FALSE;
+		}
+
+		BYTE* dst_data = nullptr;
+		HRESULT hr = pSample->GetPointer(&dst_data);
+		if (FAILED(hr) || !dst_data) {
+			return S_FALSE;
+		}
+
+		long buffSize = pSample->GetSize();
+
+		const VSFrame* frame = m_pVapourSynthFile->m_vsAPI->getFrame(m_CurrentFrame, m_pVapourSynthFile->m_vsNodeAudio, m_vsErrorMessage, sizeof(m_vsErrorMessage));
+		if (!frame) {
+			DLog(ConvertUtf8ToWide(m_vsErrorMessage));
+			return E_FAIL;
+		}
+		const int frameSamples = m_pVapourSynthFile->m_vsAPI->getFrameLength(frame);
+		int frameSize = frameSamples * m_BytesPerSample;
+
+		std::vector<const uint8_t*> frameptrs(m_Channels, nullptr);
+		for (int ch = 0; ch < m_Channels; ch++) {
+			frameptrs[ch] = m_pVapourSynthFile->m_vsAPI->getReadPtr(frame, ch);
+			if (!frameptrs[ch]) {
+				frameSize = 0;
+				break;
+			}
+		}
+
+		if (!frameSize || buffSize < (long)(frameSize)) {
+			m_pVapourSynthFile->m_vsAPI->freeFrame(frame);
+			return S_FALSE;
+		}
+
+		switch (m_BitDepth) {
+		case 8:
+		{
+			uint8_t* dst8 = dst_data;
+			for (int i = 0; i < frameSamples; i++) {
+				for (int ch = 0; ch < m_Channels; ch++) {
+					*dst8++ = *frameptrs[ch]++;
+				}
+			}
+			break;
+		}
+		case 16:
+		{
+			uint16_t* dst16 = (uint16_t*)dst_data;
+			for (int i = 0; i < frameSamples; i++) {
+				for (int ch = 0; ch < m_Channels; ch++) {
+					*dst16++ = *(uint16_t*)frameptrs[ch];
+					frameptrs[ch] += sizeof(uint16_t);
+				}
+			}
+			break;
+		}
+		case 32:
+		{
+			uint32_t* dst32 = (uint32_t*)dst_data;
+			for (int i = 0; i < frameSamples; i++) {
+				for (int ch = 0; ch < m_Channels; ch++) {
+					*dst32++ = *(uint32_t*)frameptrs[ch];
+					frameptrs[ch] += sizeof(uint32_t);
+				}
+			}
+			break;
+		}
+		}
+
+		m_pVapourSynthFile->m_vsAPI->freeFrame(frame);
+
+		pSample->SetActualDataLength(frameSize);
+
+		// Sample time
+		REFERENCE_TIME rtStart = llMulDiv(m_FrameCounter,     UNITS * m_FrameSamples, m_SampleRate, 0);
+		REFERENCE_TIME rtStop  = llMulDiv(m_FrameCounter + 1, UNITS * m_FrameSamples, m_SampleRate, 0);
+
+		// The sample times are modified by the current rate.
+		if (m_dRateSeeking != 1.0) {
+			rtStart = static_cast<REFERENCE_TIME>(rtStart / m_dRateSeeking);
+			rtStop = static_cast<REFERENCE_TIME>(rtStop / m_dRateSeeking);
+		}
+		pSample->SetTime(&rtStart, &rtStop);
+
+		m_FrameCounter++;
+		m_CurrentFrame++;
+	}
+
+	pSample->SetSyncPoint(TRUE);
+
+	if (m_bDiscontinuity) {
+		pSample->SetDiscontinuity(TRUE);
+		m_bDiscontinuity = FALSE;
+	}
+
+	return S_OK;
+}
+
+HRESULT CVapourSynthAudioStream::CheckMediaType(const CMediaType* pmt)
+{
+	if (pmt->majortype == MEDIATYPE_Audio
+		&& pmt->subtype == m_Subtype
+		&& pmt->formattype == FORMAT_WaveFormatEx) {
+
+		WAVEFORMATEX* wfe = (WAVEFORMATEX*)pmt->Format();
+		if ((int)wfe->nChannels >= m_Channels
+			&& (int)wfe->nSamplesPerSec == m_SampleRate
+			&& (int)wfe->nBlockAlign == m_BytesPerSample
+			&& (int)wfe->wBitsPerSample == m_BitDepth) {
+			return S_OK;
+		}
+	}
+
+	return E_INVALIDARG;
+}
+
+HRESULT CVapourSynthAudioStream::SetMediaType(const CMediaType* pMediaType)
+{
+	HRESULT hr = __super::SetMediaType(pMediaType);
+
+	if (SUCCEEDED(hr)) {
+		DLog(L"SetMediaType with subtype {}", GUIDtoWString(m_mt.subtype));
+	}
+
+	return hr;
+}
+
+HRESULT CVapourSynthAudioStream::GetMediaType(int iPosition, CMediaType* pmt)
 {
 	CAutoLock cAutoLock(m_pFilter->pStateLock());
 

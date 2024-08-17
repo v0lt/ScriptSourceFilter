@@ -1,7 +1,7 @@
 0.2.0 dev
 -----------------------
 The license has been changed to LGPL-2.1.
-Added audio support for AviSynth+ scripts.
+Added audio support for AviSynth+ and VapourSynth scripts.
 ScriptSourceFilter will not show a video with an error if it cannot connect to AviSynth+ or VapourSynth. This will allow the player to try other filters.
 Now uses VapourSynth API 4.
 Recommended versions are AviSynth+ 3.7.3 or later, VapourSynth R63 or later.

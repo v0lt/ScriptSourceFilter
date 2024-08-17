@@ -11,6 +11,10 @@
 #endif
 #include "Helper.h"
 
+ //
+ // CVapourSynthFile
+ //
+
 class CVapourSynthFile
 {
 	friend class CVapourSynthVideoStream;
@@ -31,6 +35,10 @@ public:
 	~CVapourSynthFile();
 };
 
+//
+// CVapourSynthVideoStream
+//
+
 class CVapourSynthVideoStream
 	: public CSourceStream
 	, public CSourceSeeking
@@ -39,8 +47,6 @@ private:
 	CCritSec m_cSharedState;
 
 	const CVapourSynthFile* m_pVapourSynthFile;
-
-	char m_vsErrorMessage[1024];
 
 	const VSVideoInfo* m_vsVideoInfo  = nullptr;
 	int                m_Planes[4] = { 0, 1, 2, 3 };
@@ -71,6 +77,8 @@ private:
 	int64_t m_fpsNum = 1;
 	int64_t m_fpsDen = 1;
 
+	char m_vsErrorMessage[1024];
+
 public:
 	CVapourSynthVideoStream(CVapourSynthFile* pVapourSynthFile, CSource* pParent, HRESULT* phr);
 	virtual ~CVapourSynthVideoStream();
@@ -81,6 +89,71 @@ private:
 	HRESULT OnThreadCreate() override;
 	HRESULT OnThreadStartPlay() override;
 
+	void UpdateFromSeek();
+
+	// IMediaSeeking
+	STDMETHODIMP SetRate(double dRate) override;
+
+	HRESULT ChangeStart() override;
+	HRESULT ChangeStop() override;
+	HRESULT ChangeRate() override { return S_OK; }
+
+public:
+	HRESULT DecideBufferSize(IMemAllocator* pIMemAlloc, ALLOCATOR_PROPERTIES* pProperties) override;
+	HRESULT FillBuffer(IMediaSample* pSample) override;
+	HRESULT CheckMediaType(const CMediaType* pMediaType) override;
+	HRESULT SetMediaType(const CMediaType* pMediaType) override;
+	HRESULT GetMediaType(int iPosition, CMediaType* pmt) override;
+
+	// IQualityControl
+	STDMETHODIMP Notify(IBaseFilter* pSender, Quality q) override { return E_NOTIMPL; }
+};
+
+//
+// CVapourSynthAudioStream
+//
+
+class CVapourSynthAudioStream
+	: public CSourceStream
+	, public CSourceSeeking
+{
+private:
+	CCritSec m_cSharedState;
+
+	const CVapourSynthFile* m_pVapourSynthFile;
+
+	const VSAudioInfo* m_vsAudioInfo = nullptr;
+
+	BOOL m_bDiscontinuity = FALSE;
+	BOOL m_bFlushing = FALSE;
+
+	GUID m_Subtype = {};
+	int m_Channels = 0;
+	int m_SampleRate = 0;
+	int m_BytesPerSample = 0; // for all audio channels
+	int m_BitDepth = 0;
+	VSSampleType m_SampleType = {};
+
+	int m_FrameSamples = 0;
+	int m_NumFrames = 0;
+	int64_t m_NumSamples = 0;
+
+	int m_FrameCounter = 0;
+	int m_CurrentFrame = 0;
+
+	char m_vsErrorMessage[1024];
+
+	std::wstring m_StreamInfo;
+
+public:
+	CVapourSynthAudioStream(CVapourSynthFile* pVapourSynthFile, CSource* pParent, HRESULT* phr);
+	virtual ~CVapourSynthAudioStream();
+
+	STDMETHODIMP NonDelegatingQueryInterface(REFIID riid, void** ppv) override;
+
+private:
+	HRESULT OnThreadCreate() override;
+	HRESULT OnThreadStartPlay() override;
 	void UpdateFromSeek();
 
 	// IMediaSeeking
