@@ -31,7 +31,6 @@ private:
 	friend class CVapourSynthStream;
 
 	std::wstring m_fn;
-	std::wstring m_StreamInfo;
 
 	std::unique_ptr<CAviSynthFile> m_pAviSynthFile;
 	std::unique_ptr<CVapourSynthFile> m_pVapourSynthFile;

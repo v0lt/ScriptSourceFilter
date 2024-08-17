@@ -26,9 +26,13 @@ class CAviSynthFile
 	AVSValue            m_AVSValue;
 	const AVS_Linkage*  m_Linkage = nullptr;
 
+	std::wstring m_FileInfo;
+
 public:
 	CAviSynthFile(const WCHAR* filepath, CSource* pParent, HRESULT* phr);
 	~CAviSynthFile();
+
+	std::wstring_view GetInfo() { return m_FileInfo; }
 };
 
 //
@@ -81,6 +85,8 @@ public:
 	virtual ~CAviSynthVideoStream();
 
 	STDMETHODIMP NonDelegatingQueryInterface(REFIID riid, void** ppv) override;
+
+	std::wstring_view GetInfo() { return m_StreamInfo; }
 
 private:
 	HRESULT OnThreadCreate() override;
@@ -142,6 +148,8 @@ public:
 	virtual ~CAviSynthAudioStream();
 
 	STDMETHODIMP NonDelegatingQueryInterface(REFIID riid, void** ppv) override;
+
+	std::wstring_view GetInfo() { return m_StreamInfo; }
 
 private:
 	HRESULT OnThreadCreate() override;

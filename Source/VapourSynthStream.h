@@ -28,11 +28,15 @@ class CVapourSynthFile
 	VSNode* m_vsNodeVideo = nullptr;
 	VSNode* m_vsNodeAudio = nullptr;
 
+	std::wstring m_FileInfo;
+
 	void SetVSNodes();
 
 public:
 	CVapourSynthFile(const WCHAR* filepath, CSource* pParent, HRESULT* phr);
 	~CVapourSynthFile();
+
+	std::wstring_view GetInfo() { return m_FileInfo; }
 };
 
 //
@@ -78,12 +82,15 @@ private:
 	int64_t m_fpsDen = 1;
 
 	char m_vsErrorMessage[1024];
+	std::wstring m_StreamInfo;
 
 public:
 	CVapourSynthVideoStream(CVapourSynthFile* pVapourSynthFile, CSource* pParent, HRESULT* phr);
 	virtual ~CVapourSynthVideoStream();
 
 	STDMETHODIMP NonDelegatingQueryInterface(REFIID riid, void** ppv) override;
+	
+	std::wstring_view GetInfo() { return m_StreamInfo; }
 
 private:
 	HRESULT OnThreadCreate() override;
@@ -142,7 +149,6 @@ private:
 	int m_CurrentFrame = 0;
 
 	char m_vsErrorMessage[1024];
-
 	std::wstring m_StreamInfo;
 
 public:
@@ -150,6 +156,8 @@ public:
 	virtual ~CVapourSynthAudioStream();
 
 	STDMETHODIMP NonDelegatingQueryInterface(REFIID riid, void** ppv) override;
+
+	std::wstring_view GetInfo() { return m_StreamInfo; }
 
 private:
 	HRESULT OnThreadCreate() override;

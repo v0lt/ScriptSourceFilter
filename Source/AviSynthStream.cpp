@@ -80,12 +80,20 @@ CAviSynthFile::CAviSynthFile(const WCHAR* name, CSource* pParent, HRESULT* phr)
 				delete pVideoStream;
 				throw std::exception("AviSynth+ script returned unsupported video");
 			}
+			else {
+				m_FileInfo.append(pVideoStream->GetInfo());
+				m_FileInfo += (L'\n');
+			}
 		}
 		
 		if (VInfo.HasAudio()) {
-			new CAviSynthAudioStream(this, pParent, &hr);
+			auto pAudioStream = new CAviSynthAudioStream(this, pParent, &hr);
 			if (FAILED(hr)) {
 				DLog(L"AviSynth+ script returned unsupported audio");
+			}
+			else {
+				m_FileInfo.append(pAudioStream->GetInfo());
+				m_FileInfo += (L'\n');
 			}
 		}
 

@@ -68,12 +68,20 @@ CVapourSynthFile::CVapourSynthFile(const WCHAR* name, CSource* pParent, HRESULT*
 				delete pVideoStream;
 				throw std::exception("AviSynth+ script returned unsupported video");
 			}
+			else {
+				m_FileInfo.append(pVideoStream->GetInfo());
+				m_FileInfo += (L'\n');
+			}
 		}
 
 		if (m_vsNodeAudio) {
-			new CVapourSynthAudioStream(this, pParent, &hr);
+			auto pAudioStream = new CVapourSynthAudioStream(this, pParent, &hr);
 			if (FAILED(hr)) {
 				DLog(L"AviSynth+ script returned unsupported audio");
+			}
+			else {
+				m_FileInfo.append(pAudioStream->GetInfo());
+				m_FileInfo += (L'\n');
 			}
 		}
 
@@ -198,7 +206,7 @@ CVapourSynthVideoStream::CVapourSynthVideoStream(CVapourSynthFile* pVapourSynthF
 		m_rtDuration = m_rtStop = llMulDiv(UNITS * m_NumFrames, m_fpsDen, m_fpsNum, 0);
 
 		UINT color_info = 0;
-		std::wstring streamInfo = std::format(
+		m_StreamInfo = std::format(
 			L"Script type : VapourSynth\n"
 			L"Video stream: {} {}x{} {:.3f} fps",
 			m_Format.str, m_Width, m_Height, (double)m_fpsNum / m_fpsDen
@@ -217,7 +225,7 @@ CVapourSynthVideoStream::CVapourSynthVideoStream(CVapourSynthFile* pVapourSynthF
 		if (vsMap) {
 			int numKeys = m_pVapourSynthFile->m_vsAPI->mapNumKeys(vsMap);
 			if (numKeys > 0) {
-				streamInfo += std::format(L"\nProperties [{}]:", numKeys);
+				m_StreamInfo += std::format(L"\nProperties [{}]:", numKeys);
 			}
 
 			for (int i = 0; i < numKeys; i++) {
@@ -229,14 +237,14 @@ CVapourSynthVideoStream::CVapourSynthVideoStream(CVapourSynthFile* pVapourSynthF
 					int err = 0;
 					const char keyType = m_pVapourSynthFile->m_vsAPI->mapGetType(vsMap, keyName);
 
-					streamInfo += std::format(L"\n{:>2}: <{}> '{}'", i, keyType, A2WStr(keyName));
+					m_StreamInfo += std::format(L"\n{:>2}: <{}> '{}'", i, keyType, A2WStr(keyName));
 
 					switch (keyType) {
 					case ptInt:
 						val_Int = m_pVapourSynthFile->m_vsAPI->mapGetInt(vsMap, keyName, 0, &err);
 						if (!err) {
-							streamInfo += std::format(L" = {}", val_Int);
-							streamInfo += std::format(L" = {}", val_Int);
+							m_StreamInfo += std::format(L" = {}", val_Int);
+							m_StreamInfo += std::format(L" = {}", val_Int);
 							if (strcmp(keyName, "_SARNum") == 0) {
 								m_Sar.num = val_Int;
 							}
@@ -251,7 +259,7 @@ CVapourSynthVideoStream::CVapourSynthVideoStream(CVapourSynthFile* pVapourSynthF
 					case ptFloat:
 						val_Float = m_pVapourSynthFile->m_vsAPI->mapGetFloat(vsMap, keyName, 0, &err);
 						if (!err) {
-							streamInfo += std::format(L" = {:.3f}", val_Float);
+							m_StreamInfo += std::format(L" = {:.3f}", val_Float);
 						}
 						break;
 					case ptData:
@@ -260,10 +268,10 @@ CVapourSynthVideoStream::CVapourSynthVideoStream(CVapourSynthFile* pVapourSynthF
 							const int dataSize = m_pVapourSynthFile->m_vsAPI->mapGetDataSize(vsMap, keyName, 0, &err);
 							if (!err) {
 								if (dataSize == 1 && strcmp(keyName, "_PictType") == 0) {
-									streamInfo += std::format(L" = {}", val_Data[0]);
+									m_StreamInfo += std::format(L" = {}", val_Data[0]);
 								}
 								else {
-									streamInfo += std::format(L", {} bytes", dataSize);
+									m_StreamInfo += std::format(L", {} bytes", dataSize);
 								}
 							}
 						}
@@ -330,7 +338,7 @@ CVapourSynthVideoStream::CVapourSynthVideoStream(CVapourSynthFile* pVapourSynthF
 			vih2->dwPictAspectRatioY = parY;
 		}
 
-		DLog(streamInfo);
+		DLog(m_StreamInfo);
 
 		hr = S_OK;
 	}
@@ -689,13 +697,13 @@ CVapourSynthAudioStream::CVapourSynthAudioStream(CVapourSynthFile* pVapourSynthF
 		wfe->cbSize = 0;
 
 		m_StreamInfo = std::format(L"Audio stream: {} channels, {} Hz, ", m_Channels, m_SampleRate);
-		switch (m_SampleType) {
-		case SAMPLE_INT8:  m_StreamInfo.append(L"int8"); break;
-		case SAMPLE_INT16: m_StreamInfo.append(L"int16"); break;
-		case SAMPLE_INT24: m_StreamInfo.append(L"int24"); break;
-		case SAMPLE_INT32: m_StreamInfo.append(L"int32"); break;
-		case SAMPLE_FLOAT: m_StreamInfo.append(L"float32"); break;
+		if (m_SampleType == stFloat) {
+			m_StreamInfo.append(L"float");
 		}
+		else if (m_SampleType == stInteger) {
+			m_StreamInfo.append(L"int");
+		}
+		m_StreamInfo.append(std::to_wstring(m_BitDepth));
 		DLog(m_StreamInfo);
 
 		hr = S_OK;

@@ -136,7 +136,12 @@ STDMETHODIMP_(bool) CScriptSource::GetActive()
 STDMETHODIMP CScriptSource::GetScriptInfo(std::wstring& str)
 {
 	if (GetActive()) {
-		str.assign(m_StreamInfo);
+		if (m_pAviSynthFile) {
+			str.assign(m_pAviSynthFile->GetInfo());
+		}
+		else if (m_pVapourSynthFile) {
+			str.assign(m_pVapourSynthFile->GetInfo());
+		}
 		return S_OK;
 	} else {
 		str.assign(L"filter is not active");
