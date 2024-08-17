@@ -267,10 +267,10 @@ CVapourSynthVideoStream::CVapourSynthVideoStream(CVapourSynthFile* pVapourSynthF
 							const int dataSize = m_pVapourSynthFile->m_vsAPI->mapGetDataSize(vsMap, keyName, 0, &err);
 							if (!err) {
 								if (dataSize == 1 && strcmp(keyName, "_PictType") == 0) {
-									m_StreamInfo += std::format(L"<d> '{}' = {}", A2WStr(keyName), val_Data[0]);
+									m_StreamInfo += std::format(L"<b> '{}' = {}", A2WStr(keyName), val_Data[0]);
 								}
 								else {
-									m_StreamInfo += std::format(L"<d> '{}', {} bytes", A2WStr(keyName), dataSize);
+									m_StreamInfo += std::format(L"<b> '{}', {} bytes", A2WStr(keyName), dataSize);
 								}
 							}
 						}
