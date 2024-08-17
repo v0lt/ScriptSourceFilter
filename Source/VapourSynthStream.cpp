@@ -237,14 +237,13 @@ CVapourSynthVideoStream::CVapourSynthVideoStream(CVapourSynthFile* pVapourSynthF
 					int err = 0;
 					const char keyType = m_pVapourSynthFile->m_vsAPI->mapGetType(vsMap, keyName);
 
-					m_StreamInfo += std::format(L"\n{:>2}: <{}> '{}'", i, keyType, A2WStr(keyName));
+					m_StreamInfo += std::format(L"\n{:>2}: ", i);
 
 					switch (keyType) {
 					case ptInt:
 						val_Int = m_pVapourSynthFile->m_vsAPI->mapGetInt(vsMap, keyName, 0, &err);
 						if (!err) {
-							m_StreamInfo += std::format(L" = {}", val_Int);
-							m_StreamInfo += std::format(L" = {}", val_Int);
+							m_StreamInfo += std::format(L"<i> '{}' = {}", A2WStr(keyName), val_Int);
 							if (strcmp(keyName, "_SARNum") == 0) {
 								m_Sar.num = val_Int;
 							}
@@ -259,7 +258,7 @@ CVapourSynthVideoStream::CVapourSynthVideoStream(CVapourSynthFile* pVapourSynthF
 					case ptFloat:
 						val_Float = m_pVapourSynthFile->m_vsAPI->mapGetFloat(vsMap, keyName, 0, &err);
 						if (!err) {
-							m_StreamInfo += std::format(L" = {:.3f}", val_Float);
+							m_StreamInfo += std::format(L"<f> '{}' = {:.3f}", A2WStr(keyName), val_Float);
 						}
 						break;
 					case ptData:
@@ -268,10 +267,10 @@ CVapourSynthVideoStream::CVapourSynthVideoStream(CVapourSynthFile* pVapourSynthF
 							const int dataSize = m_pVapourSynthFile->m_vsAPI->mapGetDataSize(vsMap, keyName, 0, &err);
 							if (!err) {
 								if (dataSize == 1 && strcmp(keyName, "_PictType") == 0) {
-									m_StreamInfo += std::format(L" = {}", val_Data[0]);
+									m_StreamInfo += std::format(L"<d> '{}' = {}", A2WStr(keyName), val_Data[0]);
 								}
 								else {
-									m_StreamInfo += std::format(L", {} bytes", dataSize);
+									m_StreamInfo += std::format(L"<d> '{}', {} bytes", A2WStr(keyName), dataSize);
 								}
 							}
 						}
