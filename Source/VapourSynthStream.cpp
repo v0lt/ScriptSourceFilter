@@ -57,13 +57,21 @@ CVapourSynthFile::CVapourSynthFile(const WCHAR* name, CSource* pParent, HRESULT*
 			throw std::exception("Failed to call VapourSynth evaluateFile");
 		}
 
-		m_vsNode = m_vsScriptAPI->getOutputNode(m_vsScript, 0);
-		if (!m_vsNode) {
-			throw std::exception("Failed to get VapourSynth output node");
+		VSNode* vsNode = m_vsScriptAPI->getOutputNode(m_vsScript, 0);
+		if (!vsNode) {
+			throw std::exception("Failed to get VapourSynth output node 0");
 		}
 
-		auto vsVideoInfo = m_vsAPI->getVideoInfo(m_vsNode);
+		auto vsVideoInfo = m_vsAPI->getVideoInfo(vsNode);
 		if (vsVideoInfo) {
+			if (vsVideoInfo->format.colorFamily == cfUndefined || vsVideoInfo->width <= 0 || vsVideoInfo->height <= 0) {
+				vsVideoInfo = nullptr;
+			}
+		}
+		if (vsVideoInfo) {
+			m_vsNodeVideo = vsNode;
+			vsNode = nullptr;
+
 			const auto& vf = vsVideoInfo->format;
 			const auto videoID = ((vf.colorFamily << 28) | (vf.sampleType << 24) | (vf.bitsPerSample << 16) | (vf.subSamplingW << 8) | (vf.subSamplingH << 0));
 			auto Format = GetFormatParamsVapourSynth(videoID);
@@ -81,12 +89,29 @@ CVapourSynthFile::CVapourSynthFile(const WCHAR* name, CSource* pParent, HRESULT*
 			}
 		}
 
-		auto vsAudioInfo = m_vsAPI->getAudioInfo(m_vsNode);
-		if (vsAudioInfo && vsAudioInfo->format.numChannels) {
+		if (!vsNode) {
+			vsNode = m_vsScriptAPI->getOutputNode(m_vsScript, 1);
+		}
+
+		auto vsAudioInfo = m_vsAPI->getAudioInfo(vsNode);
+		if (vsAudioInfo) {
+			if (vsAudioInfo->format.numChannels <= 0) {
+				vsAudioInfo = nullptr;
+			}
+		}
+		if (vsAudioInfo) {
+			m_vsNodeAudio = vsNode;
+			vsNode = nullptr;
+
 			//new CVapourSynthAudioStream(this, pParent, &hr);
 			if (FAILED(hr)) {
 				DLog(L"AviSynth+ script returned unsupported audio");
 			}
+		}
+
+		if (vsNode) {
+			m_vsAPI->freeNode(vsNode);
+			vsNode = nullptr;
 		}
 
 		hr = S_OK;
@@ -108,9 +133,13 @@ CVapourSynthFile::CVapourSynthFile(const WCHAR* name, CSource* pParent, HRESULT*
 
 CVapourSynthFile::~CVapourSynthFile()
 {
-	if (m_vsNode) {
-		m_vsAPI->freeNode(m_vsNode);
-		m_vsNode = nullptr;
+	if (m_vsNodeVideo) {
+		m_vsAPI->freeNode(m_vsNodeVideo);
+		m_vsNodeVideo = nullptr;
+	}
+	if (m_vsNodeAudio) {
+		m_vsAPI->freeNode(m_vsNodeAudio);
+		m_vsNodeAudio = nullptr;
 	}
 
 	if (m_vsScript) {
@@ -140,7 +169,7 @@ CVapourSynthVideoStream::CVapourSynthVideoStream(CVapourSynthFile* pVapourSynthF
 	std::wstring error;
 
 	try {
-		m_vsVideoInfo = m_pVapourSynthFile->m_vsAPI->getVideoInfo(m_pVapourSynthFile->m_vsNode);
+		m_vsVideoInfo = m_pVapourSynthFile->m_vsAPI->getVideoInfo(m_pVapourSynthFile->m_vsNodeVideo);
 
 		const auto& vf = m_vsVideoInfo->format;
 		const auto videoID = ((vf.colorFamily << 28) | (vf.sampleType << 24) | (vf.bitsPerSample << 16) | (vf.subSamplingW << 8) | (vf.subSamplingH << 0));
@@ -168,7 +197,7 @@ CVapourSynthVideoStream::CVapourSynthVideoStream(CVapourSynthFile* pVapourSynthF
 			m_Format.str, m_Width, m_Height, (double)m_fpsNum / m_fpsDen
 		);
 
-		const VSFrame* frame = m_pVapourSynthFile->m_vsAPI->getFrame(0, m_pVapourSynthFile->m_vsNode, m_vsErrorMessage, sizeof(m_vsErrorMessage));
+		const VSFrame* frame = m_pVapourSynthFile->m_vsAPI->getFrame(0, m_pVapourSynthFile->m_vsNodeVideo, m_vsErrorMessage, sizeof(m_vsErrorMessage));
 		if (!frame) {
 			error = ConvertUtf8ToWide(m_vsErrorMessage);
 			throw std::exception("Failed to call getFrame(0)");
@@ -477,7 +506,7 @@ HRESULT CVapourSynthVideoStream::FillBuffer(IMediaSample* pSample)
 			}
 		}
 		else {
-			const VSFrame* frame = m_pVapourSynthFile->m_vsAPI->getFrame(m_CurrentFrame, m_pVapourSynthFile->m_vsNode, m_vsErrorMessage, sizeof(m_vsErrorMessage));
+			const VSFrame* frame = m_pVapourSynthFile->m_vsAPI->getFrame(m_CurrentFrame, m_pVapourSynthFile->m_vsNodeVideo, m_vsErrorMessage, sizeof(m_vsErrorMessage));
 			if (!frame) {
 				DLog(ConvertUtf8ToWide(m_vsErrorMessage));
 				return E_FAIL;

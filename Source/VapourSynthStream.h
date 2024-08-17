@@ -21,7 +21,8 @@ class CVapourSynthFile
 	const VSAPI* m_vsAPI = nullptr;
 	const VSSCRIPTAPI* m_vsScriptAPI = nullptr;
 	VSScript* m_vsScript = nullptr;
-	VSNode* m_vsNode = nullptr;
+	VSNode* m_vsNodeVideo = nullptr;
+	VSNode* m_vsNodeAudio = nullptr;
 
 public:
 	CVapourSynthFile(const WCHAR* filepath, CSource* pParent, HRESULT* phr);
