@@ -24,6 +24,8 @@ class CVapourSynthFile
 	VSNode* m_vsNodeVideo = nullptr;
 	VSNode* m_vsNodeAudio = nullptr;
 
+	void SetVSNodes();
+
 public:
 	CVapourSynthFile(const WCHAR* filepath, CSource* pParent, HRESULT* phr);
 	~CVapourSynthFile();

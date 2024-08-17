@@ -57,30 +57,9 @@ CVapourSynthFile::CVapourSynthFile(const WCHAR* name, CSource* pParent, HRESULT*
 			throw std::exception("Failed to call VapourSynth evaluateFile");
 		}
 
-		VSNode* vsNode = m_vsScriptAPI->getOutputNode(m_vsScript, 0);
-		if (!vsNode) {
-			throw std::exception("Failed to get VapourSynth output node 0");
-		}
+		SetVSNodes();
 
-		auto vsVideoInfo = m_vsAPI->getVideoInfo(vsNode);
-		if (vsVideoInfo) {
-			if (vsVideoInfo->format.colorFamily == cfUndefined || vsVideoInfo->width <= 0 || vsVideoInfo->height <= 0) {
-				vsVideoInfo = nullptr;
-			}
-		}
-		if (vsVideoInfo) {
-			m_vsNodeVideo = vsNode;
-			vsNode = nullptr;
-
-			const auto& vf = vsVideoInfo->format;
-			const auto videoID = ((vf.colorFamily << 28) | (vf.sampleType << 24) | (vf.bitsPerSample << 16) | (vf.subSamplingW << 8) | (vf.subSamplingH << 0));
-			auto Format = GetFormatParamsVapourSynth(videoID);
-			if (Format.fourcc == DWORD(-1)) {
-				char formatname[32] = {};
-				m_vsAPI->getVideoFormatName(&vsVideoInfo->format, formatname);
-				throw std::exception(std::format("Unsuported pixel type {}", formatname).c_str());
-			}
-
+		if (m_vsNodeVideo) {
 			auto pVideoStream = new CVapourSynthVideoStream(this, pParent, &hr);
 			if (FAILED(hr)) {
 				pParent->RemovePin(pVideoStream);
@@ -89,29 +68,11 @@ CVapourSynthFile::CVapourSynthFile(const WCHAR* name, CSource* pParent, HRESULT*
 			}
 		}
 
-		if (!vsNode) {
-			vsNode = m_vsScriptAPI->getOutputNode(m_vsScript, 1);
-		}
-
-		auto vsAudioInfo = m_vsAPI->getAudioInfo(vsNode);
-		if (vsAudioInfo) {
-			if (vsAudioInfo->format.numChannels <= 0) {
-				vsAudioInfo = nullptr;
-			}
-		}
-		if (vsAudioInfo) {
-			m_vsNodeAudio = vsNode;
-			vsNode = nullptr;
-
+		if (m_vsNodeAudio) {
 			//new CVapourSynthAudioStream(this, pParent, &hr);
 			if (FAILED(hr)) {
 				DLog(L"AviSynth+ script returned unsupported audio");
 			}
-		}
-
-		if (vsNode) {
-			m_vsAPI->freeNode(vsNode);
-			vsNode = nullptr;
 		}
 
 		hr = S_OK;
@@ -151,6 +112,50 @@ CVapourSynthFile::~CVapourSynthFile()
 
 	if (m_hVSScriptDll) {
 		FreeLibrary(m_hVSScriptDll);
+	}
+}
+
+void CVapourSynthFile::SetVSNodes()
+{
+	VSNode* vsNode = m_vsScriptAPI->getOutputNode(m_vsScript, 0);
+	if (!vsNode) {
+		throw std::exception("Failed to get VapourSynth output node 0");
+	}
+
+	auto vi = m_vsAPI->getVideoInfo(vsNode);
+
+	if (vi && vi->format.colorFamily != cfUndefined && vi->width > 0 && vi->height > 0) {
+		const auto& vf = vi->format;
+		const auto videoID = ((vf.colorFamily << 28) | (vf.sampleType << 24) | (vf.bitsPerSample << 16) | (vf.subSamplingW << 8) | (vf.subSamplingH << 0));
+		auto Format = GetFormatParamsVapourSynth(videoID);
+		if (Format.fourcc == DWORD(-1)) {
+			char formatname[32] = {};
+			m_vsAPI->getVideoFormatName(&vi->format, formatname);
+
+			m_vsAPI->freeNode(vsNode);
+			vsNode = nullptr;
+
+			throw std::exception(std::format("Unsuported pixel type {}", formatname).c_str());
+		}
+
+		m_vsNodeVideo = vsNode;
+		vsNode = nullptr;
+	}
+
+	if (!vsNode) {
+		vsNode = m_vsScriptAPI->getOutputNode(m_vsScript, 1);
+	}
+
+	auto ai = m_vsAPI->getAudioInfo(vsNode);
+
+	if (ai && ai->format.numChannels > 0 && ai->format.numChannels <= 32) {
+		m_vsNodeAudio = vsNode;
+		vsNode = nullptr;
+	}
+
+	if (vsNode) {
+		m_vsAPI->freeNode(vsNode);
+		vsNode = nullptr;
 	}
 }
 
