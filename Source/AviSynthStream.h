@@ -21,6 +21,7 @@ class CAviSynthFile
 	friend class CAviSynthAudioStream;
 
 	HMODULE m_hAviSynthDll = nullptr;
+
 	IScriptEnvironment* m_ScriptEnvironment = nullptr;
 	AVSValue            m_AVSValue;
 	const AVS_Linkage*  m_Linkage = nullptr;

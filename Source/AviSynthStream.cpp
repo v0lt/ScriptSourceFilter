@@ -568,22 +568,6 @@ HRESULT CAviSynthVideoStream::FillBuffer(IMediaSample* pSample)
 	return S_OK;
 }
 
-HRESULT CAviSynthVideoStream::GetMediaType(int iPosition, CMediaType* pmt)
-{
-	CAutoLock cAutoLock(m_pFilter->pStateLock());
-
-	if (iPosition < 0) {
-		return E_INVALIDARG;
-	}
-	if (iPosition >= 1) {
-		return VFW_S_NO_MORE_ITEMS;
-	}
-
-	*pmt = m_mt;
-
-	return S_OK;
-}
-
 HRESULT CAviSynthVideoStream::CheckMediaType(const CMediaType* pmt)
 {
 	if (pmt->majortype == MEDIATYPE_Video
@@ -613,6 +597,22 @@ HRESULT CAviSynthVideoStream::SetMediaType(const CMediaType* pMediaType)
 	}
 
 	return hr;
+}
+
+HRESULT CAviSynthVideoStream::GetMediaType(int iPosition, CMediaType* pmt)
+{
+	CAutoLock cAutoLock(m_pFilter->pStateLock());
+
+	if (iPosition < 0) {
+		return E_INVALIDARG;
+	}
+	if (iPosition >= 1) {
+		return VFW_S_NO_MORE_ITEMS;
+	}
+
+	*pmt = m_mt;
+
+	return S_OK;
 }
 
 //
@@ -874,22 +874,6 @@ HRESULT CAviSynthAudioStream::FillBuffer(IMediaSample* pSample)
 	return S_OK;
 }
 
-HRESULT CAviSynthAudioStream::GetMediaType(int iPosition, CMediaType* pmt)
-{
-	CAutoLock cAutoLock(m_pFilter->pStateLock());
-
-	if (iPosition < 0) {
-		return E_INVALIDARG;
-	}
-	if (iPosition >= 1) {
-		return VFW_S_NO_MORE_ITEMS;
-	}
-
-	*pmt = m_mt;
-
-	return S_OK;
-}
-
 HRESULT CAviSynthAudioStream::CheckMediaType(const CMediaType* pmt)
 {
 	if (pmt->majortype == MEDIATYPE_Audio
@@ -917,4 +901,20 @@ HRESULT CAviSynthAudioStream::SetMediaType(const CMediaType* pMediaType)
 	}
 
 	return hr;
+}
+
+HRESULT CAviSynthAudioStream::GetMediaType(int iPosition, CMediaType* pmt)
+{
+	CAutoLock cAutoLock(m_pFilter->pStateLock());
+
+	if (iPosition < 0) {
+		return E_INVALIDARG;
+	}
+	if (iPosition >= 1) {
+		return VFW_S_NO_MORE_ITEMS;
+	}
+
+	*pmt = m_mt;
+
+	return S_OK;
 }
