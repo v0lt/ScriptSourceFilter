@@ -669,14 +669,39 @@ CAviSynthAudioStream::CAviSynthAudioStream(CAviSynthFile* pAviSynthFile, CSource
 			m_mt.SetTemporalCompression(FALSE);
 			m_mt.SetSampleSize(m_BytesPerSample);
 
-			WAVEFORMATEX* wfe = (WAVEFORMATEX*)m_mt.AllocFormatBuffer(sizeof(WAVEFORMATEX));
-			wfe->wFormatTag      = wFormatTag;
-			wfe->nChannels       = m_Channels;
-			wfe->nSamplesPerSec  = m_SampleRate;
-			wfe->nAvgBytesPerSec = m_BytesPerSample * m_SampleRate;
-			wfe->nBlockAlign     = m_BytesPerSample;
-			wfe->wBitsPerSample  = m_BitDepth;
-			wfe->cbSize          = 0;
+			bool has_at_least_v10 = true;
+			try {
+				m_pAviSynthFile->m_ScriptEnvironment->CheckVersion(10);
+			}
+			catch (const AvisynthError&) {
+				has_at_least_v10 = false;
+			}
+
+			UINT channelLayout = has_at_least_v10 ? VInfo.GetChannelMask() : 0;
+
+			if (channelLayout) {
+				WAVEFORMATEXTENSIBLE* wfex = (WAVEFORMATEXTENSIBLE*)m_mt.AllocFormatBuffer(sizeof(WAVEFORMATEXTENSIBLE));
+				wfex->Format.wFormatTag           = WAVE_FORMAT_EXTENSIBLE;
+				wfex->Format.nChannels            = m_Channels;
+				wfex->Format.nSamplesPerSec       = m_SampleRate;
+				wfex->Format.nAvgBytesPerSec      = m_BytesPerSample * m_SampleRate;
+				wfex->Format.nBlockAlign          = m_BytesPerSample;
+				wfex->Format.wBitsPerSample       = m_BitDepth;
+				wfex->Format.cbSize               = sizeof(WAVEFORMATEXTENSIBLE) - sizeof(WAVEFORMATEX); // 22
+				wfex->Samples.wValidBitsPerSample = m_BitDepth;
+				wfex->dwChannelMask               = channelLayout;
+				wfex->SubFormat                   = m_Subtype;
+			}
+			else {
+				WAVEFORMATEX* wfe = (WAVEFORMATEX*)m_mt.AllocFormatBuffer(sizeof(WAVEFORMATEX));
+				wfe->wFormatTag      = wFormatTag;
+				wfe->nChannels       = m_Channels;
+				wfe->nSamplesPerSec  = m_SampleRate;
+				wfe->nAvgBytesPerSec = m_BytesPerSample * m_SampleRate;
+				wfe->nBlockAlign     = m_BytesPerSample;
+				wfe->wBitsPerSample  = m_BitDepth;
+				wfe->cbSize          = 0;
+			}
 
 			m_StreamInfo = std::format(L"Audio stream: {} channels, {} Hz, ", m_Channels, m_SampleRate);
 			switch (m_SampleType) {
