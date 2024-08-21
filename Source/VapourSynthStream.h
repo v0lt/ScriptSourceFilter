@@ -81,7 +81,7 @@ private:
 	int64_t m_fpsNum = 1;
 	int64_t m_fpsDen = 1;
 
-	char m_vsErrorMessage[1024];
+	char m_vsErrorMessage[1024] = {};
 	std::wstring m_StreamInfo;
 
 public:

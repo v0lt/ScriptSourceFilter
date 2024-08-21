@@ -40,7 +40,7 @@ void ComboBox_SelectByItemData(HWND hWnd, int nIDComboBox, LONG_PTR data)
 {
 	LRESULT lCount = SendDlgItemMessageW(hWnd, nIDComboBox, CB_GETCOUNT, 0, 0);
 	if (lCount != CB_ERR) {
-		for (int idx = 0; idx < lCount; idx++) {
+		for (LRESULT idx = 0; idx < lCount; idx++) {
 			const LRESULT lValue = SendDlgItemMessageW(hWnd, nIDComboBox, CB_GETITEMDATA, idx, 0);
 			if (data == lValue) {
 				SendDlgItemMessageW(hWnd, nIDComboBox, CB_SETCURSEL, idx, 0);

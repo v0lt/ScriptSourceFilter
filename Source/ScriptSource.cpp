@@ -83,7 +83,7 @@ STDMETHODIMP CScriptSource::Load(LPCOLESTR pszFileName, const AM_MEDIA_TYPE* pmt
 		return hr;
 	}
 
-	m_fn = fn;
+	m_fn = std::move(fn);
 
 	return S_OK;
 }

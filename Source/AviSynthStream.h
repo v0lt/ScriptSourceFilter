@@ -133,7 +133,7 @@ private:
 	int m_SampleRate = 0;
 	int m_BytesPerSample = 0; // for all audio channels
 	int m_BitDepth = 0;
-	int m_SampleType = 0;
+	AvsSampleType m_SampleType = (AvsSampleType)0;
 
 	int m_BufferSamples = 0;
 

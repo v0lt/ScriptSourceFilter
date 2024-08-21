@@ -27,4 +27,4 @@ struct FmtParams_t {
 const FmtParams_t& GetFormatParamsAviSynth(const int asFormat);
 const FmtParams_t& GetFormatParamsVapourSynth(const int vsVideoFormat);
 
-std::unique_ptr<BYTE[]> GetBitmapWithText(const std::wstring text, const long width, const long height);
+std::unique_ptr<BYTE[]> GetBitmapWithText(const std::wstring& text, const long width, const long height);

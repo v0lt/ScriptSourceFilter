@@ -108,7 +108,7 @@ const FmtParams_t& GetFormatParamsVapourSynth(const int vsVideoFormat)
 	return s_FormatTable[0];
 }
 
-std::unique_ptr<BYTE[]> GetBitmapWithText(const std::wstring text, const long width, const long height)
+std::unique_ptr<BYTE[]> GetBitmapWithText(const std::wstring& text, const long width, const long height)
 {
 	HFONT hFont = CreateFontW(-14, 0, 0, 0, FW_NORMAL, FALSE,
 		FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS,

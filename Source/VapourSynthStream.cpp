@@ -137,7 +137,7 @@ void CVapourSynthFile::SetVSNodes()
 	if (vi && vi->format.colorFamily != cfUndefined && vi->width > 0 && vi->height > 0) {
 		const auto& vf = vi->format;
 		const auto videoID = ((vf.colorFamily << 28) | (vf.sampleType << 24) | (vf.bitsPerSample << 16) | (vf.subSamplingW << 8) | (vf.subSamplingH << 0));
-		auto Format = GetFormatParamsVapourSynth(videoID);
+		auto& Format = GetFormatParamsVapourSynth(videoID);
 		if (Format.fourcc == DWORD(-1)) {
 			char formatname[32] = {};
 			m_vsAPI->getVideoFormatName(&vi->format, formatname);

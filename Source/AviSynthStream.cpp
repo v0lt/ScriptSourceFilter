@@ -69,7 +69,7 @@ CAviSynthFile::CAviSynthFile(const WCHAR* name, CSource* pParent, HRESULT* phr)
 		auto VInfo = Clip->GetVideoInfo();
 
 		if (VInfo.HasVideo()) {
-			auto Format = GetFormatParamsAviSynth(VInfo.pixel_type);
+			auto& Format = GetFormatParamsAviSynth(VInfo.pixel_type);
 			if (Format.fourcc == DWORD(-1)) {
 				throw std::exception(std::format("Unsuported pixel_type {:#010x} ({})", (uint32_t)VInfo.pixel_type, VInfo.pixel_type).c_str());
 			}
@@ -515,7 +515,6 @@ HRESULT CAviSynthVideoStream::FillBuffer(IMediaSample* pSample)
 		}
 		else {
 			auto Clip = m_pAviSynthFile->m_AVSValue.AsClip();
-			auto VInfo = Clip->GetVideoInfo();
 			auto VFrame = Clip->GetFrame(m_CurrentFrame, m_pAviSynthFile->m_ScriptEnvironment);
 
 			const int num_planes = m_Format.planes;
@@ -646,7 +645,7 @@ CAviSynthAudioStream::CAviSynthAudioStream(CAviSynthFile* pAviSynthFile, CSource
 			m_SampleRate     = VInfo.SamplesPerSecond();
 			m_BytesPerSample = VInfo.BytesPerAudioSample();
 			m_BitDepth       = m_BytesPerSample * 8 / m_Channels;
-			m_SampleType     = VInfo.SampleType();
+			m_SampleType     = (AvsSampleType)VInfo.SampleType();
 			m_NumSamples     = VInfo.num_audio_samples;
 
 			WORD wFormatTag;
@@ -877,7 +876,6 @@ HRESULT CAviSynthAudioStream::FillBuffer(IMediaSample* pSample)
 		}
 
 		auto Clip = m_pAviSynthFile->m_AVSValue.AsClip();
-		auto VInfo = Clip->GetVideoInfo();
 		int64_t count = std::min<int64_t>(m_BufferSamples, m_NumSamples - m_CurrentSample);
 		Clip->GetAudio(dst_data, m_CurrentSample, count, m_pAviSynthFile->m_ScriptEnvironment);
 
