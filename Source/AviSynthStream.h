@@ -101,6 +101,8 @@ private:
 	HRESULT ChangeStop() override;
 	HRESULT ChangeRate() override { return S_OK; }
 
+	void InitVideoMediaType();
+
 public:
 	HRESULT DecideBufferSize(IMemAllocator* pIMemAlloc, ALLOCATOR_PROPERTIES* pProperties) override;
 	HRESULT FillBuffer(IMediaSample* pSample) override;
