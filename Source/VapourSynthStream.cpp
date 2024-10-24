@@ -156,14 +156,14 @@ void CVapourSynthFile::SetVSNodes()
 		vsNode = m_vsScriptAPI->getOutputNode(m_vsScript, 1);
 	}
 
-	auto ai = m_vsAPI->getAudioInfo(vsNode);
-
-	if (ai && ai->format.numChannels > 0 && ai->format.numChannels <= 32 && (ai->format.channelLayout & 0xffffffff00000000ui64) == 0) {
-		m_vsNodeAudio = vsNode;
-		vsNode = nullptr;
-	}
-
 	if (vsNode) {
+		auto ai = m_vsAPI->getAudioInfo(vsNode);
+
+		if (ai && ai->format.numChannels > 0 && ai->format.numChannels <= 32 && (ai->format.channelLayout & 0xffffffff00000000ui64) == 0) {
+			m_vsNodeAudio = vsNode;
+			vsNode = nullptr;
+		}
+
 		m_vsAPI->freeNode(vsNode);
 		vsNode = nullptr;
 	}
