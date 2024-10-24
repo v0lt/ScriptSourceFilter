@@ -305,37 +305,7 @@ CVapourSynthVideoStream::CVapourSynthVideoStream(CVapourSynthFile* pVapourSynthF
 			m_ColorInfo = color_info | (AMCONTROL_USED | AMCONTROL_COLORINFO_PRESENT);
 		}
 
-		m_mt.InitMediaType();
-		m_mt.SetType(&MEDIATYPE_Video);
-		m_mt.SetSubtype(&m_Format.subtype);
-		m_mt.SetFormatType(&FORMAT_VideoInfo2);
-		m_mt.SetTemporalCompression(FALSE);
-		m_mt.SetSampleSize(m_BufferSize);
-
-		VIDEOINFOHEADER2* vih2 = (VIDEOINFOHEADER2*)m_mt.AllocFormatBuffer(sizeof(VIDEOINFOHEADER2));
-		ZeroMemory(vih2, sizeof(VIDEOINFOHEADER2));
-		vih2->rcSource = { 0, 0, (long)m_Width, (long)m_Height };
-		vih2->rcTarget = vih2->rcSource;
-		vih2->AvgTimePerFrame         = m_AvgTimePerFrame;
-		vih2->bmiHeader.biSize        = sizeof(vih2->bmiHeader);
-		vih2->bmiHeader.biWidth       = m_PitchBuff / m_Format.Packsize;
-		vih2->bmiHeader.biHeight      = (m_Format.fourcc == BI_RGB) ? -(long)m_Height : m_Height;
-		vih2->bmiHeader.biPlanes      = 1;
-		vih2->bmiHeader.biBitCount    = m_Format.bitCount;
-		vih2->bmiHeader.biCompression = m_Format.fourcc;
-		vih2->bmiHeader.biSizeImage   = m_BufferSize;
-
-		vih2->dwControlFlags = m_ColorInfo;
-
-		if (m_Sar.num > 0 && m_Sar.den > 0 && m_Sar.num < INT16_MAX && m_Sar.den < INT16_MAX) {
-			auto parX = m_Sar.num * m_Width;
-			auto parY = m_Sar.den * m_Height;
-			const auto gcd = std::gcd(parX, parY);
-			parX /= gcd;
-			parY /= gcd;
-			vih2->dwPictAspectRatioX = parX;
-			vih2->dwPictAspectRatioY = parY;
-		}
+		InitVideoMediaType();
 
 		DLog(m_StreamInfo);
 
@@ -443,6 +413,41 @@ HRESULT CVapourSynthVideoStream::ChangeStop()
 	UpdateFromSeek();
 
 	return S_OK;
+}
+
+void CVapourSynthVideoStream::InitVideoMediaType()
+{
+	m_mt.InitMediaType();
+	m_mt.SetType(&MEDIATYPE_Video);
+	m_mt.SetSubtype(&m_Format.subtype);
+	m_mt.SetFormatType(&FORMAT_VideoInfo2);
+	m_mt.SetTemporalCompression(FALSE);
+	m_mt.SetSampleSize(m_BufferSize);
+
+	VIDEOINFOHEADER2* vih2 = (VIDEOINFOHEADER2*)m_mt.AllocFormatBuffer(sizeof(VIDEOINFOHEADER2));
+	ZeroMemory(vih2, sizeof(VIDEOINFOHEADER2));
+	vih2->rcSource = { 0, 0, (long)m_Width, (long)m_Height };
+	vih2->rcTarget = vih2->rcSource;
+	vih2->AvgTimePerFrame         = m_AvgTimePerFrame;
+	vih2->bmiHeader.biSize        = sizeof(vih2->bmiHeader);
+	vih2->bmiHeader.biWidth       = m_PitchBuff / m_Format.Packsize;
+	vih2->bmiHeader.biHeight      = (m_Format.fourcc == BI_RGB) ? -(long)m_Height : m_Height;
+	vih2->bmiHeader.biPlanes      = 1;
+	vih2->bmiHeader.biBitCount    = m_Format.bitCount;
+	vih2->bmiHeader.biCompression = m_Format.fourcc;
+	vih2->bmiHeader.biSizeImage   = m_BufferSize;
+
+	vih2->dwControlFlags = m_ColorInfo;
+
+	if (m_Sar.num > 0 && m_Sar.den > 0 && m_Sar.num < INT16_MAX && m_Sar.den < INT16_MAX) {
+		auto parX = m_Sar.num * m_Width;
+		auto parY = m_Sar.den * m_Height;
+		const auto gcd = std::gcd(parX, parY);
+		parX /= gcd;
+		parY /= gcd;
+		vih2->dwPictAspectRatioX = parX;
+		vih2->dwPictAspectRatioY = parY;
+	}
 }
 
 HRESULT CVapourSynthVideoStream::DecideBufferSize(IMemAllocator* pAlloc, ALLOCATOR_PROPERTIES* pProperties)
