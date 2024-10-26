@@ -85,6 +85,7 @@ static const FmtParams_t s_FormatTable[] = {
 	{MAKEFOURCC('G','4',0,16),   MEDIASUBTYPE_LAV_RAWVIDEO, VideoInfo::CS_RGBAP16,    0,             L"RGBAP16",      2, 8,       16,    4,     64},
 	// grayscale
 	{FCC('Y800'),                MEDIASUBTYPE_Y800,         VideoInfo::CS_Y8,         pfGray8,       L"Y8",           1, 2,       8,     1,     8},
+	{MAKEFOURCC('Y','1',0,10),   MEDIASUBTYPE_LAV_RAWVIDEO, VideoInfo::CS_Y10,        pfGray10,      L"Y10",          2, 2,       10,    1,     16},
 	{MAKEFOURCC('Y','1',0,16),   MEDIASUBTYPE_Y16,          VideoInfo::CS_Y16,        pfGray16,      L"Y16",          2, 2,       16,    1,     16},
 };
 
