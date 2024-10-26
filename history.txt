@@ -1,5 +1,8 @@
 0.2.2 dev
 -----------------------
+Fixed display of video frame with error in AviSynth script.
+Fixed opening VapourSynth scripts without sound.
+Added support for Y10 (Gray10) format.
 
 0.2.1.165 - 2024-08-18
 -----------------------
