@@ -76,50 +76,38 @@ void str_replace(std::wstring& s, const std::wstring_view from, const std::wstri
 	}
 }
 
-std::string ConvertWideToANSI(const std::wstring& wstr)
+//
+// converting strings of different formats
+//
+
+std::wstring ConvertAnsiToWide(const std::string_view str)
 {
-	int count = WideCharToMultiByte(CP_ACP, 0, wstr.c_str(), (int)wstr.length(), nullptr, 0, nullptr, nullptr);
+	int count = MultiByteToWideChar(CP_ACP, 0, str.data(), (int)str.length(), nullptr, 0);
+	std::wstring wstr(count, 0);
+	MultiByteToWideChar(CP_ACP, 0, str.data(), (int)str.length(), &wstr[0], count);
+	return wstr;
+}
+
+std::wstring ConvertUtf8ToWide(const std::string_view str)
+{
+	int count = MultiByteToWideChar(CP_UTF8, 0, str.data(), (int)str.length(), nullptr, 0);
+	std::wstring wstr(count, 0);
+	MultiByteToWideChar(CP_UTF8, 0, str.data(), (int)str.length(), &wstr[0], count);
+	return wstr;
+}
+
+std::string ConvertWideToANSI(const std::wstring_view wstr)
+{
+	int count = WideCharToMultiByte(CP_ACP, 0, wstr.data(), (int)wstr.length(), nullptr, 0, nullptr, nullptr);
 	std::string str(count, 0);
-	WideCharToMultiByte(CP_ACP, 0, wstr.c_str(), -1, &str[0], count, nullptr, nullptr);
+	WideCharToMultiByte(CP_ACP, 0, wstr.data(), -1, &str[0], count, nullptr, nullptr);
 	return str;
 }
 
-std::wstring ConvertAnsiToWide(const char* pstr, int size)
+std::string ConvertWideToUtf8(const std::wstring_view wstr)
 {
-	int count = MultiByteToWideChar(CP_ACP, 0, pstr, size, nullptr, 0);
-	std::wstring wstr(count, 0);
-	MultiByteToWideChar(CP_ACP, 0, pstr, size, &wstr[0], count);
-	return wstr;
-}
-
-std::wstring ConvertAnsiToWide(const std::string& str)
-{
-	int count = MultiByteToWideChar(CP_ACP, 0, str.c_str(), (int)str.length(), nullptr, 0);
-	std::wstring wstr(count, 0);
-	MultiByteToWideChar(CP_ACP, 0, str.c_str(), (int)str.length(), &wstr[0], count);
-	return wstr;
-}
-
-std::string ConvertWideToUtf8(const std::wstring& wstr)
-{
-	int count = WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), (int)wstr.length(), nullptr, 0, nullptr, nullptr);
+	int count = WideCharToMultiByte(CP_UTF8, 0, wstr.data(), (int)wstr.length(), nullptr, 0, nullptr, nullptr);
 	std::string str(count, 0);
-	WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), -1, &str[0], count, nullptr, nullptr);
+	WideCharToMultiByte(CP_UTF8, 0, wstr.data(), -1, &str[0], count, nullptr, nullptr);
 	return str;
-}
-
-std::wstring ConvertUtf8ToWide(const std::string& str)
-{
-	int count = MultiByteToWideChar(CP_UTF8, 0, str.c_str(), (int)str.length(), nullptr, 0);
-	std::wstring wstr(count, 0);
-	MultiByteToWideChar(CP_UTF8, 0, str.c_str(), (int)str.length(), &wstr[0], count);
-	return wstr;
-}
-
-std::wstring ConvertUtf8ToWide(const char* pstr, int size)
-{
-	int count = MultiByteToWideChar(CP_UTF8, 0, pstr, size, nullptr, 0);
-	std::wstring wstr(count, 0);
-	MultiByteToWideChar(CP_UTF8, 0, pstr, size, &wstr[0], count);
-	return wstr;
 }
