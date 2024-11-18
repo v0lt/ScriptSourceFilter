@@ -40,7 +40,7 @@ CAviSynthFile::CAviSynthFile(const WCHAR* name, CSource* pParent, HRESULT* phr)
 
 		AVS_linkage = m_Linkage = m_ScriptEnvironment->GetAVSLinkage();
 	}
-	catch (const std::exception& e) {
+	catch ([[maybe_unused]] const std::exception& e) {
 		DLog(A2WStr(e.what()));
 		*phr = E_FAIL;
 		return;
@@ -99,7 +99,7 @@ CAviSynthFile::CAviSynthFile(const WCHAR* name, CSource* pParent, HRESULT* phr)
 
 		hr = S_OK;
 	}
-	catch (const std::exception& e) {
+	catch ([[maybe_unused]] const std::exception& e) {
 		DLog(L"{}\n{}", A2WStr(e.what()), error);
 
 		new CAviSynthVideoStream(error, pParent, &hr);
@@ -275,7 +275,7 @@ CAviSynthVideoStream::CAviSynthVideoStream(CAviSynthFile* pAviSynthFile, CSource
 
 		hr = S_OK;
 	}
-	catch (const std::exception& e) {
+	catch ([[maybe_unused]] const std::exception& e) {
 		DLog(L"{}\n{}", A2WStr(e.what()), error);
 
 		hr = E_FAIL;
@@ -721,7 +721,7 @@ CAviSynthAudioStream::CAviSynthAudioStream(CAviSynthFile* pAviSynthFile, CSource
 			hr = S_OK;
 		}
 	}
-	catch (const std::exception& e) {
+	catch ([[maybe_unused]] const std::exception& e) {
 		DLog(L"{}\n{}", A2WStr(e.what()), error);
 
 		hr = E_FAIL;

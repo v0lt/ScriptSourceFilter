@@ -40,7 +40,7 @@ CVapourSynthFile::CVapourSynthFile(const WCHAR* name, CSource* pParent, HRESULT*
 		m_vsAPI = m_vsScriptAPI->getVSAPI(VAPOURSYNTH_API_VERSION);
 		ASSERT(m_vsAPI);
 	}
-	catch (const std::exception& e) {
+	catch ([[maybe_unused]] const std::exception& e) {
 		DLog(A2WStr(e.what()));
 		*phr = E_FAIL;
 		return;
@@ -87,7 +87,7 @@ CVapourSynthFile::CVapourSynthFile(const WCHAR* name, CSource* pParent, HRESULT*
 
 		hr = S_OK;
 	}
-	catch (const std::exception& e) {
+	catch ([[maybe_unused]] const std::exception& e) {
 		DLog(L"{}\n{}", A2WStr(e.what()), error);
 
 		new CAviSynthVideoStream(error, pParent, &hr);
@@ -311,7 +311,7 @@ CVapourSynthVideoStream::CVapourSynthVideoStream(CVapourSynthFile* pVapourSynthF
 
 		hr = S_OK;
 	}
-	catch (const std::exception& e) {
+	catch ([[maybe_unused]] const std::exception& e) {
 		DLog(L"{}\n{}", A2WStr(e.what()), error);
 
 		hr = E_FAIL;
@@ -715,7 +715,7 @@ CVapourSynthAudioStream::CVapourSynthAudioStream(CVapourSynthFile* pVapourSynthF
 
 		hr = S_OK;
 	}
-	catch (const std::exception& e) {
+	catch ([[maybe_unused]] const std::exception& e) {
 		DLog(L"{}\n{}", A2WStr(e.what()), error);
 
 		hr = E_FAIL;
