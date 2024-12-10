@@ -172,15 +172,14 @@ CAviSynthVideoStream::CAviSynthVideoStream(CAviSynthFile* pAviSynthFile, CSource
 		m_rtDuration = m_rtStop = llMulDiv(UNITS * m_NumFrames, m_fpsDen, m_fpsNum, 0);
 
 		if (VInfo.IsPlanar()) {
-			if (VInfo.IsYUV()) {
+			if (VInfo.IsYUV() || VInfo.IsYUVA()) {
 				m_Planes[0] = PLANAR_Y;
-				if (VInfo.IsVPlaneFirst()) {
-					m_Planes[1] = PLANAR_U; // Yes, that's right, because the output is YV12, YV16, YV24.
-					m_Planes[2] = PLANAR_V;
-				}
-				else {
+				if (VInfo.IsYV12() || VInfo.IsYV16() || VInfo.IsYV24()) {
 					m_Planes[1] = PLANAR_V;
 					m_Planes[2] = PLANAR_U;
+				} else {
+					m_Planes[1] = PLANAR_U;
+					m_Planes[2] = PLANAR_V;
 				}
 			}
 			else if (VInfo.IsRGB()) {
