@@ -3,7 +3,7 @@ REM Copyright (C) 2020-2024 v0lt
 REM 
 REM SPDX-License-Identifier: LGPL-2.1-only
 
-SETLOCAL
+SETLOCAL ENABLEDELAYEDEXPANSION
 CD /D %~dp0
 
 SET "TITLE=MPC Script Source"
@@ -22,6 +22,12 @@ FOR %%A IN (%*) DO (
   )
   IF /I "%%A" == "Sign" (
     SET "SIGN=True"
+  )
+  IF /I "%%A" == "VS2019" (
+    SET "COMPILER=VS2019"
+  )
+  IF /I "%%A" == "VS2022" (
+    SET "COMPILER=VS2022"
   )
 )
 
@@ -111,7 +117,16 @@ ENDLOCAL
 EXIT
 
 :SubVSPath
-FOR /f "delims=" %%A IN ('"%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe" -property installationPath -latest -requires Microsoft.Component.MSBuild') DO SET VS_PATH=%%A
+SET "PARAMS=-property installationPath -requires Microsoft.Component.MSBuild"
+IF /I "%COMPILER%" == "VS2019" (
+  SET "PARAMS=%PARAMS% -version [16.0,17.0)"
+) ELSE IF /I "%COMPILER%" == "VS2022" (
+  SET "PARAMS=%PARAMS% -version [17.0,18.0)"
+) ELSE (
+  SET "PARAMS=%PARAMS% -latest"
+)
+SET "VSWHERE="%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe" %PARAMS%"
+FOR /f "delims=" %%A IN ('!VSWHERE!') DO SET VS_PATH=%%A
 EXIT /B
 
 :SubDetectSevenzipPath
