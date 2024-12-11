@@ -44,12 +44,12 @@ SET "TOOLSET=%VS_PATH%\Common7\Tools\vsdevcmd"
 SET "LOG_DIR=_bin\logs"
 IF NOT EXIST "%LOG_DIR%" MD "%LOG_DIR%"
 
-CALL "%TOOLSET%" -no_logo -arch=x86
+CALL "%TOOLSET%" -arch=x86
 REM again set the source directory (fix possible bug in VS2017)
 CD /D %~dp0
 CALL :SubCompiling x86
 
-CALL "%TOOLSET%" -no_logo -arch=amd64
+CALL "%TOOLSET%" -arch=amd64
 REM again set the source directory (fix possible bug in VS2017)
 CD /D %~dp0
 CALL :SubCompiling x64
