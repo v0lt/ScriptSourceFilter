@@ -1,15 +1,15 @@
 // Copyright (c) 2020-2024 v0lt, Aleksoid
-// 
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in all
 // copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -52,6 +52,7 @@ inline void DebugLogFmt(std::wstring_view format, Args&& ...args)
 #define SAFE_DELETE(p)       { if (p) { delete (p); (p) = nullptr; } }
 
 #define QI(i) (riid == __uuidof(i)) ? GetInterface((i*)this, ppv) :
+#define IFQIRETURN(i) if (riid == __uuidof(i)) { return GetInterface((i*)this, ppv); }
 
 #define ALIGN(x, a)           __ALIGN_MASK(x,(decltype(x))(a)-1)
 #define __ALIGN_MASK(x, mask) (((x)+(mask))&~(mask))
@@ -102,6 +103,7 @@ inline T round_pow2(T number, T pow2)
 	}
 }
 
+[[nodiscard]] bool IsWindows11_24H2OrGreater();
 LPCWSTR GetWindowsVersion();
 
 inline std::wstring GUIDtoWString(const GUID& guid)
