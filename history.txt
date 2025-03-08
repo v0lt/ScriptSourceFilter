@@ -1,3 +1,6 @@
+0.2.6 dev
+-----------------------
+
 0.2.5.183 - 2024-12-13
 -----------------------
 Fixed support for YV12, YV16, YV24 formats for AviSynth+.
