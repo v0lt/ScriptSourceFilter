@@ -1,5 +1,6 @@
 0.2.6 dev
 -----------------------
+Fixed registration of a filter from a folder with Unicode characters.
 
 0.2.5.183 - 2024-12-13
 -----------------------
