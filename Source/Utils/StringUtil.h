@@ -1,4 +1,4 @@
-// Copyright (c) 2020-2024 v0lt, Aleksoid
+// Copyright (c) 2020-2025 v0lt, Aleksoid
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -123,9 +123,8 @@ void str_replace(std::string& s, const std::string_view from, const std::string_
 void str_replace(std::wstring& s, const std::wstring_view from, const std::wstring_view to);
 
 //
-// simple convert ANSI string to wide character string
+// simple convert ASCII string to wide character string
 //
-
 inline std::wstring A2WStr(const std::string_view sv)
 {
 	return std::wstring(sv.begin(), sv.end());
@@ -135,10 +134,12 @@ inline std::wstring A2WStr(const std::string_view sv)
 // converting strings of different formats
 //
 
+// convert system default Windows ANSI code page string to UTF-16 (wide character) string
 std::wstring ConvertAnsiToWide(const std::string_view sv);
 
 std::wstring ConvertUtf8ToWide(const std::string_view sv);
 
+// convert UTF-16 (wide character) string to system default Windows ANSI code page string
 std::string ConvertWideToANSI(const std::wstring_view wsv);
 
 std::string ConvertWideToUtf8(const std::wstring_view wsv);
