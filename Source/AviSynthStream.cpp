@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020-2024 v0lt
+ * Copyright (C) 2020-2025 v0lt
  *
  * SPDX-License-Identifier: LGPL-2.1-only
  */
@@ -41,7 +41,7 @@ CAviSynthFile::CAviSynthFile(const WCHAR* name, CSource* pParent, HRESULT* phr)
 		AVS_linkage = m_Linkage = m_ScriptEnvironment->GetAVSLinkage();
 	}
 	catch ([[maybe_unused]] const std::exception& e) {
-		DLog(A2WStr(e.what()));
+		DLog(ConvertAnsiToWide(e.what()));
 		*phr = E_FAIL;
 		return;
 	}
@@ -100,7 +100,7 @@ CAviSynthFile::CAviSynthFile(const WCHAR* name, CSource* pParent, HRESULT* phr)
 		hr = S_OK;
 	}
 	catch ([[maybe_unused]] const std::exception& e) {
-		DLog(L"{}\n{}", A2WStr(e.what()), error);
+		DLog(L"{}\n{}", ConvertAnsiToWide(e.what()), error);
 
 		new CAviSynthVideoStream(error, pParent, &hr);
 		if (SUCCEEDED(hr)) {
@@ -275,7 +275,7 @@ CAviSynthVideoStream::CAviSynthVideoStream(CAviSynthFile* pAviSynthFile, CSource
 		hr = S_OK;
 	}
 	catch ([[maybe_unused]] const std::exception& e) {
-		DLog(L"{}\n{}", A2WStr(e.what()), error);
+		DLog(L"{}\n{}", ConvertAnsiToWide(e.what()), error);
 
 		hr = E_FAIL;
 	}
@@ -721,7 +721,7 @@ CAviSynthAudioStream::CAviSynthAudioStream(CAviSynthFile* pAviSynthFile, CSource
 		}
 	}
 	catch ([[maybe_unused]] const std::exception& e) {
-		DLog(L"{}\n{}", A2WStr(e.what()), error);
+		DLog(L"{}\n{}", ConvertAnsiToWide(e.what()), error);
 
 		hr = E_FAIL;
 	}

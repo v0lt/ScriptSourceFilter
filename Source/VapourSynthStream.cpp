@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020-2024 v0lt
+ * Copyright (C) 2020-2025 v0lt
  *
  * SPDX-License-Identifier: LGPL-2.1-only
  */
@@ -41,7 +41,7 @@ CVapourSynthFile::CVapourSynthFile(const WCHAR* name, CSource* pParent, HRESULT*
 		ASSERT(m_vsAPI);
 	}
 	catch ([[maybe_unused]] const std::exception& e) {
-		DLog(A2WStr(e.what()));
+		DLog(ConvertAnsiToWide(e.what()));
 		*phr = E_FAIL;
 		return;
 	}
@@ -88,7 +88,7 @@ CVapourSynthFile::CVapourSynthFile(const WCHAR* name, CSource* pParent, HRESULT*
 		hr = S_OK;
 	}
 	catch ([[maybe_unused]] const std::exception& e) {
-		DLog(L"{}\n{}", A2WStr(e.what()), error);
+		DLog(L"{}\n{}", ConvertAnsiToWide(e.what()), error);
 
 		new CAviSynthVideoStream(error, pParent, &hr);
 		if (SUCCEEDED(hr)) {
@@ -312,7 +312,7 @@ CVapourSynthVideoStream::CVapourSynthVideoStream(CVapourSynthFile* pVapourSynthF
 		hr = S_OK;
 	}
 	catch ([[maybe_unused]] const std::exception& e) {
-		DLog(L"{}\n{}", A2WStr(e.what()), error);
+		DLog(L"{}\n{}", ConvertAnsiToWide(e.what()), error);
 
 		hr = E_FAIL;
 	}
@@ -716,7 +716,7 @@ CVapourSynthAudioStream::CVapourSynthAudioStream(CVapourSynthFile* pVapourSynthF
 		hr = S_OK;
 	}
 	catch ([[maybe_unused]] const std::exception& e) {
-		DLog(L"{}\n{}", A2WStr(e.what()), error);
+		DLog(L"{}\n{}", ConvertAnsiToWide(e.what()), error);
 
 		hr = E_FAIL;
 	}
