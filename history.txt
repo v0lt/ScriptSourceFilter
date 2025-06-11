@@ -1,16 +1,23 @@
+0.2.8 dev
+-----------------------
+
+
 0.2.7.192 - 2024-04-03
 -----------------------
 Fixed registration of a filter from a folder with Unicode characters.
 
+
 0.2.5.183 - 2024-12-13
 -----------------------
 Fixed support for YV12, YV16, YV24 formats for AviSynth+.
+
 
 0.2.3.174 - 2024-11-05
 -----------------------
 Fixed display of video frame with error in AviSynth script.
 Fixed opening VapourSynth scripts without sound.
 Added support for Y10 (Gray10) format.
+
 
 0.2.1.165 - 2024-08-18
 -----------------------
@@ -20,14 +27,17 @@ ScriptSourceFilter will not show a video with an error if it cannot connect to A
 Now uses VapourSynth API 4.
 Recommended versions are AviSynth+ 3.7.3 or later, VapourSynth R63 or later.
 
+
 0.1.4.128 - 2022-09-21
 -----------------------
 Added Frame Properties support for AviSynth+ and VapourSynth R59.
 Recommended versions are AviSynth+ 3.7.2 or later, VapourSynth R59 or later.
 
+
 0.1.2.106 - 2022-01-05
 -----------------------
 Removed filter registration for .avs and .vpy extensions. This preserves the ability to open scripts using the "AVI/WAV File Source" system filter. Better solution is to add ScriptSourceFilter as an external filter in MPC-BE, MPC-HC and other players, set the priority as preferred and enable the filter when needed.
+
 
 0.1.0.76 - 2020-06-16
 ----------------------
