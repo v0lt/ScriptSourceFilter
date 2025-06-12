@@ -1,8 +1,8 @@
-// 
+//
 // Copyright (c) 2020-2025 v0lt, Aleksoid
-// 
+//
 // SPDX-License-Identifier: MIT
-// 
+//
 
 #pragma once
 
