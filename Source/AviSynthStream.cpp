@@ -198,15 +198,15 @@ CAviSynthVideoStream::CAviSynthVideoStream(CAviSynthFile* pAviSynthFile, CSource
 			m_Format.str, m_Width, m_Height, (double)m_fpsNum/m_fpsDen
 		);
 
-		bool has_at_least_v9 = true;
+		bool has_at_least_v8 = true;
 		try {
-			m_pAviSynthFile->m_ScriptEnvironment->CheckVersion(9);
+			m_pAviSynthFile->m_ScriptEnvironment->CheckVersion(8);
 		}
 		catch (const AvisynthError&) {
-			has_at_least_v9 = false;
+			has_at_least_v8 = false;
 		}
 
-		if (has_at_least_v9) {
+		if (has_at_least_v8) {
 			auto& avsMap = VFrame->getConstProperties();
 			int numKeys = m_pAviSynthFile->m_ScriptEnvironment->propNumKeys(&avsMap);
 			if (numKeys > 0) {
