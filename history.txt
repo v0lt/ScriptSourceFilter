@@ -1,5 +1,7 @@
 0.2.8 dev
 -----------------------
+Fixed logging of exceptions with non-ASCII characters for the debug version.
+Minimum AviSynth Interface Version to get frame properties is 8 (previously it was 9).
 
 
 0.2.7.192 - 2024-04-03
