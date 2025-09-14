@@ -71,7 +71,9 @@ CAviSynthFile::CAviSynthFile(const WCHAR* name, CSource* pParent, HRESULT* phr)
 		if (VInfo.HasVideo()) {
 			auto& Format = GetFormatParamsAviSynth(VInfo.pixel_type);
 			if (Format.fourcc == DWORD(-1)) {
-				throw std::exception(std::format("Unsuported pixel_type {:#010x} ({})", (uint32_t)VInfo.pixel_type, VInfo.pixel_type).c_str());
+				DLog("Unsuported pixel_type {:#010x} ({})", (uint32_t)VInfo.pixel_type, VInfo.pixel_type);
+				*phr = E_FAIL;
+				return;
 			}
 
 			auto pVideoStream = new CAviSynthVideoStream(this, pParent, &hr);
