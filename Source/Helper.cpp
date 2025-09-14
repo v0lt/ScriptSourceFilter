@@ -66,6 +66,10 @@ static const FmtParams_t s_FormatTable[] = {
 	{MAKEFOURCC('Y','3',0,14),   MEDIASUBTYPE_LAV_RAWVIDEO, VideoInfo::CS_YUV444P14,  pfYUV444P14,   L"YUV444P14",    2, 6,       14,    3,     48},
 	{MAKEFOURCC('Y','3',0,16),   MEDIASUBTYPE_LAV_RAWVIDEO, VideoInfo::CS_YUV444P16,  pfYUV444P16,   L"YUV444P16",    2, 6,       16,    3,     48},
 	// YUV planar whith alpha
+	{MAKEFOURCC('Y','4',10,8),   MEDIASUBTYPE_LAV_RAWVIDEO, VideoInfo::CS_YUVA422,    0,             L"YUVA422P8",    1, 6,       8,     4,     24},
+	{MAKEFOURCC('Y','4',10,10),  MEDIASUBTYPE_LAV_RAWVIDEO, VideoInfo::CS_YUVA422P10, 0,             L"YUVA422P10",   2, 6,       10,    4,     48},
+	{MAKEFOURCC('Y','4',10,12),  MEDIASUBTYPE_LAV_RAWVIDEO, VideoInfo::CS_YUVA422P12, 0,             L"YUVA422P12",   2, 6,       12,    4,     48},
+	{MAKEFOURCC('Y','4',10,16),  MEDIASUBTYPE_LAV_RAWVIDEO, VideoInfo::CS_YUVA422P16, 0,             L"YUVA422P16",   2, 6,       16,    4,     48},
 	{MAKEFOURCC('Y','4',0,8),    MEDIASUBTYPE_LAV_RAWVIDEO, VideoInfo::CS_YUVA444,    0,             L"YUVA444P8",    1, 8,       8,     4,     32},
 	{MAKEFOURCC('Y','4',0,10),   MEDIASUBTYPE_LAV_RAWVIDEO, VideoInfo::CS_YUVA444P10, 0,             L"YUVA444P10",   2, 8,       10,    4,     64},
 	{MAKEFOURCC('Y','4',0,12),   MEDIASUBTYPE_LAV_RAWVIDEO, VideoInfo::CS_YUVA444P12, 0,             L"YUVA444P12",   2, 8,       12,    4,     64},
