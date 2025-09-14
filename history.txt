@@ -1,6 +1,6 @@
 0.2.10 dev
 -----------------------
-
+Added support for various formats for AviSynth+ and VapourSynth.
 
 0.2.9.200 - 2025-06-15
 -----------------------
