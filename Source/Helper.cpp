@@ -79,10 +79,12 @@ static const FmtParams_t s_FormatTable[] = {
 	{MAKEFOURCC('G','3',0,8),    MEDIASUBTYPE_LAV_RAWVIDEO, VideoInfo::CS_RGBP,       pfRGB24,       L"RGBP8",        1, 6,       8,     3,     24},
 	{MAKEFOURCC('G','3',0,10),   MEDIASUBTYPE_LAV_RAWVIDEO, VideoInfo::CS_RGBP10,     pfRGB30,       L"RGBP10",       2, 6,       10,    3,     48},
 	{MAKEFOURCC('G','3',0,16),   MEDIASUBTYPE_LAV_RAWVIDEO, VideoInfo::CS_RGBP16,     pfRGB48,       L"RGBP16",       2, 6,       16,    3,     48},
+	{MAKEFOURCC('G','3',0,33),   MEDIASUBTYPE_LAV_RAWVIDEO, VideoInfo::CS_RGBPS,      0,             L"RGBPS",        4, 6,       32,    3,     96},
 	// RGB planar whith alpha
 	{MAKEFOURCC('G','4',0,8),    MEDIASUBTYPE_LAV_RAWVIDEO, VideoInfo::CS_RGBAP,      0,             L"RGBAP8",       1, 8,       8,     4,     32},
 	{MAKEFOURCC('G','4',0,10),   MEDIASUBTYPE_LAV_RAWVIDEO, VideoInfo::CS_RGBAP10,    0,             L"RGBAP10",      2, 8,       10,    4,     64},
 	{MAKEFOURCC('G','4',0,16),   MEDIASUBTYPE_LAV_RAWVIDEO, VideoInfo::CS_RGBAP16,    0,             L"RGBAP16",      2, 8,       16,    4,     64},
+	{MAKEFOURCC('G','4',0,33),   MEDIASUBTYPE_LAV_RAWVIDEO, VideoInfo::CS_RGBAPS,     0,             L"RGBAPS",       4, 8,       32,    4,    128},
 	// grayscale
 	{FCC('Y800'),                MEDIASUBTYPE_Y800,         VideoInfo::CS_Y8,         pfGray8,       L"Y8",           1, 2,       8,     1,     8},
 	{MAKEFOURCC('Y','1',0,10),   MEDIASUBTYPE_LAV_RAWVIDEO, VideoInfo::CS_Y10,        pfGray10,      L"Y10",          2, 2,       10,    1,     16},
