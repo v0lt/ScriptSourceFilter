@@ -83,8 +83,8 @@ static const FmtParams_t s_FormatTable[] = {
 	// RGB planar
 	{MAKEFOURCC('G','3',0,8),    MEDIASUBTYPE_LAV_RAWVIDEO, VideoInfo::CS_RGBP,       pfRGB24,       L"RGBP8",        1, 6,       8,     3,     24},
 	{MAKEFOURCC('G','3',0,10),   MEDIASUBTYPE_LAV_RAWVIDEO, VideoInfo::CS_RGBP10,     pfRGB30,       L"RGBP10",       2, 6,       10,    3,     48},
-	{MAKEFOURCC('G','3',0,12),   MEDIASUBTYPE_LAV_RAWVIDEO, VideoInfo::CS_RGBP12,     0,             L"RGBP12",       2, 6,       12,    3,     48},
-	{MAKEFOURCC('G','3',0,14),   MEDIASUBTYPE_LAV_RAWVIDEO, VideoInfo::CS_RGBP14,     0,             L"RGBP14",       2, 6,       14,    3,     48},
+	{MAKEFOURCC('G','3',0,12),   MEDIASUBTYPE_LAV_RAWVIDEO, VideoInfo::CS_RGBP12,     pfRGB36,       L"RGBP12",       2, 6,       12,    3,     48},
+	{MAKEFOURCC('G','3',0,14),   MEDIASUBTYPE_LAV_RAWVIDEO, VideoInfo::CS_RGBP14,     pfRGB42,       L"RGBP14",       2, 6,       14,    3,     48},
 	{MAKEFOURCC('G','3',0,16),   MEDIASUBTYPE_LAV_RAWVIDEO, VideoInfo::CS_RGBP16,     pfRGB48,       L"RGBP16",       2, 6,       16,    3,     48},
 	{MAKEFOURCC('G','3',0,33),   MEDIASUBTYPE_LAV_RAWVIDEO, VideoInfo::CS_RGBPS,      pfRGBS,        L"RGBPS",        4, 6,       32,    3,     96},
 	// RGB planar whith alpha
