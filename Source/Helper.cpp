@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020-2024 v0lt
+ * Copyright (C) 2020-2025 v0lt
  *
  * SPDX-License-Identifier: LGPL-2.1-only
  */
@@ -68,6 +68,7 @@ static const FmtParams_t s_FormatTable[] = {
 	// YUV planar whith alpha
 	{MAKEFOURCC('Y','4',0,8),    MEDIASUBTYPE_LAV_RAWVIDEO, VideoInfo::CS_YUVA444,    0,             L"YUVA444P8",    1, 8,       8,     4,     32},
 	{MAKEFOURCC('Y','4',0,10),   MEDIASUBTYPE_LAV_RAWVIDEO, VideoInfo::CS_YUVA444P10, 0,             L"YUVA444P10",   2, 8,       10,    4,     64},
+	{MAKEFOURCC('Y','4',0,12),   MEDIASUBTYPE_LAV_RAWVIDEO, VideoInfo::CS_YUVA444P12, 0,             L"YUVA444P12",   2, 8,       12,    4,     64},
 	{MAKEFOURCC('Y','4',0,16),   MEDIASUBTYPE_LAV_RAWVIDEO, VideoInfo::CS_YUVA444P16, 0,             L"YUVA444P16",   2, 8,       16,    4,     64},
 	// RGB packed
 	{BI_RGB,                     MEDIASUBTYPE_RGB24,        VideoInfo::CS_BGR24,      0,             L"RGB24",        3, 2,       8,     1,     24},
@@ -78,11 +79,15 @@ static const FmtParams_t s_FormatTable[] = {
 	// RGB planar
 	{MAKEFOURCC('G','3',0,8),    MEDIASUBTYPE_LAV_RAWVIDEO, VideoInfo::CS_RGBP,       pfRGB24,       L"RGBP8",        1, 6,       8,     3,     24},
 	{MAKEFOURCC('G','3',0,10),   MEDIASUBTYPE_LAV_RAWVIDEO, VideoInfo::CS_RGBP10,     pfRGB30,       L"RGBP10",       2, 6,       10,    3,     48},
+	{MAKEFOURCC('G','3',0,12),   MEDIASUBTYPE_LAV_RAWVIDEO, VideoInfo::CS_RGBP12,     0,             L"RGBP12",       2, 6,       12,    3,     48},
+	{MAKEFOURCC('G','3',0,14),   MEDIASUBTYPE_LAV_RAWVIDEO, VideoInfo::CS_RGBP14,     0,             L"RGBP14",       2, 6,       14,    3,     48},
 	{MAKEFOURCC('G','3',0,16),   MEDIASUBTYPE_LAV_RAWVIDEO, VideoInfo::CS_RGBP16,     pfRGB48,       L"RGBP16",       2, 6,       16,    3,     48},
 	{MAKEFOURCC('G','3',0,33),   MEDIASUBTYPE_LAV_RAWVIDEO, VideoInfo::CS_RGBPS,      pfRGBS,        L"RGBPS",        4, 6,       32,    3,     96},
 	// RGB planar whith alpha
 	{MAKEFOURCC('G','4',0,8),    MEDIASUBTYPE_LAV_RAWVIDEO, VideoInfo::CS_RGBAP,      0,             L"RGBAP8",       1, 8,       8,     4,     32},
 	{MAKEFOURCC('G','4',0,10),   MEDIASUBTYPE_LAV_RAWVIDEO, VideoInfo::CS_RGBAP10,    0,             L"RGBAP10",      2, 8,       10,    4,     64},
+	{MAKEFOURCC('G','4',0,12),   MEDIASUBTYPE_LAV_RAWVIDEO, VideoInfo::CS_RGBAP12,    0,             L"RGBAP12",      2, 8,       12,    4,     64},
+	{MAKEFOURCC('G','4',0,14),   MEDIASUBTYPE_LAV_RAWVIDEO, VideoInfo::CS_RGBAP14,    0,             L"RGBAP14",      2, 8,       14,    4,     64},
 	{MAKEFOURCC('G','4',0,16),   MEDIASUBTYPE_LAV_RAWVIDEO, VideoInfo::CS_RGBAP16,    0,             L"RGBAP16",      2, 8,       16,    4,     64},
 	{MAKEFOURCC('G','4',0,33),   MEDIASUBTYPE_LAV_RAWVIDEO, VideoInfo::CS_RGBAPS,     0,             L"RGBAPS",       4, 8,       32,    4,    128},
 	// grayscale
