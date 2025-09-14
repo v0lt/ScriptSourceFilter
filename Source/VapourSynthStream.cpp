@@ -88,14 +88,15 @@ CVapourSynthFile::CVapourSynthFile(const WCHAR* name, CSource* pParent, HRESULT*
 		hr = S_OK;
 	}
 	catch ([[maybe_unused]] const std::exception& e) {
-		DLog(L"{}\n{}", ConvertAnsiToWide(e.what()), error);
+		hr = E_FAIL;
+		DLog(ConvertAnsiToWide(e.what()));
 
-		new CAviSynthVideoStream(error, pParent, &hr);
-		if (SUCCEEDED(hr)) {
-			hr = S_FALSE;
-		}
-		else {
-			hr = E_FAIL;
+		if (error.length()) {
+			DLog(error);
+			new CAviSynthVideoStream(error, pParent, &hr);
+			if (SUCCEEDED(hr)) {
+				hr = S_FALSE; // show video with VapourSynth error text
+			}
 		}
 	}
 
