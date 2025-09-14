@@ -1,3 +1,7 @@
+0.2.10 dev
+-----------------------
+
+
 0.2.9.200 - 2025-06-15
 -----------------------
 Fixed logging of exceptions with non-ASCII characters for the debug version.

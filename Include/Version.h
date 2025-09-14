@@ -21,7 +21,7 @@
 
 #define VER_MAJOR      0
 #define VER_MINOR      2
-#define VER_BUILD      9
+#define VER_BUILD      10
 
 #define VERSION_NUM    VER_MAJOR,VER_MINOR,VER_BUILD,REV_NUM
 #define VERSION_STR    MAKE_STR(VER_MAJOR) "." MAKE_STR(VER_MINOR) "." MAKE_STR(VER_BUILD) "." MAKE_STR(REV_NUM)
