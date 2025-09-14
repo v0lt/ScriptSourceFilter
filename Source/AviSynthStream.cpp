@@ -71,9 +71,7 @@ CAviSynthFile::CAviSynthFile(const WCHAR* name, CSource* pParent, HRESULT* phr)
 		if (VInfo.HasVideo()) {
 			auto& Format = GetFormatParamsAviSynth(VInfo.pixel_type);
 			if (Format.fourcc == DWORD(-1)) {
-				DLog("Unsuported pixel_type {:#010x} ({})", (uint32_t)VInfo.pixel_type, VInfo.pixel_type);
-				*phr = E_FAIL;
-				return;
+				throw std::exception(std::format("Unsuported pixel_type {:#010x} ({})", (uint32_t)VInfo.pixel_type, VInfo.pixel_type).c_str());
 			}
 
 			auto pVideoStream = new CAviSynthVideoStream(this, pParent, &hr);
@@ -102,13 +100,15 @@ CAviSynthFile::CAviSynthFile(const WCHAR* name, CSource* pParent, HRESULT* phr)
 		hr = S_OK;
 	}
 	catch ([[maybe_unused]] const std::exception& e) {
-		DLog(L"{}\n{}", ConvertAnsiToWide(e.what()), error);
+		hr = E_FAIL;
+		DLog(ConvertAnsiToWide(e.what()));
 
-		new CAviSynthVideoStream(error, pParent, &hr);
-		if (SUCCEEDED(hr)) {
-			hr = S_FALSE;
-		} else {
-			hr = E_FAIL;
+		if (error.length()) {
+			DLog(error);
+			new CAviSynthVideoStream(error, pParent, &hr);
+			if (SUCCEEDED(hr)) {
+				hr = S_FALSE; // show video with AviSynth error text
+			}
 		}
 	}
 
