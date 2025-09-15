@@ -1,6 +1,8 @@
-0.2.10 dev
+0.2.11.215 - 2025-09-15
 -----------------------
-Added support for various formats for AviSynth+ and VapourSynth.
+Added support for various video formats for AviSynth+ and VapourSynth.
+The filter will not open the correct scripts with unsupported video formats.
+
 
 0.2.9.200 - 2025-06-15
 -----------------------
