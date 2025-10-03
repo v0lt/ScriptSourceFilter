@@ -1,3 +1,7 @@
+0.2.12 dev
+-----------------------
+
+
 0.2.11.215 - 2025-09-15
 -----------------------
 Added support for various video formats for AviSynth+ and VapourSynth.
