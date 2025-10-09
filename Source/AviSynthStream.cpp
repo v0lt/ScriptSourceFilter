@@ -30,15 +30,15 @@ std::wstring ConvertUtf8OrAnsiLinesToWide(const std::string_view sv)
 		auto line = sv.data() + pos;
 		auto line_size = k - pos;
 		UINT codePage = CP_UTF8;
-		int count = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, line, line_size, nullptr, 0);
+		int count = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, line, (int)line_size, nullptr, 0);
 		if (count == 0) {
 			codePage = CP_ACP;
-			count = MultiByteToWideChar(CP_ACP, 0, line, line_size, nullptr, 0);
+			count = MultiByteToWideChar(CP_ACP, 0, line, (int)line_size, nullptr, 0);
 		}
 
 		auto size = wstr.length();
 		wstr.resize(size + count);
-		MultiByteToWideChar(codePage, 0, line, line_size, &wstr[size], count);
+		MultiByteToWideChar(codePage, 0, line, (int)line_size, &wstr[size], count);
 
 		pos = k;
 	}
