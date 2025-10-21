@@ -1,6 +1,7 @@
-0.2.12 dev
+0.2.13 dev
 -----------------------
-
+Fixed error text display in UTF-8, system ANSI, or mixed encoding (different encodings in different strings). This fixes the display of AviSynth+ errors.
+Fixed filter registration and deregistration using included CMD files.
 
 0.2.11.215 - 2025-09-15
 -----------------------
