@@ -1,5 +1,5 @@
 @cd /d "%~dp0"
-@regsvr32.exe MpcScriptSource.ax /u /s
+@regsvr32.exe "%~dp0/MpcScriptSource.ax" /u /s
 @if %errorlevel% NEQ 0 goto error
 :success
 @echo.
