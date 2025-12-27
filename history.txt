@@ -1,3 +1,6 @@
+0.2.14 dev
+-----------------------
+
 0.2.13.225 - 2025-10-21
 -----------------------
 Fixed error text display in UTF-8, system ANSI, or mixed encoding (different encodings in different strings). This fixes the display of AviSynth+ errors.
