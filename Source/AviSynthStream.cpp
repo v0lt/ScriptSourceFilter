@@ -554,7 +554,14 @@ HRESULT CAviSynthVideoStream::FillBuffer(IMediaSample* pSample)
 		}
 		else {
 			auto Clip = m_pAviSynthFile->m_AVSValue.AsClip();
-			auto VFrame = Clip->GetFrame(m_CurrentFrame, m_pAviSynthFile->m_ScriptEnvironment);
+			PVideoFrame VFrame;
+			try {
+				VFrame = Clip->GetFrame(m_CurrentFrame, m_pAviSynthFile->m_ScriptEnvironment);
+			}
+			catch (const AvisynthError& e) {
+				DLog(L"IClip::GetFrame threw an exception: {}", ConvertUtf8OrAnsiLinesToWide(e.msg));
+				return E_FAIL;
+			}
 
 			const int num_planes = m_Format.planes;
 			for (int i = 0; i < num_planes; i++) {
@@ -916,7 +923,13 @@ HRESULT CAviSynthAudioStream::FillBuffer(IMediaSample* pSample)
 
 		auto Clip = m_pAviSynthFile->m_AVSValue.AsClip();
 		int64_t count = std::min<int64_t>(m_BufferSamples, m_NumSamples - m_CurrentSample);
-		Clip->GetAudio(dst_data, m_CurrentSample, count, m_pAviSynthFile->m_ScriptEnvironment);
+		try {
+			Clip->GetAudio(dst_data, m_CurrentSample, count, m_pAviSynthFile->m_ScriptEnvironment);
+		}
+		catch (const AvisynthError& e) {
+			DLog(L"IClip::GetAudio threw an exception: {}", ConvertUtf8OrAnsiLinesToWide(e.msg));
+			return E_FAIL;
+		}
 
 		pSample->SetActualDataLength(count * m_BytesPerSample);
 
