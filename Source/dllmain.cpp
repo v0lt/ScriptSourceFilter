@@ -43,15 +43,14 @@ STDAPI DllRegisterServer()
 STDAPI DllUnregisterServer()
 {
 	LPCWSTR strGuid = _CRT_WIDE(STR_CLSID_ScriptSource);
-	DWORD type;
 	WCHAR data[40];
 
 	HKEY hKey;
 	LONG ec = ::RegOpenKeyExW(HKEY_CLASSES_ROOT, L"Media Type\\Extensions\\.avs", 0, KEY_ALL_ACCESS, &hKey);
 	if (ec == ERROR_SUCCESS) {
 		DWORD cbData = sizeof(data); // in bytes
-		ec = RegQueryValueExW(hKey, L"Source Filter", nullptr, &type, (LPBYTE)data, &cbData);
-		if (ec == ERROR_SUCCESS && type == REG_SZ && _wcsicmp(strGuid, data) == 0) {
+		ec = RegGetValueW(hKey, nullptr, L"Source Filter", RRF_RT_REG_SZ, nullptr, (LPVOID)data, &cbData);
+		if (ec == ERROR_SUCCESS && _wcsicmp(strGuid, data) == 0) {
 			RegDeleteValueW(hKey, L"Source Filter");
 		}
 		::RegCloseKey(hKey);
@@ -60,8 +59,8 @@ STDAPI DllUnregisterServer()
 	ec = ::RegOpenKeyExW(HKEY_CLASSES_ROOT, L"Media Type\\Extensions\\.vpy", 0, KEY_ALL_ACCESS, &hKey);
 	if (ec == ERROR_SUCCESS) {
 		DWORD cbData = sizeof(data); // in bytes
-		ec = RegQueryValueExW(hKey, L"Source Filter", nullptr, &type, (LPBYTE)data, &cbData);
-		if (ec == ERROR_SUCCESS && type == REG_SZ && _wcsicmp(strGuid, data) == 0) {
+		ec = RegGetValueW(hKey, nullptr, L"Source Filter", RRF_RT_REG_SZ, nullptr, (LPVOID)data, &cbData);
+		if (ec == ERROR_SUCCESS && _wcsicmp(strGuid, data) == 0) {
 			RegDeleteValueW(hKey, L"Source Filter");
 		}
 		::RegCloseKey(hKey);
