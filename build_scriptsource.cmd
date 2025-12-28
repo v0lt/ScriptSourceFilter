@@ -1,5 +1,5 @@
 @ECHO OFF
-REM Copyright (C) 2020-2024 v0lt
+REM Copyright (C) 2020-2025 v0lt
 REM 
 REM SPDX-License-Identifier: LGPL-2.1-only
 
@@ -114,7 +114,7 @@ IF DEFINED SEVENZIP (
 TITLE Compiling %TITLE% [FINISHED]
 TIMEOUT /T 3
 ENDLOCAL
-EXIT
+EXIT /B
 
 :SubVSPath
 SET "PARAMS=-property installationPath -requires Microsoft.Component.MSBuild"
