@@ -117,7 +117,7 @@ CAviSynthFile::CAviSynthFile(const WCHAR* name, CSource* pParent, HRESULT* phr)
 				m_FileInfo += (L'\n');
 			}
 		}
-		
+
 		if (VInfo.HasAudio()) {
 			auto pAudioStream = new CAviSynthAudioStream(this, pParent, &hr);
 			if (FAILED(hr)) {
@@ -679,13 +679,13 @@ CAviSynthAudioStream::CAviSynthAudioStream(CAviSynthFile* pAviSynthFile, CSource
 {
 	CAutoLock cAutoLock(&m_cSharedState);
 
-	HRESULT hr;
+	HRESULT hr = E_NOT_SET;
 	std::wstring error;
 
 	try {
 		auto Clip = m_pAviSynthFile->m_AVSValue.AsClip();
 		auto VInfo = Clip->GetVideoInfo();
-	
+
 		if (VInfo.HasAudio()) {
 			m_Channels       = VInfo.AudioChannels();
 			m_SampleRate     = VInfo.SamplesPerSecond();

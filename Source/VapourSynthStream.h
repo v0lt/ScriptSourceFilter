@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020-2024 v0lt
+ * Copyright (C) 2020-2025 v0lt
  *
  * SPDX-License-Identifier: LGPL-2.1-only
  */
@@ -89,7 +89,7 @@ public:
 	virtual ~CVapourSynthVideoStream();
 
 	STDMETHODIMP NonDelegatingQueryInterface(REFIID riid, void** ppv) override;
-	
+
 	std::wstring_view GetInfo() { return m_StreamInfo; }
 
 private:
