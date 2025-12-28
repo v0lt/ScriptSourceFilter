@@ -1,5 +1,7 @@
-0.2.14 dev
+0.2.15.235 - 2025-12-28
 -----------------------
+Fixed a filter crash when Avisynth cannot deliver a video frame or audio data.
+Other minor fixes.
 
 0.2.13.225 - 2025-10-21
 -----------------------
