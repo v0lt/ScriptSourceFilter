@@ -558,7 +558,7 @@ HRESULT CAviSynthVideoStream::FillBuffer(IMediaSample* pSample)
 			try {
 				VFrame = Clip->GetFrame(m_CurrentFrame, m_pAviSynthFile->m_ScriptEnvironment);
 			}
-			catch (const AvisynthError& e) {
+			catch ([[maybe_unused]] const AvisynthError& e) {
 				DLog(L"IClip::GetFrame threw an exception: {}", ConvertUtf8OrAnsiLinesToWide(e.msg));
 				return E_FAIL;
 			}
@@ -926,7 +926,7 @@ HRESULT CAviSynthAudioStream::FillBuffer(IMediaSample* pSample)
 		try {
 			Clip->GetAudio(dst_data, m_CurrentSample, count, m_pAviSynthFile->m_ScriptEnvironment);
 		}
-		catch (const AvisynthError& e) {
+		catch ([[maybe_unused]] const AvisynthError& e) {
 			DLog(L"IClip::GetAudio threw an exception: {}", ConvertUtf8OrAnsiLinesToWide(e.msg));
 			return E_FAIL;
 		}
