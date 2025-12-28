@@ -156,7 +156,7 @@ std::unique_ptr<BYTE[]> GetBitmapWithText(const std::wstring& text, const long w
 	HGDIOBJ hBitmapOld = nullptr;
 	void* pBitmapBits = nullptr;
 	HBITMAP hBitmap = CreateDIBSection(hDC, &bmi, DIB_RGB_COLORS, &pBitmapBits, nullptr, 0);
-	if (pBitmapBits) {
+	if (hBitmap && pBitmapBits) {
 		HGDIOBJ hBitmapOld = SelectObject(hDC, hBitmap);
 
 		SetTextColor(hDC, RGB(255, 255, 255));
