@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020-2024 v0lt
+ * Copyright (C) 2020-2025 v0lt
  *
  * SPDX-License-Identifier: LGPL-2.1-only
  */
@@ -45,11 +45,11 @@ STDAPI DllUnregisterServer()
 	LPCWSTR strGuid = _CRT_WIDE(STR_CLSID_ScriptSource);
 	DWORD type;
 	WCHAR data[40];
-	DWORD cbData;
 
 	HKEY hKey;
 	LONG ec = ::RegOpenKeyExW(HKEY_CLASSES_ROOT, L"Media Type\\Extensions\\.avs", 0, KEY_ALL_ACCESS, &hKey);
 	if (ec == ERROR_SUCCESS) {
+		DWORD cbData = sizeof(data); // in bytes
 		ec = RegQueryValueExW(hKey, L"Source Filter", nullptr, &type, (LPBYTE)data, &cbData);
 		if (ec == ERROR_SUCCESS && type == REG_SZ && _wcsicmp(strGuid, data) == 0) {
 			RegDeleteValueW(hKey, L"Source Filter");
@@ -59,6 +59,7 @@ STDAPI DllUnregisterServer()
 
 	ec = ::RegOpenKeyExW(HKEY_CLASSES_ROOT, L"Media Type\\Extensions\\.vpy", 0, KEY_ALL_ACCESS, &hKey);
 	if (ec == ERROR_SUCCESS) {
+		DWORD cbData = sizeof(data); // in bytes
 		ec = RegQueryValueExW(hKey, L"Source Filter", nullptr, &type, (LPBYTE)data, &cbData);
 		if (ec == ERROR_SUCCESS && type == REG_SZ && _wcsicmp(strGuid, data) == 0) {
 			RegDeleteValueW(hKey, L"Source Filter");
