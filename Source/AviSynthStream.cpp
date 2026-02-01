@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020-2025 v0lt
+ * Copyright (C) 2020-2026 v0lt
  *
  * SPDX-License-Identifier: LGPL-2.1-only
  */
@@ -310,6 +310,11 @@ CAviSynthVideoStream::CAviSynthVideoStream(CAviSynthFile* pAviSynthFile, CSource
 	}
 	catch ([[maybe_unused]] const std::exception& e) {
 		DLog(L"{}\n{}", ConvertAnsiToWide(e.what()), error);
+
+		hr = E_FAIL;
+	}
+	catch (const AvisynthError& e) {
+		DLog(ConvertUtf8OrAnsiLinesToWide(e.msg));
 
 		hr = E_FAIL;
 	}
