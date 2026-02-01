@@ -579,7 +579,7 @@ HRESULT CAviSynthVideoStream::FillBuffer(IMediaSample* pSample)
 					dst_pitch /= 2;
 				}
 
-				if (m_Format.fourcc == BI_RGB) {
+				if (m_Format.fourcc == BI_RGB || m_Format.fourcc == MAKEFOURCC('B','G','R',48) || m_Format.fourcc == MAKEFOURCC('B','R','A',64)) {
 					src_data += src_pitch * (height - 1);
 					src_pitch = -src_pitch;
 				}
