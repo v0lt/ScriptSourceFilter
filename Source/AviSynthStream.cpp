@@ -313,7 +313,7 @@ CAviSynthVideoStream::CAviSynthVideoStream(CAviSynthFile* pAviSynthFile, CSource
 
 		hr = E_FAIL;
 	}
-	catch (const AvisynthError& e) {
+	catch ([[maybe_unused]] const AvisynthError& e) {
 		DLog(ConvertUtf8OrAnsiLinesToWide(e.msg));
 
 		hr = E_FAIL;
