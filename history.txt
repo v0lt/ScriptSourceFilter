@@ -1,4 +1,4 @@
-0.2.16 dev
+0.2.17.241 - 2026-04-03
 -----------------------
 Fixed a player crash when PClip::GetFrame throws an AvisynthError exception.
 Fixed display of the "BGR48" and "BGRA64" formats (it was upside down). AviSynth+ outputs these formats as bottom-up bitmaps.
